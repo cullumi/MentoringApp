@@ -3,11 +3,34 @@ import * as React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { StyleSheet, Text, Button } from 'react-native';
+import LinkedInModal from 'react-native-linkedin';
 
 const Stack = createStackNavigator();
 
+const [isSignedIn, setIsSignedIn] = useState(true);
+
+export default class AppContainer extends React.Component {
+  linkedRef = React.createRef<LinkedInModal>()
+  render() {
+    return (
+      <View style={styles.container}>
+        <LinkedInModal
+          ref={this.linkedRef}
+          clientID="86bzo41s6bc4am"
+          clientSecret="O2U1ANijJnQG2E3s"
+          redirectUri="https://cs.wwu.edu/"
+          onSuccess={token => console.log(token)}
+        />
+        <Button title="Log Out" onPress={this.linkedRef.current.logoutAsync()} />
+      </View>
+    )
+  }
+}
+
 export default function App() {
-  return (
+
+  if (state.isLoading)
+  return isSignedIn ? (
     <NavigationContainer>
       <Stack.Navigator>
         <Stack.Screen
@@ -15,7 +38,22 @@ export default function App() {
           component={HomeScreen}
           options={{ title: 'Welcome' }}
         />
-        <Stack.Screen name="Profile" component={ProfileScreen} />
+        <Stack.Screen name="Meetings" component={MeetingsScreen} />
+        <Stack.Screen name="ViewDebrief" component={ViewDebriefScreen} />
+        <Stack.Screen name="Messaging" component={MessagingScreen} />
+        <Stack.Screen name="Help" component={HelpScreen} />
+        <Stack.Screen name="SubmitDebrief" component={SubmitDebriefScreen} />
+      </Stack.Navigator>
+    </NavigationContainer>
+  ) : (
+    <NavigationContainer>
+      <Stack.Navigator>
+        <Stack.Screen
+          name="Login"
+          component={LoginScreen}
+          options={{ title: 'Welcome!' }}
+        />
+        <Stack.Screen name="Privacy" component={PrivacyScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );
@@ -32,15 +70,30 @@ const HomeScreen = ({ navigation }) => {
   );
 };
 
-const ProfileScreen = () => {
-  return <Text>This is Jane's profile</Text>;
+const MeetingsScreen = () => {
+  return <Text></Text>;
 };
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#bbb',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
+const ViewDebriefScreen = () => {
+  return <Text></Text>;
+};
+
+const MessagingScreen = () => {
+  return <Text></Text>;
+};
+
+const HelpScreen = () => {
+  return <Text></Text>;
+};
+
+const SubmitDebriefScreen = () => {
+  return <Text></Text>;
+};
+
+const LoginScreen = () => {
+  return <Text></Text>;
+};
+
+const Screen = () => {
+  return <Text></Text>;
+};

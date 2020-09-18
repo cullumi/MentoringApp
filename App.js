@@ -2,34 +2,14 @@ import 'react-native-gesture-handler';
 import * as React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
-import { StyleSheet, Text, Button } from 'react-native';
-import LinkedInModal from 'react-native-linkedin';
+import { StyleSheet, Text, Button, View, ActivityIndicator, StatusBar } from 'react-native';
+import LinkedInModal, { LinkedInToken } from 'react-native-linkedin';
 
 const Stack = createStackNavigator();
 
-const [isSignedIn, setIsSignedIn] = useState(true);
-
-export default class AppContainer extends React.Component {
-  linkedRef = React.createRef<LinkedInModal>()
-  render() {
-    return (
-      <View style={styles.container}>
-        <LinkedInModal
-          ref={this.linkedRef}
-          clientID="86bzo41s6bc4am"
-          clientSecret="O2U1ANijJnQG2E3s"
-          redirectUri="https://cs.wwu.edu/"
-          onSuccess={token => console.log(token)}
-        />
-        <Button title="Log Out" onPress={this.linkedRef.current.logoutAsync()} />
-      </View>
-    )
-  }
-}
+const [isSignedIn, setIsSignedIn] = useState(false);
 
 export default function App() {
-
-  if (state.isLoading)
   return isSignedIn ? (
     <NavigationContainer>
       <Stack.Navigator>
@@ -90,8 +70,21 @@ const SubmitDebriefScreen = () => {
   return <Text></Text>;
 };
 
+const linkedRef = React.createRef<LinkedInModal>();
+
 const LoginScreen = () => {
-  return <Text></Text>;
+  return (
+      <View style={styles.container}>
+        <LinkedInModal
+          ref={linkedRef}
+          clientID="[ Your client id from https://www.linkedin.com/developer/apps ]"
+          clientSecret="[ Your client secret from https://www.linkedin.com/developer/apps ]"
+          redirectUri="[ Your redirect uri set into https://www.linkedin.com/developer/apps ]"
+          onSuccess={token => console.log(token)}
+        />
+        <Button title="Log Out" onPress={this.linkedRef.current.logoutAsync()} />
+      </View>
+    );
 };
 
 const Screen = () => {

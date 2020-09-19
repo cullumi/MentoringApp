@@ -1,0 +1,83 @@
+{
+  "name": "react-native-linkedin",
+  "version": "2.1.1",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "description": "React-Native LinkedIn, a simple LinkedIn login library for React-Native with WebView and Modal",
+  "repository": "https://github.com/xcarpentier/react-native-linkedin.git",
+  "author": "Xavier Carpentier <xcapetir@gmail.com> (https://xaviercarpentier.com/)",
+  "bugs": {
+    "url": "https://github.com/xcarpentier/react-native-linkedin/issues"
+  },
+  "homepage": "https://github.com/xcarpentier/react-native-linkedin",
+  "license": "MIT",
+  "scripts": {
+    "start": "yarn config:dev && expo start",
+    "build": "rm -rf lib/ && node_modules/.bin/tsc && cp -rf ./src/assets ./lib",
+    "config:dev": "json -I -f package.json -e 'this.main=\"node_modules/expo/AppEntry.js\"'",
+    "config:npm": "json -I -f package.json -e 'this.main=\"lib/index.js\"'",
+    "test": "TZ=Europe/Paris jest --no-watchman",
+    "lint": "tslint --project .",
+    "tsc": "node_modules/.bin/tsc --noEmit",
+    "cleaning": "rm -rf node_modules && rm -f yarn.lock && yarn install && watchman watch-del-all && rm -fr $TMPDIR/react-*",
+    "prepublishOnly": "yarn lint && yarn build && yarn test && yarn config:npm",
+    "postpublish": "yarn config:dev"
+  },
+  "keywords": [
+    "react-native",
+    "react-native-linkedin",
+    "linkedin"
+  ],
+  "dependencies": {
+    "query-string": "6.8.3",
+    "ramda": "0.26.1",
+    "uuid": "3.3.3",
+    "react-native-webview": "7.0.5"
+  },
+  "devDependencies": {
+    "@types/jest": "24.0.17",
+    "@types/react": "16.9.4",
+    "@types/react-native": "0.60.17",
+    "@types/uuid": "^3.4.4",
+    "@types/ramda": "^0.25.47",
+    "babel-jest": "24.9.0",
+    "babel-preset-react-native": "^4.0.0",
+    "babel-preset-expo": "^7.0.0",
+    "expo": "^35.0.0",
+    "husky": "3.0.8",
+    "json": "^9.0.6",
+    "jest-expo": "^35.0.0",
+    "react": "16.8.3",
+    "react-native": "https://github.com/expo/react-native/archive/sdk-35.0.0.tar.gz",
+    "react-test-renderer": "16.8.3",
+    "tslint": "5.12.0",
+    "tslint-config-prettier": "1.17.0",
+    "typescript": "3.4.5"
+  },
+  "peerDependencies": {
+    "react": "*",
+    "react-native": "*",
+    "react-native-webview": "*"
+  },
+  "jest": {
+    "preset": "react-native",
+    "moduleFileExtensions": [
+      "js",
+      "jsx",
+      "json",
+      "ts",
+      "tsx"
+    ],
+    "transform": {
+      "^.+\\.(js|jsx|ts|tsx)$": "babel-jest"
+    },
+    "testMatch": [
+      "**/*.test.ts?(x)"
+    ]
+  },
+  "husky": {
+    "hooks": {
+      "pre-push": "yarn lint && yarn tsc && yarn test"
+    }
+  }
+}

@@ -2,13 +2,19 @@ import 'react-native-gesture-handler';
 import React, { useState } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
-import { StyleSheet, Text, Button, View, ActivityIndicator, StatusBar } from 'react-native';
-import LinkedInModal, { LinkedInToken } from 'react-native-linkedin';
+import { TouchableOpacity, AsyncStorage, StyleSheet, Text, Image, Button, View, ActivityIndicator, StatusBar, Dimensions } from 'react-native';
+import LinkedInModal from 'react-native-linkedin';
+import Storage from './localstorage';
 
 const Stack = createStackNavigator();
-const linkedRef = React.createRef(LinkedInModal);
 
-// Main styles variable.
+// measurements and styles
+
+const windowWidth = Dimensions.get('window').width;
+const windowHeight = Dimensions.get('window').height;
+const windowHeight6 = windowHeight / 6;
+const titleWidth = windowWidth - 100;
+const mainButtonWidth = windowWidth - 50;
 
 const styles = StyleSheet.create({
   container: {
@@ -16,19 +22,20 @@ const styles = StyleSheet.create({
     backgroundColor: '#fff',
     justifyContent: 'center',
     alignItems: 'center',
-  },
+  }
 })
 
 // Functions for generating various pages below.
 
 const HomeScreen = ({ navigation }) => {
   return (
-    <Button
-      title="Go to Jane's profile"
-      onPress={() =>
-        navigation.navigate('Profile', { name: 'Jane' })
-      }
-    />
+      <View style={{flex: 1, flexDirection: 'column'}}>
+        <View style={{height:10, width:windowWidth}} />
+        <View style={{width: windowWidth, flexDirection: 'row-reverse', alignItems:'center'}}>
+          <View style={{width: 25}} />
+          <Button style={{width: mainButtonWidth, height: 60, backgroundColor: 'blue'}} />
+        </View>
+      </View>
   );
 };
 
@@ -53,18 +60,14 @@ const SubmitDebriefScreen = () => {
 };
 
 const LoginScreen = () => {
-  return (
-      <View style={styles.container}>
-        <LinkedInModal
-          ref={linkedRef}
-          clientID="86bzo41s6bc4am"
-          clientSecret="O2U1ANijJnQG2E3s"
-          redirectUri="https://cs.wwu.edu/"
-          onSuccess={token => console.log(token)}
-        />
-        <Button title="Log Out" onPress={this.linkedRef.current.logoutAsync()} />
-      </View>
-    );
+  return <View style={styles.container}>
+          <LinkedInModal
+            clientID="86bzo41s6bc4am"
+            clientSecret="O2U1ANijJnQG2E3s"
+            redirectUri="https://cs.wwu.edu/"
+            onSuccess={token => console.log(token)}
+          />
+        </View>;
 };
 
 const PrivacyScreen = () => {
@@ -79,18 +82,27 @@ export default class AppContainer extends React.Component {
     return (
         <NavigationContainer>
           <Stack.Navigator>
-            {false == false ? [
+            {true == false ? [
               <Stack.Screen
                 name="Login"
                 component={LoginScreen}
-                options={{ title: 'Welcome!' }}
               />,
               <Stack.Screen name="Privacy" component={PrivacyScreen} />
             ] : [
               <Stack.Screen
                 name="Home"
                 component={HomeScreen}
-                options={{ title: 'Welcome' }}
+                options={{
+                  headerTitle: "Messages",
+                  headerRight: () => (
+                    <View style={{flexDirection:'row'}}>
+                    <TouchableOpacity onPress={() => alert('This is a button!')} activeOpacity={0.5}>
+                      <Image style={{width:30, height:30}} source={require('./assets/help.png')} />
+                    </TouchableOpacity>
+                    <View style={{width:5}} />
+                    </View>
+                  ),
+                }}
               />,
               <Stack.Screen name="Meetings" component={MeetingsScreen} />,
               <Stack.Screen name="ViewDebrief" component={ViewDebriefScreen} />,

@@ -7,6 +7,7 @@ import LinkedInModal from 'react-native-linkedin';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import Ionicons from 'react-native-vector-icons/Ionicons';
 
+// Needs to be implemented:
 // import Storage from './localstorage';
 
 // navigation controllers

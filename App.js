@@ -5,7 +5,7 @@ import { createStackNavigator } from '@react-navigation/stack';
 import { TouchableOpacity, AsyncStorage, StyleSheet, Text, Image, Button, View, ActivityIndicator, StatusBar, Dimensions } from 'react-native';
 import LinkedInModal from 'react-native-linkedin';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import Ionicons from 'react-native-vector-icons/Ionicons';
+import IonIcon from 'react-native-vector-icons/Ionicons';
 
 // Needs to be implemented:
 // import Storage from './localstorage';
@@ -20,7 +20,7 @@ const windowWidth = Dimensions.get('window').width;
 const windowHeight = Dimensions.get('window').height;
 const windowHeight6 = windowHeight / 6;
 const mainWidth = windowWidth - 50;
-const mainConversationWidth = windowWidth - 120;
+const mainConversationWidth = windowWidth - 130;
 const mainTitleWidth = windowWidth - 90;
 
 const styles = StyleSheet.create({
@@ -56,6 +56,7 @@ const styles = StyleSheet.create({
 //              1 - verified, check for conversations to display
 // const accountType = Storage.getItem('accountType'); 
 const accountType = 0;
+
 const HomeScreen = ({ navigation }) => {
   return (
       <View style={{flex: 1, flexDirection: 'column'}}>
@@ -63,7 +64,7 @@ const HomeScreen = ({ navigation }) => {
         <View style={{height:30, backgroundColor:'#fff'}}></View>
         <View style={{flexDirection:'row-reverse', backgroundColor:'#fff', alignItems:'center'}}>
           <View style={{width:15}}></View>
-          <TouchableOpacity onPress={() => alert('This is a button!')} activeOpacity={0.5}>
+          <TouchableOpacity onPress={() => navigation.navigate('HelpModal')} activeOpacity={0.5}>
             <Image style={{width:30, height:30}} source={require('./assets/help.png')} />
           </TouchableOpacity>
           <View style={{width:mainTitleWidth,textAlign:'center',alignItems:'center'}}>
@@ -82,25 +83,25 @@ const HomeScreen = ({ navigation }) => {
           </View>
         </View>
         ] : [
-          <View style={{width:windowWidth, height:100, flexDirection:'row', alignItems:'center', backgroundColor:'#f6f6f6'}}>
+          <View style={{width:windowWidth, height:110, flexDirection:'row', alignItems:'center', backgroundColor:'#f6f6f6'}}>
             <View style={{width:80, alignItems:'center', justifyContent:'center'}}>
               <Image style={{width:60, height:60}} source={require('./assets/avatar.png')} />
+              <View style={{height:5}} />
+                <View style={styles.MentorBox}>
+                  <Text style={styles.MentorTag}>Mentor</Text>
+                </View>
             </View>
             <View style={{width: mainConversationWidth, flexDirection:'column'}}>
               <View style={{flexDirection:'row'}}>
                 <Text style={{fontSize:20}}>John Smith</Text>
-                <View style={{width:5}} />
-                <View style={styles.MentorBox}>
-                  <Text style={styles.MentorTag}>Mentor</Text>
-                </View>
               </View>
               <View style={{height:4}} />
               <View>
-                <Text>This is a previous of our conversation. I'll...</Text>
+                <Text>This is a preview of our conversation...</Text>
               </View>
             </View>
             <View style={{width:40, alignItems:'center', justifyContent:'center'}}>
-              <Image style={{width:24, height:24}} source={require('./assets/right-message-chevron.png')} />
+              <IonIcon type='Ionicons' name='ios-arrow-dropright' size={30} color='#000000' onPress={() => alert('This will eventually open a conversation!')} />
             </View>
           </View>
         ]}
@@ -108,8 +109,23 @@ const HomeScreen = ({ navigation }) => {
   );
 };
 
-const MeetingsScreen = () => {
-  return <Text></Text>;
+const MeetingsScreen = ({ navigation }) => {
+  return (
+    <View style={{flex: 1, flexDirection: 'column'}}>
+      <View style={{height:22, backgroundColor:'#003F87'}}></View>
+        <View style={{height:30, backgroundColor:'#fff'}}></View>
+        <View style={{flexDirection:'row-reverse', backgroundColor:'#fff', alignItems:'center'}}>
+          <View style={{width:15}}></View>
+          <TouchableOpacity onPress={() => navigation.navigate('HelpModal')} activeOpacity={0.5}>
+            <Image style={{width:30, height:30}} source={require('./assets/help.png')} />
+          </TouchableOpacity>
+          <View style={{width:mainTitleWidth,textAlign:'center',alignItems:'center'}}>
+            <Text style={{fontSize:22}}>Meetings</Text>
+          </View>
+        </View>
+        <View style={{height:30, backgroundColor:'#fff'}}></View>
+    </View>
+  );
 };
 
 const ViewDebriefScreen = () => {
@@ -120,8 +136,13 @@ const MessagingScreen = () => {
   return <Text></Text>;
 };
 
-const HelpScreen = () => {
-  return <Text></Text>;
+const HelpScreen = ({ navigation }) => {
+  return (
+    <View>
+      <Text>Help Screen</Text>
+      <Button onPress={() => navigation.goBack()} title="Dismiss" />
+    </View>
+  );
 };
 
 const SubmitDebriefScreen = () => {
@@ -143,27 +164,9 @@ const PrivacyScreen = () => {
   return <Text></Text>;
 };
 
-function HomeStack() {
+function HomeStackLoggedIn() {
   return (
-    <Stack.Navigator>
-      <Stack.Screen name="Home" component={HomeScreen} />,
-      <Stack.Screen name="ViewDebrief" component={ViewDebriefScreen} />,
-      <Stack.Screen name="Messaging" component={MessagingScreen} />,
-      <Stack.Screen name="Help" component={HelpScreen} />,
-      <Stack.Screen name="SubmitDebrief" component={SubmitDebriefScreen} />
-    </Stack.Navigator>
-  );
-}
-
-// Main class for app. Responsible for rendering app container.
-export default class AppContainer extends React.Component {
-  // Main rendering function. Detects whether user is signed in, then brings them to Home or Login.
-  render() {
-    // The false == false below was signedIn == false
-    return (
-        <NavigationContainer>
-          {false == false ? (
-            <Tab.Navigator
+    <Tab.Navigator
               screenOptions={({ route }) => ({
                 tabBarIcon: ({ focused, color, size }) => {
                   let iconName;
@@ -171,29 +174,48 @@ export default class AppContainer extends React.Component {
                   if (route.name === 'Home') {
                     iconName = focused
                       ? 'ios-home'
-                      : 'ios-home-outline';
+                      : 'ios-home';
                   } else if (route.name === 'Meetings') {
                     iconName = focused ? 'ios-list-box' : 'ios-list';
                   }
 
-                  // You can return any component that you like here!
-                  return <Ionicons name={iconName} size={size} color={color} />;
+                  return <IonIcon name={iconName} size={size} color={color} />;
                 }
               })}
               tabBarOptions={{
-                activeTintColor: 'tomato',
+                activeTintColor: '#003F87',
                 inactiveTintColor: 'gray',
               }}
             >
               <Tab.Screen name="Home" component={HomeScreen} />
               <Tab.Screen name="Meetings" component={MeetingsScreen} />
-            </Tab.Navigator>
-          ) : (
-            <Stack.Navigator>
-              <Stack.Screen name="Login" component={LoginScreen} />
-              <Stack.Screen name="Privacy" component={PrivacyScreen} />
-            </Stack.Navigator>
-          )}
+      </Tab.Navigator>
+  );
+}
+
+const LoggedOutStack = createStackNavigator();
+
+function HomeStackLoggedOut() {
+  return (
+    <LoggedOutStack.Navigator>
+      <LoggedOutStack.Screen name="Login" component={LoginScreen} />
+      <LoggedOutStack.Screen name="Privacy" component={PrivacyScreen} />
+    </LoggedOutStack.Navigator>
+  );
+}
+
+const loggedIn = true;
+
+// Main class for app. Responsible for rendering app container.
+export default class AppContainer extends React.Component {
+  // Main rendering function. Detects whether user is signed in, then brings them to Home or Login.
+  render() {
+    return (
+        <NavigationContainer>
+          <Stack.Navigator mode='modal' headerMode='none'>
+            <Stack.Screen name='Main' component={loggedIn ? HomeStackLoggedIn : HomeStackLoggedOut} />
+            <Stack.Screen name='HelpModal' component={HelpScreen} />
+          </Stack.Navigator>
         </NavigationContainer>
     );
   }

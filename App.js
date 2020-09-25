@@ -124,6 +124,10 @@ const MeetingsScreen = ({ navigation }) => {
           </View>
         </View>
         <View style={{height:30, backgroundColor:'#fff'}}></View>
+        <View style={{height:30}}></View>
+        <View style={{alignItems:'center',justifyContent:'center'}}>
+          <Text style={{fontSize:25}}>Upcoming Meetings</Text>
+        </View>
     </View>
   );
 };
@@ -149,13 +153,40 @@ const SubmitDebriefScreen = () => {
   return <Text></Text>;
 };
 
+const handleLogin = async (data: LinkedInToken) => {
+
+  const { access_token, authentication_code } = data;
+
+  if (!authentication_code) {
+
+    this.setState({ refreshing: true });
+
+    const response = await fetch('https://api.linkedin.com/v2/me', {
+      method: 'GET',
+      headers: {
+        Authorization: 'Bearer ' + access_token,
+      }
+    });
+
+    const payload = await response.json();
+
+    this.setState({ ...payload, refreshing: false });
+
+  } else {
+
+    alert(`authentication_code = ${authentication_code}`);
+
+  }
+
+}
+
 const LoginScreen = () => {
   return <View style={styles.container}>
           <LinkedInModal
             clientID="86bzo41s6bc4am"
             clientSecret="O2U1ANijJnQG2E3s"
             redirectUri="https://cs.wwu.edu/"
-            onSuccess={token => console.log(token)}
+            onSuccess={handleLogin}
           />
         </View>;
 };
@@ -204,7 +235,7 @@ function HomeStackLoggedOut() {
   );
 }
 
-const loggedIn = true;
+const loggedIn = false;
 
 // Main class for app. Responsible for rendering app container.
 export default class AppContainer extends React.Component {

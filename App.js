@@ -6,6 +6,7 @@ import { TouchableOpacity, AsyncStorage, StyleSheet, Text, Image, Button, View, 
 import LinkedInModal from 'react-native-linkedin';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import IonIcon from 'react-native-vector-icons/Ionicons';
+import { GiftedChat } from "react-native-gifted-chat";
 
 // Needs to be implemented:
 // import Storage from './localstorage';
@@ -46,7 +47,6 @@ const styles = StyleSheet.create({
     fontSize: 12
   }
 })
-
 
 // Functions for generating various pages below.
 
@@ -101,7 +101,7 @@ const HomeScreen = ({ navigation }) => {
               </View>
             </View>
             <View style={{width:40, alignItems:'center', justifyContent:'center'}}>
-              <IonIcon type='Ionicons' name='ios-arrow-dropright' size={30} color='#000000' onPress={() => alert('This will eventually open a conversation!')} />
+              <IonIcon type='Ionicons' name='ios-arrow-dropright' size={30} color='#000000' onPress={() => navigation.navigate('Messaging')} />
             </View>
           </View>
         ]}
@@ -127,6 +127,8 @@ const MeetingsScreen = ({ navigation }) => {
         <View style={{height:30}}></View>
         <View style={{alignItems:'center',justifyContent:'center'}}>
           <Text style={{fontSize:25}}>Upcoming Meetings</Text>
+          <View style={{height:30}}></View>
+          <Text style={{fontSize:20}}>No meetings scheduled.</Text>
         </View>
     </View>
   );
@@ -136,8 +138,45 @@ const ViewDebriefScreen = () => {
   return <Text></Text>;
 };
 
-const MessagingScreen = () => {
+const ProposeMeetingScreen = () => {
   return <Text></Text>;
+};
+
+const initialMessages = [
+        {
+          _id: 1,
+          text: "Hello, here's a photo.",
+          createdAt: new Date(),
+          user: {
+            _id: 2,
+            name: 'Adam Bullard',
+            avatar: 'http://adambullard.com/images/smiling.JPG',
+          },
+          image: 'https://i.pinimg.com/originals/5b/b4/8b/5bb48b07fa6e3840bb3afa2bc821b882.jpg'
+        }
+        
+  ];
+
+const MessagingScreen = ({ navigation }) => {
+
+  const [messages, setMessages] = useState(initialMessages);
+
+  return (
+    <View style={{flex: 1, flexDirection: 'column'}}>
+      <View style={{height:22, backgroundColor:'#003F87'}}></View>
+      <View style={{height:30, backgroundColor:'#fff'}}></View>
+      <View style={{flexDirection:'row-reverse', backgroundColor:'#fff'}}>
+        <View style={{width:25}} />
+        <IonIcon type='Ionicons' name='ios-document' size={30} color='#000000' onPress={() => navigation.navigate('ProposeMeeting')} />
+        <View style={{width:mainTitleWidth,textAlign:'center',alignItems:'center'}}>
+          <Text style={{fontSize:22}}>John Smith</Text>
+        </View>
+        <IonIcon type='Ionicons' name='ios-close' size={30} color='#000000' onPress={() => navigation.navigate('Main')} />
+      </View>
+      <View style={{height:30, backgroundColor:'#fff'}}></View>
+      <GiftedChat messages={messages} />
+    </View>
+  );
 };
 
 const HelpScreen = ({ navigation }) => {
@@ -235,7 +274,7 @@ function HomeStackLoggedOut() {
   );
 }
 
-const loggedIn = false;
+const loggedIn = true;
 
 // Main class for app. Responsible for rendering app container.
 export default class AppContainer extends React.Component {
@@ -243,9 +282,11 @@ export default class AppContainer extends React.Component {
   render() {
     return (
         <NavigationContainer>
-          <Stack.Navigator mode='modal' headerMode='none'>
+          <Stack.Navigator headerMode='none'>
             <Stack.Screen name='Main' component={loggedIn ? HomeStackLoggedIn : HomeStackLoggedOut} />
             <Stack.Screen name='HelpModal' component={HelpScreen} />
+            <Stack.Screen name='Messaging' component={MessagingScreen} />
+            <Stack.Screen name='ProposeMeeting' component={ProposeMeetingScreen} />
           </Stack.Navigator>
         </NavigationContainer>
     );

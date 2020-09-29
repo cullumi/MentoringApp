@@ -7,6 +7,7 @@ import LinkedInModal from 'react-native-linkedin';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import IonIcon from 'react-native-vector-icons/Ionicons';
 import { GiftedChat } from "react-native-gifted-chat";
+import { debug } from 'react-native-reanimated';
 
 // Needs to be implemented:
 // import Storage from './localstorage';
@@ -57,55 +58,63 @@ const styles = StyleSheet.create({
 // const accountType = Storage.getItem('accountType'); 
 const accountType = 0;
 
+const unapprovedAccount = () => {
+  return (
+  <View style={{height:50, width:windowWidth}} />,
+  <View style={{width: windowWidth, flexDirection: 'row-reverse', alignItems:'center'}}>
+    <View style={{width: 25}} />
+    <View style={{width: mainWidth, alignItems:'center', justifyContent:'center'}}>
+      <Text style={{textAlign:'center', fontSize:22}}>Welcome to the CSWWU Mentors!</Text>
+      <View style={{height: 25}} />
+      <Text style={{textAlign:'center', fontSize:22}}>Admins are verifying your profile, check back later to be connected with your mentor/mentee.</Text>
+    </View>
+  </View>
+  );
+};
+
+const approvedAccount = () => {
+  return (
+  <View style={{width:windowWidth, height:110, flexDirection:'row', alignItems:'center', backgroundColor:'#f6f6f6'}}>
+    <View style={{width:80, alignItems:'center', justifyContent:'center'}}>
+      <Image style={{width:60, height:60}} source={require('./assets/avatar.png')} />
+      <View style={{height:5}} />
+      <View style={styles.MentorBox}>
+        <Text style={styles.MentorTag}>Mentor</Text>
+      </View>
+    </View>
+    <View style={{width: mainConversationWidth, flexDirection:'column'}}>
+    <View style={{flexDirection:'row'}}>
+      <Text style={{fontSize:20}}>John Smith</Text>
+    </View>
+      <View style={{height:4}} />
+      <View>
+        <Text>This is a preview of our conversation...</Text>
+      </View>
+    </View>
+    <View style={{width:40, alignItems:'center', justifyContent:'center'}}>
+      <IonIcon type='Ionicons' name='ios-arrow-dropright' size={30} color='#000000' onPress={() => navigation.navigate('Messaging')} />
+    </View>
+  </View>
+  );
+};
+
 const HomeScreen = ({ navigation }) => {
   return (
-      <View style={{flex: 1, flexDirection: 'column'}}>
-        <View style={{height:22, backgroundColor:'#003F87'}}></View>
-        <View style={{height:30, backgroundColor:'#fff'}}></View>
-        <View style={{flexDirection:'row-reverse', backgroundColor:'#fff', alignItems:'center'}}>
-          <View style={{width:15}}></View>
-          <TouchableOpacity onPress={() => navigation.navigate('HelpModal')} activeOpacity={0.5}>
-            <Image style={{width:30, height:30}} source={require('./assets/help.png')} />
-          </TouchableOpacity>
-          <View style={{width:mainTitleWidth,textAlign:'center',alignItems:'center'}}>
-            <Text style={{fontSize:22}}>Home</Text>
-          </View>
+    <View style={{flex: 1, flexDirection: 'column'}}>
+      <View style={{height:22, backgroundColor:'#003F87'}}></View>
+      <View style={{height:30, backgroundColor:'#fff'}}></View>
+      <View style={{flexDirection:'row-reverse', backgroundColor:'#fff', alignItems:'center'}}>
+        <View style={{width:15}}></View>
+        <TouchableOpacity onPress={() => navigation.navigate('HelpModal')} activeOpacity={0.5}>
+          <Image style={{width:30, height:30}} source={require('./assets/help.png')} />
+        </TouchableOpacity>
+        <View style={{width:mainTitleWidth,textAlign:'center',alignItems:'center'}}>
+          <Text style={{fontSize:22}}>Home</Text>
         </View>
-        <View style={{height:30, backgroundColor:'#fff'}}></View>
-        {accountType == 1 ? [
-          <View style={{height:50, width:windowWidth}} />,
-          <View style={{width: windowWidth, flexDirection: 'row-reverse', alignItems:'center'}}>
-            <View style={{width: 25}} />
-            <View style={{width: mainWidth, alignItems:'center', justifyContent:'center'}}>
-              <Text style={{textAlign:'center', fontSize:22}}>Welcome to the CSWWU Mentors!</Text>
-              <View style={{height: 25}} />
-              <Text style={{textAlign:'center', fontSize:22}}>Admins are verifying your profile, check back later to be connected with your mentor/mentee.</Text>
-          </View>
-        </View>
-        ] : [
-          <View style={{width:windowWidth, height:110, flexDirection:'row', alignItems:'center', backgroundColor:'#f6f6f6'}}>
-            <View style={{width:80, alignItems:'center', justifyContent:'center'}}>
-              <Image style={{width:60, height:60}} source={require('./assets/avatar.png')} />
-              <View style={{height:5}} />
-                <View style={styles.MentorBox}>
-                  <Text style={styles.MentorTag}>Mentor</Text>
-                </View>
-            </View>
-            <View style={{width: mainConversationWidth, flexDirection:'column'}}>
-              <View style={{flexDirection:'row'}}>
-                <Text style={{fontSize:20}}>John Smith</Text>
-              </View>
-              <View style={{height:4}} />
-              <View>
-                <Text>This is a preview of our conversation...</Text>
-              </View>
-            </View>
-            <View style={{width:40, alignItems:'center', justifyContent:'center'}}>
-              <IonIcon type='Ionicons' name='ios-arrow-dropright' size={30} color='#000000' onPress={() => navigation.navigate('Messaging')} />
-            </View>
-          </View>
-        ]}
       </View>
+      <View style={{height:30, backgroundColor:'#fff'}}></View>
+      { accountType == 1 ? [unapprovedAccount()] : [approvedAccount()] }
+    </View>
   );
 };
 
@@ -192,44 +201,6 @@ const SubmitDebriefScreen = () => {
   return <Text></Text>;
 };
 
-const handleLogin = async (data: LinkedInToken) => {
-
-  const { access_token, authentication_code } = data;
-
-  if (!authentication_code) {
-
-    this.setState({ refreshing: true });
-
-    const response = await fetch('https://api.linkedin.com/v2/me', {
-      method: 'GET',
-      headers: {
-        Authorization: 'Bearer ' + access_token,
-      }
-    });
-
-    const payload = await response.json();
-
-    this.setState({ ...payload, refreshing: false });
-
-  } else {
-
-    alert(`authentication_code = ${authentication_code}`);
-
-  }
-
-}
-
-const LoginScreen = () => {
-  return <View style={styles.container}>
-          <LinkedInModal
-            clientID="86bzo41s6bc4am"
-            clientSecret="O2U1ANijJnQG2E3s"
-            redirectUri="https://cs.wwu.edu/"
-            onSuccess={handleLogin}
-          />
-        </View>;
-};
-
 const PrivacyScreen = () => {
   return <Text></Text>;
 };
@@ -263,6 +234,49 @@ function HomeStackLoggedIn() {
   );
 }
 
+class LoginScreen extends React.Component {
+  constructor(props) {
+    super(props)
+    this.state = {
+      refreshing : false
+    };
+
+    // this.handleLogin = this.handleLogin.bind(this);
+  }
+  
+  render () {
+    return <View style={styles.container}>
+              <LinkedInModal
+                clientID="86bzo41s6bc4am"
+                clientSecret="O2U1ANijJnQG2E3s"
+                redirectUri="https://cs.wwu.edu/"
+                onSuccess={() => this.handleLogin}
+              />
+          </View>;
+  }
+
+  async handleLogin(data) {
+    //: LinkedInToken) => {
+  
+    const { access_token, authentication_code } = data;
+  
+    if (!authentication_code) { 
+      this.setState({ refreshing: true });
+      const response = await fetch('https://api.linkedin.com/v2/me', {
+        method: 'GET',
+        headers: {
+          Authorization: 'Bearer ' + access_token,
+        }
+      });
+      const payload = await response.json();
+      this.setState({ ...payload, refreshing: false });
+    } 
+    else {
+      alert(`authentication_code = ${authentication_code}`);
+    }
+  }
+};
+
 const LoggedOutStack = createStackNavigator();
 
 function HomeStackLoggedOut() {
@@ -271,10 +285,10 @@ function HomeStackLoggedOut() {
       <LoggedOutStack.Screen name="Login" component={LoginScreen} />
       <LoggedOutStack.Screen name="Privacy" component={PrivacyScreen} />
     </LoggedOutStack.Navigator>
-  );
+  )
 }
 
-const loggedIn = true;
+const loggedIn = false;
 
 // Main class for app. Responsible for rendering app container.
 export default class AppContainer extends React.Component {

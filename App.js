@@ -201,11 +201,7 @@ const SubmitDebriefScreen = () => {
   return <Text></Text>;
 };
 
-const PrivacyScreen = () => {
-  return <Text></Text>;
-};
-
-function HomeStackLoggedIn() {
+function HomeStack() {
   return (
     <Tab.Navigator
               screenOptions={({ route }) => ({
@@ -240,26 +236,37 @@ class LoginScreen extends React.Component {
     this.state = {
       refreshing : false
     };
-
-    // this.handleLogin = this.handleLogin.bind(this);
   }
   
   render () {
-    return <View style={styles.container}>
+    console.log("Rendering Login Screen" + this);
+    console.log("Navigation: " + this.props.navigation);
+
+    // return <View style={styles.container}>
+    return  <View style={styles.container}>
               <LinkedInModal
                 clientID="86bzo41s6bc4am"
                 clientSecret="O2U1ANijJnQG2E3s"
                 redirectUri="https://cs.wwu.edu/"
-                onSuccess={() => this.handleLogin}
+                onSuccess={data => {
+                  this.handleLogin(data);
+                  if (this.state.id != undefined) {
+                    this.props.navigation.navigate('Privacy');
+                  }
+                }}
               />
-          </View>;
+            </View>
   }
 
   async handleLogin(data) {
     //: LinkedInToken) => {
   
+    console.log("Authenticating...", data);
+
     const { access_token, authentication_code } = data;
   
+    console.log("Pre-Authentication Code: " + authentication_code);
+
     if (!authentication_code) { 
       this.setState({ refreshing: true });
       const response = await fetch('https://api.linkedin.com/v2/me', {
@@ -270,16 +277,33 @@ class LoginScreen extends React.Component {
       });
       const payload = await response.json();
       this.setState({ ...payload, refreshing: false });
+      console.log(JSON.parse(JSON.stringify(payload)));
     } 
     else {
-      alert(`authentication_code = ${authentication_code}`);
+      console.log("Authentication Code Received: " + authentication_code);
+      // alert(this.navigation.navigate('Privacy'));//`authentication_code = ${authentication_code}`);
     }
   }
+}
+
+const LoginWrapper = ({navigation}) => {
+
+  console.log("Nav:" + navigation);
+
+  return <View style={styles.container}>
+      <LoginScreen nav={navigation} />
+  </View>
+}
+
+const PrivacyScreen = ({navigation}) => {
+  loggedIn = true;
+  navigation.navigate('Main')
+  return (null);
 };
 
 const LoggedOutStack = createStackNavigator();
 
-function HomeStackLoggedOut() {
+const LoginStack = ({route, navigation}) => {
   return (
     <LoggedOutStack.Navigator>
       <LoggedOutStack.Screen name="Login" component={LoginScreen} />
@@ -288,16 +312,20 @@ function HomeStackLoggedOut() {
   )
 }
 
-const loggedIn = false;
-
 // Main class for app. Responsible for rendering app container.
 export default class AppContainer extends React.Component {
+
   // Main rendering function. Detects whether user is signed in, then brings them to Home or Login.
   render() {
+    console.log("Rendering NavigationContainer");
+
     return (
         <NavigationContainer>
           <Stack.Navigator headerMode='none'>
-            <Stack.Screen name='Main' component={loggedIn ? HomeStackLoggedIn : HomeStackLoggedOut} />
+            {/* <Stack.Screen name='Main' component={loggedIn ? HomeStack : LoginStack} /> */}
+            <Stack.Screen name='Login' component={LoginScreen} />
+            <Stack.Screen name='Privacy' component={PrivacyScreen} />
+            <Stack.Screen name='Main' component={HomeStack} />
             <Stack.Screen name='HelpModal' component={HelpScreen} />
             <Stack.Screen name='Messaging' component={MessagingScreen} />
             <Stack.Screen name='ProposeMeeting' component={ProposeMeetingScreen} />

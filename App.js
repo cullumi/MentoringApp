@@ -49,14 +49,70 @@ const styles = StyleSheet.create({
   }
 })
 
-// Functions for generating various pages below.
-
 // Get necessary data for HomeScreen.
 
 // accountType: 0 - not verified, please wait until admins pair you with mentor/mentees
 //              1 - verified, check for conversations to display
-// const accountType = Storage.getItem('accountType'); 
-const accountType = 0;
+// const accountType = Storage.getItem('accountType');
+const accountType = 0; 
+
+
+
+// HOME STACK
+
+function HomeStack() {
+  return (
+    <Tab.Navigator
+              screenOptions={({ route }) => ({
+                tabBarIcon: ({ focused, color, size }) => {
+                  let iconName;
+
+                  if (route.name === 'Home') {
+                    iconName = focused
+                      ? 'ios-home'
+                      : 'ios-home';
+                  } else if (route.name === 'Meetings') {
+                    iconName = focused ? 'ios-list-box' : 'ios-list';
+                  }
+
+                  return <IonIcon name={iconName} size={size} color={color} />;
+                }
+              })}
+              tabBarOptions={{
+                activeTintColor: '#003F87',
+                inactiveTintColor: 'gray',
+              }}
+            >
+              <Tab.Screen name="Home" component={HomeScreen} />
+              <Tab.Screen name="Meetings" component={MeetingsScreen} />
+      </Tab.Navigator>
+  );
+}
+
+
+
+// HOME SCREEN
+
+// Note: Separated unapprovedAccount and approvedAccount code into their own methods, but just because I could.
+const HomeScreen = ({ navigation }) => {
+  return (
+    <View style={{flex: 1, flexDirection: 'column'}}>
+      <View style={{height:22, backgroundColor:'#003F87'}}></View>
+      <View style={{height:30, backgroundColor:'#fff'}}></View>
+      <View style={{flexDirection:'row-reverse', backgroundColor:'#fff', alignItems:'center'}}>
+        <View style={{width:15}}></View>
+        <TouchableOpacity onPress={() => navigation.navigate('HelpModal')} activeOpacity={0.5}>
+          <Image style={{width:30, height:30}} source={require('./assets/help.png')} />
+        </TouchableOpacity>
+        <View style={{width:mainTitleWidth,textAlign:'center',alignItems:'center'}}>
+          <Text style={{fontSize:22}}>Home</Text>
+        </View>
+      </View>
+      <View style={{height:30, backgroundColor:'#fff'}}></View>
+      { accountType == 1 ? [unapprovedAccount()] : [approvedAccount()] }
+    </View>
+  );
+};
 
 const unapprovedAccount = () => {
   return (
@@ -98,25 +154,9 @@ const approvedAccount = () => {
   );
 };
 
-const HomeScreen = ({ navigation }) => {
-  return (
-    <View style={{flex: 1, flexDirection: 'column'}}>
-      <View style={{height:22, backgroundColor:'#003F87'}}></View>
-      <View style={{height:30, backgroundColor:'#fff'}}></View>
-      <View style={{flexDirection:'row-reverse', backgroundColor:'#fff', alignItems:'center'}}>
-        <View style={{width:15}}></View>
-        <TouchableOpacity onPress={() => navigation.navigate('HelpModal')} activeOpacity={0.5}>
-          <Image style={{width:30, height:30}} source={require('./assets/help.png')} />
-        </TouchableOpacity>
-        <View style={{width:mainTitleWidth,textAlign:'center',alignItems:'center'}}>
-          <Text style={{fontSize:22}}>Home</Text>
-        </View>
-      </View>
-      <View style={{height:30, backgroundColor:'#fff'}}></View>
-      { accountType == 1 ? [unapprovedAccount()] : [approvedAccount()] }
-    </View>
-  );
-};
+
+
+// MEETING SCREENS
 
 const MeetingsScreen = ({ navigation }) => {
   return (
@@ -147,9 +187,17 @@ const ViewDebriefScreen = () => {
   return <Text></Text>;
 };
 
+const SubmitDebriefScreen = () => {
+  return <Text></Text>;
+};
+
 const ProposeMeetingScreen = () => {
   return <Text></Text>;
 };
+
+
+
+// MESSAGING SCREEN
 
 const initialMessages = [
         {
@@ -169,7 +217,7 @@ const initialMessages = [
 const MessagingScreen = ({ navigation }) => {
 
   const [messages, setMessages] = useState(initialMessages);
-
+  
   return (
     <View style={{flex: 1, flexDirection: 'column'}}>
       <View style={{height:22, backgroundColor:'#003F87'}}></View>
@@ -197,39 +245,13 @@ const HelpScreen = ({ navigation }) => {
   );
 };
 
-const SubmitDebriefScreen = () => {
-  return <Text></Text>;
-};
 
-function HomeStack() {
-  return (
-    <Tab.Navigator
-              screenOptions={({ route }) => ({
-                tabBarIcon: ({ focused, color, size }) => {
-                  let iconName;
 
-                  if (route.name === 'Home') {
-                    iconName = focused
-                      ? 'ios-home'
-                      : 'ios-home';
-                  } else if (route.name === 'Meetings') {
-                    iconName = focused ? 'ios-list-box' : 'ios-list';
-                  }
+// LOGIN AND PRIVACY SCREENS
 
-                  return <IonIcon name={iconName} size={size} color={color} />;
-                }
-              })}
-              tabBarOptions={{
-                activeTintColor: '#003F87',
-                inactiveTintColor: 'gray',
-              }}
-            >
-              <Tab.Screen name="Home" component={HomeScreen} />
-              <Tab.Screen name="Meetings" component={MeetingsScreen} />
-      </Tab.Navigator>
-  );
-}
-
+// A LoginScreen class-- used to help with some state setting problems-- "refreshing" is now within this class' scope.
+// Note: the Stack Navigator automatically sets the "navigation" prop, which can be accessed via this.props.navigation.
+// The original issue I stumbled across was an attempt to pass a "Type" (a clear remnant of the TypeScript source).
 class LoginScreen extends React.Component {
   constructor(props) {
     super(props)
@@ -238,11 +260,8 @@ class LoginScreen extends React.Component {
     };
   }
   
+  // Note: passing in handleLogin with "this" inside of a "big-arrow function" ensures handleLogin can make use of the LoginScreen state props.  Mind the this!
   render () {
-    console.log("Rendering Login Screen" + this);
-    console.log("Navigation: " + this.props.navigation);
-
-    // return <View style={styles.container}>
     return  <View style={styles.container}>
               <LinkedInModal
                 clientID="86bzo41s6bc4am"
@@ -258,15 +277,10 @@ class LoginScreen extends React.Component {
             </View>
   }
 
+  // handles fetching of login information; Note: payload contains profile information upon a successful login.
   async handleLogin(data) {
-    //: LinkedInToken) => {
-  
-    console.log("Authenticating...", data);
-
     const { access_token, authentication_code } = data;
   
-    console.log("Pre-Authentication Code: " + authentication_code);
-
     if (!authentication_code) { 
       this.setState({ refreshing: true });
       const response = await fetch('https://api.linkedin.com/v2/me', {
@@ -281,48 +295,30 @@ class LoginScreen extends React.Component {
     } 
     else {
       console.log("Authentication Code Received: " + authentication_code);
-      // alert(this.navigation.navigate('Privacy'));//`authentication_code = ${authentication_code}`);
     }
   }
 }
 
-const LoginWrapper = ({navigation}) => {
-
-  console.log("Nav:" + navigation);
-
-  return <View style={styles.container}>
-      <LoginScreen nav={navigation} />
-  </View>
-}
-
+// The PrivacyScreen function -- simply navigates to Main right after coming from Login, for the time being.
 const PrivacyScreen = ({navigation}) => {
-  loggedIn = true;
   navigation.navigate('Main')
   return (null);
 };
 
-const LoggedOutStack = createStackNavigator();
 
-const LoginStack = ({route, navigation}) => {
-  return (
-    <LoggedOutStack.Navigator>
-      <LoggedOutStack.Screen name="Login" component={LoginScreen} />
-      <LoggedOutStack.Screen name="Privacy" component={PrivacyScreen} />
-    </LoggedOutStack.Navigator>
-  )
-}
+
+// APP CONTAINER
 
 // Main class for app. Responsible for rendering app container.
 export default class AppContainer extends React.Component {
 
-  // Main rendering function. Detects whether user is signed in, then brings them to Home or Login.
+  // Main rendering function. Always begins on the LoginScreen.
+  // Note: The Login and Privacy screens have been added to the Stack Navigator.
+  //        I found that React Navigation creates problems when trying to pass along state.
   render() {
-    console.log("Rendering NavigationContainer");
-
     return (
         <NavigationContainer>
           <Stack.Navigator headerMode='none'>
-            {/* <Stack.Screen name='Main' component={loggedIn ? HomeStack : LoginStack} /> */}
             <Stack.Screen name='Login' component={LoginScreen} />
             <Stack.Screen name='Privacy' component={PrivacyScreen} />
             <Stack.Screen name='Main' component={HomeStack} />

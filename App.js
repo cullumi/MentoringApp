@@ -7,7 +7,8 @@ import LinkedInModal from 'react-native-linkedin';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import IonIcon from 'react-native-vector-icons/Ionicons';
 import { GiftedChat } from "react-native-gifted-chat";
-import { debug } from 'react-native-reanimated';
+import { color, debug } from 'react-native-reanimated';
+import { Colors } from 'react-native/Libraries/NewAppScreen';
 
 // Needs to be implemented:
 // import Storage from './localstorage';
@@ -21,14 +22,20 @@ const Tab = createBottomTabNavigator();
 const windowWidth = Dimensions.get('window').width;
 const windowHeight = Dimensions.get('window').height;
 const windowHeight6 = windowHeight / 6;
-const mainWidth = windowWidth - 50;
+const mainWidth = windowWidth - 60;
 const mainConversationWidth = windowWidth - 130;
 const mainTitleWidth = windowWidth - 90;
+
+const colors = {
+  vikingBlue: '#003F87',
+  white: '#fff',
+  lightGrey: '#f6f6f6'
+}
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: colors.white,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -79,7 +86,7 @@ function HomeStack() {
                 }
               })}
               tabBarOptions={{
-                activeTintColor: '#003F87',
+                activeTintColor: colors.vikingBlue,
                 inactiveTintColor: 'gray',
               }}
             >
@@ -89,6 +96,24 @@ function HomeStack() {
   );
 }
 
+const titleBar = (title, navFunction) => {
+  return (
+    <View>
+      <View style={{height:25, backgroundColor: colors.vikingBlue}}></View>
+      <View style={{height:30, backgroundColor: colors.white}}></View>
+      <View style={{flexDirection:'row-reverse', backgroundColor: colors.white, alignItems:'center'}}>
+        <View style={{width:15}}></View>
+        <TouchableOpacity onPress={navFunction} activeOpacity={0.5}>
+          <Image style={{width:30, height:30}} source={require('./assets/help.png')} />
+        </TouchableOpacity>
+        <View style={{width:mainTitleWidth,textAlign:'center',alignItems:'center'}}>
+          <Text style={{fontSize:22}}>{title}</Text>
+        </View>
+      </View>
+      <View style={{height:30, backgroundColor: colors.white}}></View>
+    </View>
+  );
+};
 
 
 // HOME SCREEN
@@ -97,18 +122,7 @@ function HomeStack() {
 const HomeScreen = ({ navigation }) => {
   return (
     <View style={{flex: 1, flexDirection: 'column'}}>
-      <View style={{height:22, backgroundColor:'#003F87'}}></View>
-      <View style={{height:30, backgroundColor:'#fff'}}></View>
-      <View style={{flexDirection:'row-reverse', backgroundColor:'#fff', alignItems:'center'}}>
-        <View style={{width:15}}></View>
-        <TouchableOpacity onPress={() => navigation.navigate('HelpModal')} activeOpacity={0.5}>
-          <Image style={{width:30, height:30}} source={require('./assets/help.png')} />
-        </TouchableOpacity>
-        <View style={{width:mainTitleWidth,textAlign:'center',alignItems:'center'}}>
-          <Text style={{fontSize:22}}>Home</Text>
-        </View>
-      </View>
-      <View style={{height:30, backgroundColor:'#fff'}}></View>
+      { titleBar("Home", () => navigation.navigate('HelpModal')) }
       { accountType == 1 ? [unapprovedAccount()] : [approvedAccount()] }
     </View>
   );
@@ -120,6 +134,7 @@ const unapprovedAccount = () => {
   <View style={{width: windowWidth, flexDirection: 'row-reverse', alignItems:'center'}}>
     <View style={{width: 25}} />
     <View style={{width: mainWidth, alignItems:'center', justifyContent:'center'}}>
+      <View style={{height: 50}} />
       <Text style={{textAlign:'center', fontSize:22}}>Welcome to the CSWWU Mentors!</Text>
       <View style={{height: 25}} />
       <Text style={{textAlign:'center', fontSize:22}}>Admins are verifying your profile, check back later to be connected with your mentor/mentee.</Text>
@@ -130,7 +145,7 @@ const unapprovedAccount = () => {
 
 const approvedAccount = () => {
   return (
-  <View style={{width:windowWidth, height:110, flexDirection:'row', alignItems:'center', backgroundColor:'#f6f6f6'}}>
+  <View style={{width:windowWidth, height:110, flexDirection:'row', alignItems:'center', backgroundColor: colors.lightGrey}}>
     <View style={{width:80, alignItems:'center', justifyContent:'center'}}>
       <Image style={{width:60, height:60}} source={require('./assets/avatar.png')} />
       <View style={{height:5}} />
@@ -144,12 +159,12 @@ const approvedAccount = () => {
     </View>
       <View style={{height:4}} />
       <View>
-        <Text>This is a preview of our conversation...</Text>
+        <Text></Text>
       </View>
     </View>
-    <View style={{width:40, alignItems:'center', justifyContent:'center'}}>
+    {/* <View style={{width:40, alignItems:'center', justifyContent:'center'}}>
       <IonIcon type='Ionicons' name='ios-arrow-dropright' size={30} color='#000000' onPress={() => navigation.navigate('Messaging')} />
-    </View>
+    </View> */}
   </View>
   );
 };
@@ -161,24 +176,13 @@ const approvedAccount = () => {
 const MeetingsScreen = ({ navigation }) => {
   return (
     <View style={{flex: 1, flexDirection: 'column'}}>
-      <View style={{height:22, backgroundColor:'#003F87'}}></View>
-        <View style={{height:30, backgroundColor:'#fff'}}></View>
-        <View style={{flexDirection:'row-reverse', backgroundColor:'#fff', alignItems:'center'}}>
-          <View style={{width:15}}></View>
-          <TouchableOpacity onPress={() => navigation.navigate('HelpModal')} activeOpacity={0.5}>
-            <Image style={{width:30, height:30}} source={require('./assets/help.png')} />
-          </TouchableOpacity>
-          <View style={{width:mainTitleWidth,textAlign:'center',alignItems:'center'}}>
-            <Text style={{fontSize:22}}>Meetings</Text>
-          </View>
-        </View>
-        <View style={{height:30, backgroundColor:'#fff'}}></View>
+      { titleBar("Meetings", () => navigation.navigate('HelpModal')) }
+      <View style={{height:30}}></View>
+      <View style={{alignItems:'center',justifyContent:'center'}}>
+        <Text style={{fontSize:25}}>Upcoming Meetings</Text>
         <View style={{height:30}}></View>
-        <View style={{alignItems:'center',justifyContent:'center'}}>
-          <Text style={{fontSize:25}}>Upcoming Meetings</Text>
-          <View style={{height:30}}></View>
-          <Text style={{fontSize:20}}>No meetings scheduled.</Text>
-        </View>
+        <Text style={{fontSize:20}}>No meetings scheduled.</Text>
+      </View>
     </View>
   );
 };
@@ -220,9 +224,9 @@ const MessagingScreen = ({ navigation }) => {
   
   return (
     <View style={{flex: 1, flexDirection: 'column'}}>
-      <View style={{height:22, backgroundColor:'#003F87'}}></View>
-      <View style={{height:30, backgroundColor:'#fff'}}></View>
-      <View style={{flexDirection:'row-reverse', backgroundColor:'#fff'}}>
+      <View style={{height:22, backgroundColor: colors.vikingBlue}}></View>
+      <View style={{height:30, backgroundColor: colors.white}}></View>
+      <View style={{flexDirection:'row-reverse', backgroundColor: colors.white}}>
         <View style={{width:25}} />
         <IonIcon type='Ionicons' name='ios-document' size={30} color='#000000' onPress={() => navigation.navigate('ProposeMeeting')} />
         <View style={{width:mainTitleWidth,textAlign:'center',alignItems:'center'}}>
@@ -230,7 +234,7 @@ const MessagingScreen = ({ navigation }) => {
         </View>
         <IonIcon type='Ionicons' name='ios-close' size={30} color='#000000' onPress={() => navigation.navigate('Main')} />
       </View>
-      <View style={{height:30, backgroundColor:'#fff'}}></View>
+      <View style={{height:30, backgroundColor: colors.white}}></View>
       <GiftedChat messages={messages} />
     </View>
   );
@@ -239,8 +243,8 @@ const MessagingScreen = ({ navigation }) => {
 const HelpScreen = ({ navigation }) => {
   return (
     <View>
-      <Text>Help Screen</Text>
-      <Button onPress={() => navigation.goBack()} title="Dismiss" />
+      { titleBar("Help Screen", () => navigation.goBack()) }
+      <Button color={colors.vikingBlue} onPress={() => navigation.goBack()} title="Dismiss" />
     </View>
   );
 };
@@ -262,6 +266,9 @@ class LoginScreen extends React.Component {
   
   // Note: passing in handleLogin with "this" inside of a "big-arrow function" ensures handleLogin can make use of the LoginScreen state props.  Mind the this!
   render () {
+    if (this.state.id != undefined) {
+      this.props.navigation.navigate('Privacy');
+    }
     return  <View style={styles.container}>
               <LinkedInModal
                 clientID="86bzo41s6bc4am"
@@ -323,7 +330,7 @@ export default class AppContainer extends React.Component {
             <Stack.Screen name='Privacy' component={PrivacyScreen} />
             <Stack.Screen name='Main' component={HomeStack} />
             <Stack.Screen name='HelpModal' component={HelpScreen} />
-            <Stack.Screen name='Messaging' component={MessagingScreen} />
+            {/* <Stack.Screen name='Messaging' component={MessagingScreen} /> */}
             <Stack.Screen name='ProposeMeeting' component={ProposeMeetingScreen} />
           </Stack.Navigator>
         </NavigationContainer>

@@ -61,7 +61,44 @@ const styles = StyleSheet.create({
 // accountType: 0 - not verified, please wait until admins pair you with mentor/mentees
 //              1 - verified, check for conversations to display
 // const accountType = Storage.getItem('accountType');
+const accountID = 1;
 const accountType = 0; 
+
+const accounts = {
+  0:{
+    type:"Mentor",
+    connections:[2, 3,],
+  },
+  1:{
+    type:"Mentee",
+    connections:[2, 3, 4, 5,],
+  },
+  2:{
+    type:"Mentor",
+    connections:[0, 1, 3,],
+  },
+  3:{
+    type:"Mentee",
+    connections:[0, 1, 2,],
+  },
+  4:{
+    type:"Mentor",
+    connections:[1,5,],
+  },
+  5:{
+    type:"Mentee",
+    connections:[1,4,],
+  },
+};
+
+const meetings = {
+  "0-1-11/19/2020":{
+    mentorID:0,
+    menteeID:1,
+    date:"11.19.2020",
+    time:"6:00pm",
+  },
+}
 
 
 
@@ -70,29 +107,29 @@ const accountType = 0;
 function HomeStack() {
   return (
     <Tab.Navigator
-              screenOptions={({ route }) => ({
-                tabBarIcon: ({ focused, color, size }) => {
-                  let iconName;
+        screenOptions={({ route }) => ({
+            tabBarIcon: ({ focused, color, size }) => {
+                let iconName;
 
-                  if (route.name === 'Home') {
+                if (route.name === 'Home') {
                     iconName = focused
-                      ? 'ios-home'
-                      : 'ios-home';
-                  } else if (route.name === 'Meetings') {
+                    ? 'ios-home'
+                    : 'ios-home';
+                } else if (route.name === 'Meetings') {
                     iconName = focused ? 'ios-list-box' : 'ios-list';
-                  }
-
-                  return <IonIcon name={iconName} size={size} color={color} />;
                 }
-              })}
-              tabBarOptions={{
-                activeTintColor: colors.vikingBlue,
-                inactiveTintColor: 'gray',
-              }}
-            >
-              <Tab.Screen name="Home" component={HomeScreen} />
-              <Tab.Screen name="Meetings" component={MeetingsScreen} />
-      </Tab.Navigator>
+
+                return <IonIcon name={iconName} size={size} color={color} />;
+            }
+        })}
+        tabBarOptions={{
+            activeTintColor: colors.vikingBlue,
+            inactiveTintColor: 'gray',
+        }}
+    >
+        <Tab.Screen name="Home" component={HomeScreen} />
+        <Tab.Screen name="Meetings" component={MeetingsScreen} />
+    </Tab.Navigator>
   );
 }
 
@@ -123,7 +160,7 @@ const HomeScreen = ({ navigation }) => {
   return (
     <View style={{flex: 1, flexDirection: 'column'}}>
       { titleBar("Home", () => navigation.navigate('HelpModal')) }
-      { accountType == 1 ? [unapprovedAccount()] : [approvedAccount()] }
+      { accountType == 1 ? [unapprovedAccount()] : [approvedAccount(accountID)] }
     </View>
   );
 };
@@ -143,29 +180,37 @@ const unapprovedAccount = () => {
   );
 };
 
-const approvedAccount = () => {
+const approvedAccount = (accountID) => {  
   return (
-  <View style={{width:windowWidth, height:110, flexDirection:'row', alignItems:'center', backgroundColor: colors.lightGrey}}>
-    <View style={{width:80, alignItems:'center', justifyContent:'center'}}>
-      <Image style={{width:60, height:60}} source={require('./assets/avatar.png')} />
-      <View style={{height:5}} />
-      <View style={styles.MentorBox}>
-        <Text style={styles.MentorTag}>Mentor</Text>
+    <View>
+      { accounts[accountID].connections.map( (id) => connectionItem(id) ) }
+    </View>
+  );
+};
+
+const connectionItem = (connectionID) => {
+  return (
+    <View style={{width:windowWidth, height:110, flexDirection:'row', alignItems:'center', backgroundColor: colors.lightGrey}} >
+      <View style={{width:80, alignItems:'center', justifyContent:'center'}}>
+        <Image style={{width:60, height:60}} source={require('./assets/avatar.png')} />
+        <View style={{height:5}} />
+        <View style={styles.MentorBox}>
+          <Text style={styles.MentorTag}>{ accounts[connectionID].type } </Text>
+        </View>
       </View>
-    </View>
-    <View style={{width: mainConversationWidth, flexDirection:'column'}}>
-    <View style={{flexDirection:'row'}}>
-      <Text style={{fontSize:20}}>John Smith</Text>
-    </View>
-      <View style={{height:4}} />
-      <View>
-        <Text></Text>
+      <View style={{width: mainConversationWidth, flexDirection:'column'}}>
+      <View style={{flexDirection:'row'}}>
+        <Text style={{fontSize:20}}>John Smith</Text>
       </View>
+        <View style={{height:4}} />
+        <View>
+          <Text></Text>
+        </View>
+      </View>
+      {/* <View style={{width:40, alignItems:'center', justifyContent:'center'}}>
+        <IonIcon type='Ionicons' name='ios-arrow-dropright' size={30} color='#000000' onPress={() => navigation.navigate('Messaging')} />
+      </View> */}
     </View>
-    {/* <View style={{width:40, alignItems:'center', justifyContent:'center'}}>
-      <IonIcon type='Ionicons' name='ios-arrow-dropright' size={30} color='#000000' onPress={() => navigation.navigate('Messaging')} />
-    </View> */}
-  </View>
   );
 };
 
@@ -182,6 +227,40 @@ const MeetingsScreen = ({ navigation }) => {
         <Text style={{fontSize:25}}>Upcoming Meetings</Text>
         <View style={{height:30}}></View>
         <Text style={{fontSize:20}}>No meetings scheduled.</Text>
+      </View>
+    </View>
+  );
+};
+
+const upcomingMeetings = () => {
+
+};
+
+const pastMeetings = () => {
+
+};
+
+const MeetingItem = (meetingID) => {
+  
+  const meeting = meetings[meetingID];
+  
+  return (
+    <View style={{width:windowWidth, height:110, flexDirection:'row', alignItems:'center', backgroundColor: colors.lightGrey}} >
+      <View style={{width:80, alignItems:'center', justifyContent:'center'}}>
+        <Image style={{width:60, height:60}} source={require('./assets/avatar.png')} />
+        <View style={{height:5}} />
+        <View style={styles.MentorBox}>
+          <Text style={styles.MentorTag}>{ accounts[id].type } </Text>
+        </View>
+      </View>
+      <View style={{width: mainConversationWidth, flexDirection:'column'}}>
+      <View style={{flexDirection:'row'}}>
+        <Text style={{fontSize:20}}>John Smith</Text>
+      </View>
+        <View style={{height:4}} />
+        <View>
+          <Text></Text>
+        </View>
       </View>
     </View>
   );

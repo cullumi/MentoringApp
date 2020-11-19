@@ -29,7 +29,8 @@ const mainTitleWidth = windowWidth - 90;
 const colors = {
   vikingBlue: '#003F87',
   white: '#fff',
-  lightGrey: '#f6f6f6'
+  lightGrey: '#f6f6f6',
+  grey: 'gray',
 }
 
 const styles = StyleSheet.create({
@@ -66,26 +67,32 @@ const accountType = 0;
 
 const accounts = {
   0:{
+    name:"Abbi",
     type:"Mentor",
     connections:[2, 3,],
   },
   1:{
+    name:"Baltar",
     type:"Mentee",
     connections:[2, 3, 4, 5,],
   },
   2:{
+    name:"Hero",
     type:"Mentor",
     connections:[0, 1, 3,],
   },
   3:{
+    name:"Helgen",
     type:"Mentee",
     connections:[0, 1, 2,],
   },
   4:{
+    name:"Tiny Box Tim",
     type:"Mentor",
     connections:[1,5,],
   },
   5:{
+    name:"Numbah Five",
     type:"Mentee",
     connections:[1,4,],
   },
@@ -98,7 +105,16 @@ const meetings = {
     date:"11.19.2020",
     time:"6:00pm",
   },
-}
+  "0-1-11/12/2020":{
+    mentorID:0,
+    menteeID:1,
+    date:"11.19.2020",
+    time:"6:00pm",
+  },
+};
+
+const newMeetings = ["0-1-11/19/2020", "0-1-11/12/2020"];
+const oldMeetings = ["0-1-11/19/2020"];
 
 
 
@@ -160,7 +176,7 @@ const HomeScreen = ({ navigation }) => {
   return (
     <View style={{flex: 1, flexDirection: 'column'}}>
       { titleBar("Home", () => navigation.navigate('HelpModal')) }
-      { accountType == 1 ? [unapprovedAccount()] : [approvedAccount(accountID)] }
+      { accountType == 1 ? [unapprovedAccount()] : [approvedHome(accountID)] }
     </View>
   );
 };
@@ -180,15 +196,23 @@ const unapprovedAccount = () => {
   );
 };
 
-const approvedAccount = (accountID) => {  
+const approvedHome = (accountID) => {  
   return (
     <View>
-      { accounts[accountID].connections.map( (id) => connectionItem(id) ) }
+      { accounts[accountID].connections.map( (id) => { 
+        return( 
+          <View>
+            <View style={{height:5}}></View>
+            {connectionItem(id)}
+          </View> 
+        );
+      })}
     </View>
   );
 };
 
 const connectionItem = (connectionID) => {
+
   return (
     <View style={{width:windowWidth, height:110, flexDirection:'row', alignItems:'center', backgroundColor: colors.lightGrey}} >
       <View style={{width:80, alignItems:'center', justifyContent:'center'}}>
@@ -222,27 +246,60 @@ const MeetingsScreen = ({ navigation }) => {
   return (
     <View style={{flex: 1, flexDirection: 'column'}}>
       { titleBar("Meetings", () => navigation.navigate('HelpModal')) }
-      <View style={{height:30}}></View>
-      <View style={{alignItems:'center',justifyContent:'center'}}>
-        <Text style={{fontSize:25}}>Upcoming Meetings</Text>
-        <View style={{height:30}}></View>
-        <Text style={{fontSize:20}}>No meetings scheduled.</Text>
-      </View>
+      { accountType == 1 ? [unapprovedAccount()] : [approvedMeetings(accountID)] }
     </View>
   );
 };
 
-const upcomingMeetings = () => {
+const approvedMeetings = () => {
+  return (
+    <View>
+      <View style={{alignItems:'center',justifyContent:'center'}}>
+        { upcomingMeetings(accountID) }
+        { pastMeetings(accountID) }
+      </View>
+    </View>
+  );
+}
 
+const upcomingMeetings = (accountID) => {
+  return (
+    <View style={{alignItems:'center',justifyContent:'center'}}>
+      <View style={{height:30}}></View>
+      <Text style={{fontSize:25}}>Upcoming Meetings</Text>
+      <View style={{height:30}}></View>
+      { newMeetings.length === 0 
+      ? [ <Text style={{fontSize:20}}>No meetings scheduled.</Text> ] 
+      : [ newMeetings.map( (id) => {
+          return (
+            <View>
+              <View style={{height:5}}></View>
+              { meetingItem(accountID, id) }
+            </View>
+          ); 
+        })]}
+    </View>
+  );
 };
 
-const pastMeetings = () => {
-
+const pastMeetings = (accountID) => {
+  return (
+    <View style={{alignItems:'center',justifyContent:'center'}}>
+      <View style={{height:30}}></View>
+      <Text style={{fontSize:25}}>Past Meetings</Text>
+      <View style={{height:30}}></View>
+      { oldMeetings.length === 0
+      ? [ <Text style={{fontSize:20}}>No meetings been held yet.</Text> ] 
+      : [ oldMeetings.map( (id) => meetingItem(accountID, id) ) ] }
+    </View>
+  );
 };
 
-const MeetingItem = (meetingID) => {
-  
+const meetingItem = (accountID, meetingID) => {
+
   const meeting = meetings[meetingID];
+  const currUser = accounts[accountID];
+  const otherUser = accounts[meeting.mentorID === accountID ? meeting.menteeID : meeting.mentorID];
   
   return (
     <View style={{width:windowWidth, height:110, flexDirection:'row', alignItems:'center', backgroundColor: colors.lightGrey}} >
@@ -250,18 +307,21 @@ const MeetingItem = (meetingID) => {
         <Image style={{width:60, height:60}} source={require('./assets/avatar.png')} />
         <View style={{height:5}} />
         <View style={styles.MentorBox}>
-          <Text style={styles.MentorTag}>{ accounts[id].type } </Text>
+          <Text style={styles.MentorTag}>{ otherUser.type }</Text>
         </View>
       </View>
       <View style={{width: mainConversationWidth, flexDirection:'column'}}>
-      <View style={{flexDirection:'row'}}>
-        <Text style={{fontSize:20}}>John Smith</Text>
-      </View>
-        <View style={{height:4}} />
+        <View style={{flexDirection:'row'}}>
+          <View style={{flexDirection:'column'}}>
+            <Text style={{fontSize:20}}>{ meeting.date }</Text>
+            <Text style={{fontSize:20}}>{ meeting.time }</Text>
+          </View>
+        </View>
         <View>
           <Text></Text>
         </View>
       </View>
+      <View style={{height:25, backgroundColor: colors.white}}></View>
     </View>
   );
 };

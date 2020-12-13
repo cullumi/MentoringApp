@@ -63,7 +63,7 @@ const styles = StyleSheet.create({
 //              1 - verified, check for conversations to display
 // const accountType = Storage.getItem('accountType');
 const accountID = 1;
-const accountType = 0; 
+const accountType = 0;
 
 const accounts = {
   0:{
@@ -196,15 +196,15 @@ const unapprovedAccount = () => {
   );
 };
 
-const approvedHome = (accountID) => {  
+const approvedHome = (accountID) => {
   return (
     <View>
-      { accounts[accountID].connections.map( (id) => { 
-        return( 
+      { accounts[accountID].connections.map( (id) => {
+        return(
           <View>
             <View style={{height:5}}></View>
             {connectionItem(id)}
-          </View> 
+          </View>
         );
       })}
     </View>
@@ -268,15 +268,15 @@ const upcomingMeetings = (accountID) => {
       <View style={{height:30}}></View>
       <Text style={{fontSize:25}}>Upcoming Meetings</Text>
       <View style={{height:30}}></View>
-      { newMeetings.length === 0 
-      ? [ <Text style={{fontSize:20}}>No meetings scheduled.</Text> ] 
+      { newMeetings.length === 0
+      ? [ <Text style={{fontSize:20}}>No meetings scheduled.</Text> ]
       : [ newMeetings.map( (id) => {
           return (
             <View>
               <View style={{height:5}}></View>
               { meetingItem(accountID, id) }
             </View>
-          ); 
+          );
         })]}
     </View>
   );
@@ -289,7 +289,7 @@ const pastMeetings = (accountID) => {
       <Text style={{fontSize:25}}>Past Meetings</Text>
       <View style={{height:30}}></View>
       { oldMeetings.length === 0
-      ? [ <Text style={{fontSize:20}}>No meetings been held yet.</Text> ] 
+      ? [ <Text style={{fontSize:20}}>No meetings been held yet.</Text> ]
       : [ oldMeetings.map( (id) => meetingItem(accountID, id) ) ] }
     </View>
   );
@@ -300,7 +300,7 @@ const meetingItem = (accountID, meetingID) => {
   const meeting = meetings[meetingID];
   const currUser = accounts[accountID];
   const otherUser = accounts[meeting.mentorID === accountID ? meeting.menteeID : meeting.mentorID];
-  
+
   return (
     <View style={{width:windowWidth, height:110, flexDirection:'row', alignItems:'center', backgroundColor: colors.lightGrey}} >
       <View style={{width:80, alignItems:'center', justifyContent:'center'}}>
@@ -338,47 +338,6 @@ const ProposeMeetingScreen = () => {
   return <Text></Text>;
 };
 
-
-
-// MESSAGING SCREEN
-
-const initialMessages = [
-        {
-          _id: 1,
-          text: "Hello, here's a photo.",
-          createdAt: new Date(),
-          user: {
-            _id: 2,
-            name: 'Adam Bullard',
-            avatar: 'http://adambullard.com/images/smiling.JPG',
-          },
-          image: 'https://i.pinimg.com/originals/5b/b4/8b/5bb48b07fa6e3840bb3afa2bc821b882.jpg'
-        }
-        
-  ];
-
-const MessagingScreen = ({ navigation }) => {
-
-  const [messages, setMessages] = useState(initialMessages);
-  
-  return (
-    <View style={{flex: 1, flexDirection: 'column'}}>
-      <View style={{height:22, backgroundColor: colors.vikingBlue}}></View>
-      <View style={{height:30, backgroundColor: colors.white}}></View>
-      <View style={{flexDirection:'row-reverse', backgroundColor: colors.white}}>
-        <View style={{width:25}} />
-        <IonIcon type='Ionicons' name='ios-document' size={30} color='#000000' onPress={() => navigation.navigate('ProposeMeeting')} />
-        <View style={{width:mainTitleWidth,textAlign:'center',alignItems:'center'}}>
-          <Text style={{fontSize:22}}>John Smith</Text>
-        </View>
-        <IonIcon type='Ionicons' name='ios-close' size={30} color='#000000' onPress={() => navigation.navigate('Main')} />
-      </View>
-      <View style={{height:30, backgroundColor: colors.white}}></View>
-      <GiftedChat messages={messages} />
-    </View>
-  );
-};
-
 const HelpScreen = ({ navigation }) => {
   return (
     <View>
@@ -388,7 +347,34 @@ const HelpScreen = ({ navigation }) => {
   );
 };
 
+// SPLASH SCREEN
 
+// For checking user login status...
+class SplashScreen extends React.Component {
+  constructor(props) {
+    super(props)
+    this.state = {
+      refreshing : false,
+      'loggedIn': false
+    };
+  }
+
+  componentDidMount = () => AsyncStorage.getItem('Id').then((value) => this.setState({ 'Id': value }));
+
+  render () {
+    if (this.state.loggedIn !== false) {
+      this.props.navigation.navigate('Main');
+    } else {
+      this.props.navigation.navigate('Login');
+    }
+    return (
+      <View style={{textAlign:'center',alignItems:'center'}}>
+        <Text style={{fontSize:22}}>MentoringApp</Text>
+      </View>
+    )
+  }
+
+};
 
 // LOGIN AND PRIVACY SCREENS
 
@@ -398,16 +384,16 @@ const HelpScreen = ({ navigation }) => {
 class LoginScreen extends React.Component {
   constructor(props) {
     super(props)
+    this.isLoggedIn = false;
     this.state = {
       refreshing : false
     };
   }
-  
+
+
+
   // Note: passing in handleLogin with "this" inside of a "big-arrow function" ensures handleLogin can make use of the LoginScreen state props.  Mind the this!
   render () {
-    if (this.state.id != undefined) {
-      this.props.navigation.navigate('Privacy');
-    }
     return  <View style={styles.container}>
               <LinkedInModal
                 clientID="86bzo41s6bc4am"
@@ -426,8 +412,8 @@ class LoginScreen extends React.Component {
   // handles fetching of login information; Note: payload contains profile information upon a successful login.
   async handleLogin(data) {
     const { access_token, authentication_code } = data;
-  
-    if (!authentication_code) { 
+
+    if (!authentication_code) {
       this.setState({ refreshing: true });
       const response = await fetch('https://api.linkedin.com/v2/me', {
         method: 'GET',
@@ -438,16 +424,17 @@ class LoginScreen extends React.Component {
       const payload = await response.json();
       this.setState({ ...payload, refreshing: false });
       console.log(JSON.parse(JSON.stringify(payload)));
-    } 
+    }
     else {
       console.log("Authentication Code Received: " + authentication_code);
     }
   }
+
 }
 
 // The PrivacyScreen function -- simply navigates to Main right after coming from Login, for the time being.
 const PrivacyScreen = ({navigation}) => {
-  navigation.navigate('Main')
+  navigation.navigate('Main');
   return (null);
 };
 
@@ -465,6 +452,7 @@ export default class AppContainer extends React.Component {
     return (
         <NavigationContainer>
           <Stack.Navigator headerMode='none'>
+            <Stack.Screen name='Splash' component={SplashScreen} />
             <Stack.Screen name='Login' component={LoginScreen} />
             <Stack.Screen name='Privacy' component={PrivacyScreen} />
             <Stack.Screen name='Main' component={HomeStack} />

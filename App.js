@@ -404,7 +404,7 @@ class SplashScreen extends React.Component {
 
   render () {
     if (this.state.value !== null) {
-      this.props.navigation.navigate('Privacy');
+      this.props.navigation.navigate('Main');
     } else {
       this.props.navigation.navigate('Login');
     }
@@ -435,12 +435,12 @@ class LoginScreen extends React.Component {
   render () {
     const renderButton = () => {
       return (
-        <Button
-             onPress={() => this.modal.open()}
-             title="Sign in with LinkedIn"
-             color={colors.vikingBlue}
-             accessibilityLabel="Sign in with LinkedIn"
-         />
+         <Button
+           containerStyle={{padding:12, height:45, width:"45%", overflow:'hidden', borderRadius:4, backgroundColor: '#003F87'}}
+           style={{fontSize: 16, color: 'white'}}
+           onPress={() => this.modal.open()}>
+           Sign in with LinkedIn
+         </Button>
       );
     };
     return  <View style={styles.container}>
@@ -651,15 +651,14 @@ class PrivacyScreen extends React.Component {
         <View style={{height:25}} />
         <View style={{flexDirection:"row", alignItems:"center", justifyContent:"center"}}>
           <Button
-            containerStyle={{padding:10, height:45, width:"45%", overflow:'hidden', borderRadius:4, backgroundColor: '#95a5a6'}}
+            containerStyle={{padding:12, height:45, width:"45%", overflow:'hidden', borderRadius:4, backgroundColor: '#95a5a6'}}
             style={{fontSize: 16, color: 'white'}}
             onPress={() => this.denyAgreement()}>
             Disagree
           </Button>
           <View style={{width:10}} />
           <Button
-            containerStyle={{padding:10, height:45, width:"45%", overflow:'hidden', borderRadius:4, backgroundColor: '#003F87'}}
-            disabledContainerStyle={{backgroundColor: '#003F87'}}
+            containerStyle={{padding:12, height:45, width:"45%", overflow:'hidden', borderRadius:4, backgroundColor: '#003F87'}}
             style={{fontSize: 16, color: 'white'}}
             onPress={() => this.acceptAgreement()}>
             Agree

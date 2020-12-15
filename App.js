@@ -6,7 +6,6 @@ import { TouchableOpacity, AsyncStorage, StyleSheet, Text, Image, Button, View, 
 import LinkedInModal from 'react-native-linkedin';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import IonIcon from 'react-native-vector-icons/Ionicons';
-import { GiftedChat } from "react-native-gifted-chat";
 import { color, debug } from 'react-native-reanimated';
 import { Colors } from 'react-native/Libraries/NewAppScreen';
 
@@ -64,6 +63,7 @@ const styles = StyleSheet.create({
 // const accountType = Storage.getItem('accountType');
 const accountID = 1;
 const accountType = 0;
+const url = "http://mshipapp.loca.lt";
 
 const accounts = {
   0:{
@@ -355,14 +355,14 @@ class SplashScreen extends React.Component {
     super(props)
     this.state = {
       refreshing : false,
-      'loggedIn': false
+      'value': false
     };
   }
 
-  componentDidMount = () => AsyncStorage.getItem('Id').then((value) => this.setState({ 'Id': value }));
+  componentDidMount = () => AsyncStorage.getItem('Email').then((value) => this.setState({ 'value': value }));
 
   render () {
-    if (this.state.loggedIn !== false) {
+    if (this.state.value !== null) {
       this.props.navigation.navigate('Main');
     } else {
       this.props.navigation.navigate('Login');
@@ -390,15 +390,27 @@ class LoginScreen extends React.Component {
     };
   }
 
-
-
   // Note: passing in handleLogin with "this" inside of a "big-arrow function" ensures handleLogin can make use of the LoginScreen state props.  Mind the this!
   render () {
+    const renderButton = () => {
+      return (
+        <Button
+             onPress={() => this.modal.open()}
+             title="Sign in with LinkedIn"
+             color={colors.vikingBlue}
+             accessibilityLabel="Sign in with LinkedIn"
+         />
+      );
+    };
     return  <View style={styles.container}>
+              <Image style={{width:200, height:200}} source={require('./assets/logo.png')} />
+              <View style={{height:20}} />
               <LinkedInModal
                 clientID="86bzo41s6bc4am"
                 clientSecret="O2U1ANijJnQG2E3s"
                 redirectUri="https://cs.wwu.edu/"
+                ref={ref => { this.modal = ref; }}
+                renderButton={renderButton}
                 onSuccess={data => {
                   this.handleLogin(data);
                   if (this.state.id != undefined) {
@@ -415,6 +427,8 @@ class LoginScreen extends React.Component {
 
     if (!authentication_code) {
       this.setState({ refreshing: true });
+
+      // get basic profile information
       const response = await fetch('https://api.linkedin.com/v2/me', {
         method: 'GET',
         headers: {
@@ -422,10 +436,82 @@ class LoginScreen extends React.Component {
         }
       });
       const payload = await response.json();
-      this.setState({ ...payload, refreshing: false });
-      console.log(JSON.parse(JSON.stringify(payload)));
-    }
-    else {
+
+      // get profile picture URL
+      const pictureres = await fetch('https://api.linkedin.com/v2/me?projection=(id,profilePicture(displayImage~:playableStreams))&oauth2_access_token=' + access_token, {
+        method: 'GET'
+      });
+      const picPayload = await pictureres.json();
+
+      // get email address
+      const emailres = await fetch('https://api.linkedin.com/v2/clientAwareMemberHandles?q=members&projection=(elements*(primary,type,handle~))', {
+        method: 'GET',
+        headers: {
+          Authorization: 'Bearer ' + access_token,
+        }
+      });
+      const emailPayload = await emailres.json();
+
+      const email = emailPayload.elements[0]["handle~"].emailAddress;
+      const first = payload.localizedFirstName;
+      const last = payload.localizedLastName;
+      const pic = picPayload.profilePicture["displayImage~"].elements[2].identifiers[0].identifier;
+
+      // check if user exists
+      const checkres = await fetch(url + '/user/email/' + email, {
+        method: 'GET'
+      });
+      const checkPayload = await checkres.json();
+
+      console.log(JSON.stringify(checkPayload));
+
+      // log user in locally by moving data to AsyncStorage
+      try {
+        await AsyncStorage.setItem('Email', email);
+        await AsyncStorage.setItem('FirstName', first);
+        await AsyncStorage.setItem('LastName', last);
+        await AsyncStorage.setItem('Avatar', pic);
+      } catch (error) {
+        console.log(error);
+      }
+
+      this.setState({ refreshing: false });
+
+      // check if this user needs to be added to DB.
+      if (checkPayload.rowsAffected == 0) {
+
+        // create user via POST
+        const postres = fetch(url + '/create-user', {
+          method: 'POST',
+          body: JSON.stringify({
+            Email: email,
+            FirstName: first,
+            LastName: last,
+            Avatar: pic,
+            PrivacyAccepted: 0
+          }),
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+          }
+        })
+        /*.then(response => response.json())
+        .then(json => console.log(json))*/
+        .catch((error) => {
+          console.error(error);
+        });
+
+        this.props.navigation.navigate('Privacy');
+
+      } else {
+
+        this.props.navigation.navigate('Main');
+
+      }
+
+
+
+    } else {
       console.log("Authentication Code Received: " + authentication_code);
     }
   }
@@ -434,7 +520,7 @@ class LoginScreen extends React.Component {
 
 // The PrivacyScreen function -- simply navigates to Main right after coming from Login, for the time being.
 const PrivacyScreen = ({navigation}) => {
-  navigation.navigate('Main');
+  navigation.navigate('HelpModal');
   return (null);
 };
 
@@ -445,19 +531,18 @@ const PrivacyScreen = ({navigation}) => {
 // Main class for app. Responsible for rendering app container.
 export default class AppContainer extends React.Component {
 
-  // Main rendering function. Always begins on the LoginScreen.
+  // Main rendering function. Always begins on the SplashScreen.
   // Note: The Login and Privacy screens have been added to the Stack Navigator.
   //        I found that React Navigation creates problems when trying to pass along state.
   render() {
     return (
         <NavigationContainer>
-          <Stack.Navigator headerMode='none'>
+          <Stack.Navigator headerMode='none' initialRouteName='Splash'>
             <Stack.Screen name='Splash' component={SplashScreen} />
             <Stack.Screen name='Login' component={LoginScreen} />
             <Stack.Screen name='Privacy' component={PrivacyScreen} />
             <Stack.Screen name='Main' component={HomeStack} />
             <Stack.Screen name='HelpModal' component={HelpScreen} />
-            {/* <Stack.Screen name='Messaging' component={MessagingScreen} /> */}
             <Stack.Screen name='ProposeMeeting' component={ProposeMeetingScreen} />
           </Stack.Navigator>
         </NavigationContainer>

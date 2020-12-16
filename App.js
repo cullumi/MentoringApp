@@ -106,7 +106,9 @@ const accountID = 1;
 const accountType = 0;
 const url = "http://mshipapp.loca.lt";
 
-const accounts = {
+
+
+const testAccounts = {
   0:{
     name:"Abbi",
     type:"Mentor",
@@ -156,6 +158,75 @@ const meetings = {
 
 const newMeetings = ["0-1-11/19/2020", "0-1-11/12/2020"];
 const oldMeetings = ["0-1-11/19/2020"];
+
+
+
+// API GET and POST Methods
+
+async function getMenteesOf (userID) {
+  
+  const checkres = await fetch(url + '/pair/mentor/' + userID, {
+    method: 'GET'
+  });
+  const checkPayload = await checkres.json();
+
+  return {
+
+  };
+}
+
+async function getMentorsOf (userID) {
+  
+  const pairsres = await fetch(url + '/pair/mentee/' + userID, {
+    method: 'GET'
+  });
+  const pairsPayload = await pairsres.json();
+
+  const mentors = {};
+
+  pairsPayload.length
+
+  return {
+
+  };
+}
+
+async function getCurrentUser () {
+
+  try {
+    curEmail = await AsyncStorage.getItem("Email")
+  } catch (error) {
+    console.log(error);
+  }
+  
+  console.log(curEmail);
+
+  const checkres = await fetch(url + '/user/email/' + curEmail, {
+    method: 'GET'
+  });
+  const checkPayload = await checkres.json();
+
+  console.log(JSON.stringify(checkPayload));
+  // console.log(JSON.stringify(checkPayload.recordsets));
+
+  console.log(checkPayload.recordsets.length);
+
+  for (var i = 0; i < checkPayload.recordsets.length; i++) {
+    const recordSet = checkPayload.recordsets[i];
+
+  }
+
+  return {
+    id: checkPayload,
+    email: checkPayload,
+    firstName: checkPayload,
+    lastName: checkPayload,
+    avatar: checkPayload,
+    created: checkPayload,
+    lastUpdate: checkPayload,
+    PrivacyAccepted: checkPayload
+  };
+}
 
 
 
@@ -217,9 +288,9 @@ const HomeScreen = ({ navigation }) => {
   return (
     <View style={{flex: 1, flexDirection: 'column'}}>
       { titleBar("Home", () => navigation.navigate('HelpModal')) }
-      { accountType == 1 ? [unapprovedAccount()] : [approvedHome(accountID)] }
+      { accountType == 1 ? [unapprovedAccount()] : [approvedHome()] }
     </View>
-  );
+  ); // removed accountID from approvedHome() call
 };
 
 const unapprovedAccount = () => {
@@ -237,7 +308,32 @@ const unapprovedAccount = () => {
   );
 };
 
-const approvedHome = (accountID) => {
+const approvedHome = () => { // removed accountID from approvedHome() parameters
+
+  const curUser = getCurrentUser();
+  const mentors = getMentorsOf(curUser.id);
+  const mentees = getMenteesOf(curUser.id);
+  const accounts = testAccounts;
+
+  // return (
+  //   <View>
+  //     <Text>Mentors</Text>
+  //     {
+  //       mentors.map( (mentor) => {
+  //         <View style = {{height:5}}></View>
+  //         {connectionItem(mentor)}
+  //       })
+  //     }
+  //     <Text>Mentees</Text>
+  //     {
+  //       mentees.map( (mentee) => {
+  //         <View style = {{height:5}}></View>
+  //         {connectionItem(mentee)}
+  //       })
+  //     }
+  //   </View>
+  // );
+
   return (
     <View>
       { accounts[accountID].connections.map( (id) => {
@@ -253,6 +349,8 @@ const approvedHome = (accountID) => {
 };
 
 const connectionItem = (connectionID) => {
+
+  const accounts = testAccounts;
 
   return (
     <View style={{width:windowWidth, height:110, flexDirection:'row', alignItems:'center', backgroundColor: colors.lightGrey}} >

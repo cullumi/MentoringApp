@@ -105,8 +105,13 @@ const styles = StyleSheet.create({
 const accountID = 1;
 const accountType = 0;
 const url = "http://mshipapp.loca.lt";
+var curUser;
+var mentors;
+var mentees;
 
-const accounts = {
+
+
+const testAccounts = {
   0:{
     name:"Abbi",
     type:"Mentor",
@@ -156,6 +161,137 @@ const meetings = {
 
 const newMeetings = ["0-1-11/19/2020", "0-1-11/12/2020"];
 const oldMeetings = ["0-1-11/19/2020"];
+
+
+
+// API GET and POST Methods
+
+async function getMenteesOf (userID) {
+  
+  console.log("Getting Mentors...")
+
+  const pairs = await getPairsOf('mentee', userID);
+
+  return pairs;
+}
+
+async function getMentorsOf (userID) {
+  
+  console.log("Getting Mentees...");
+
+  const pairs = await getPairsOf('mentor', userID);
+
+  return pairs;
+}
+
+async function getPairsOf(type, userID) {
+  const pairsres = await fetch(url + '/pair/' + type + '/' + userID, {
+    method: 'GET'
+  });
+  const pairsPayload = await pairsres.json();
+
+  console.log(pairsPayload);
+
+  const recordSets = pairsPayload["recordsets"];
+  const pairs = [];
+
+  for (var i = 0; i < recordSets.length; i++) {
+    const recordSet = recordSets[i];
+    const pair = {
+      id: recordSet["Id"],
+      mentorID: recordSet["MentorID"],
+      menteeID: recordSet["MenteeID"],
+      created: recordSet["Created"],
+      lastUpdate: recordSet["LastUpdate"],
+      privacyAccepted: recordSet["PrivacyAccepted"]
+    }
+    pairs.push(pair);
+  }
+
+  return pairs;
+}
+
+// Simply gets the Current User, after running the ensureUserExists method.
+async function getCurrentUser () {
+
+  const userPayload = await ensureUserExists();
+  console.log("Payload 4: " + JSON.stringify(userPayload));
+  // console.log(JSON.stringify(checkPayload.recordsets));
+
+  const recordSet = userPayload["recordset"][0];
+  console.log(recordSet);
+
+  return {
+    id: recordSet["Id"],
+    email: recordSet["Email"],
+    firstName: recordSet["FirstName"],
+    lastName: recordSet["LastName"],
+    avatar: recordSet["Avatar"],
+    created: recordSet["Created"],
+    lastUpdate: recordSet["LastUpdate"],
+    PrivacyAccepted: recordSet["PrivacyAccepted"]
+  };
+}
+
+// Probably temporary, but this effectively accounts for when the user was created offline, or for when the API is offline.
+async function ensureUserExists () {
+  
+  // try {
+  const email = await AsyncStorage.getItem("Email")
+  const first = await AsyncStorage.getItem('FirstName');
+  const last = await AsyncStorage.getItem('LastName');
+  const pic = await AsyncStorage.getItem('Avatar');
+  // } catch (error) {
+  //   console.log(error);
+  // }
+  
+  console.log("Email: " + email);
+  let userPayload = await getUserByEmail(email);
+
+  // check if this user needs to be added to DB.
+  while (userPayload.rowsAffected == 0) {
+    await postNewUser(email, first, last, pic);
+    userPayload = await getUserByEmail(email);
+  }
+
+  const payload = userPayload
+  return payload;
+}
+
+async function getUserByEmail(email) {
+  const userres = await fetch(url + '/user/email/' + email, {
+    method: 'GET'
+  });
+  const userPayload = await userres.json();
+  console.log("Payload 1: " + JSON.stringify(userPayload));
+  return userPayload;
+}
+
+// create user via POST
+async function postNewUser(email, first, last, pic) {
+
+  console.log("Post new user...");
+
+  const postres = fetch(url + '/create-user', {
+    method: 'POST',
+    body: JSON.stringify({
+      Email: email,
+      FirstName: first,
+      LastName: last,
+      Avatar: pic,
+      PrivacyAccepted: 0
+    }),
+    headers: {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json',
+    }
+  })
+  /*.then(response => response.json())
+  .then(json => console.log(json))*/
+  .catch((error) => {
+    console.error(error);
+  });
+}
 
 
 
@@ -217,9 +353,9 @@ const HomeScreen = ({ navigation }) => {
   return (
     <View style={{flex: 1, flexDirection: 'column'}}>
       { titleBar("Home", () => navigation.navigate('HelpModal')) }
-      { accountType == 1 ? [unapprovedAccount()] : [approvedHome(accountID)] }
+      { accountType == 1 ? [unapprovedAccount()] : [approvedHome()] }
     </View>
-  );
+  ); // removed accountID from approvedHome() call
 };
 
 const unapprovedAccount = () => {
@@ -237,7 +373,29 @@ const unapprovedAccount = () => {
   );
 };
 
-const approvedHome = (accountID) => {
+const approvedHome = () => { // removed accountID from approvedHome() parameters
+
+  const accounts = testAccounts;
+
+  // return (
+  //   <View>
+  //     <Text>Mentors</Text>
+  //     {
+  //       mentors.map( (mentor) => {
+  //         <View style = {{height:5}}></View>
+  //         {connectionItem(mentor)}
+  //       })
+  //     }
+  //     <Text>Mentees</Text>
+  //     {
+  //       mentees.map( (mentee) => {
+  //         <View style = {{height:5}}></View>
+  //         {connectionItem(mentee)}
+  //       })
+  //     }
+  //   </View>
+  // );
+
   return (
     <View>
       { accounts[accountID].connections.map( (id) => {
@@ -253,6 +411,8 @@ const approvedHome = (accountID) => {
 };
 
 const connectionItem = (connectionID) => {
+
+  const accounts = testAccounts;
 
   return (
     <View style={{width:windowWidth, height:110, flexDirection:'row', alignItems:'center', backgroundColor: colors.lightGrey}} >
@@ -400,7 +560,14 @@ class SplashScreen extends React.Component {
     };
   }
 
-  componentDidMount = () => AsyncStorage.getItem('Email').then((value) => this.setState({ 'value': value }));
+  componentDidMount = () => AsyncStorage.getItem('Email').then((value) => this.setSkipValue(value));
+
+  async setSkipValue (value) {
+    curUser = await getCurrentUser(value);
+    mentors = await getMentorsOf(curUser.id);
+    mentees = await getMenteesOf(curUser.id);
+    this.setState({ 'value': value })
+  }
 
   render () {
     if (this.state.value !== null) {
@@ -545,6 +712,10 @@ class LoginScreen extends React.Component {
         this.props.navigation.navigate('Privacy');
 
       } else {
+
+        curUser = await getCurrentUser();
+        mentors = await getMentorsOf(curUser.id);
+        mentees = await getMenteesOf(curUser.id);
 
         this.props.navigation.navigate('Main');
 

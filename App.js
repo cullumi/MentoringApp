@@ -167,7 +167,7 @@ const oldMeetings = ["0-1-11/19/2020"];
 // API GET and POST Methods
 
 async function getMenteesOf (userID) {
-  
+
   console.log("Getting Mentors...")
 
   const pairs = await getPairsOf('mentee', userID);
@@ -176,7 +176,7 @@ async function getMenteesOf (userID) {
 }
 
 async function getMentorsOf (userID) {
-  
+
   console.log("Getting Mentees...");
 
   const pairs = await getPairsOf('mentor', userID);
@@ -215,11 +215,9 @@ async function getPairsOf(type, userID) {
 async function getCurrentUser () {
 
   const userPayload = await ensureUserExists();
-  console.log("Payload 4: " + JSON.stringify(userPayload));
-  // console.log(JSON.stringify(checkPayload.recordsets));
 
   const recordSet = userPayload["recordset"][0];
-  console.log(recordSet);
+  //console.log(recordSet);
 
   return {
     id: recordSet["Id"],
@@ -235,16 +233,16 @@ async function getCurrentUser () {
 
 // Probably temporary, but this effectively accounts for when the user was created offline, or for when the API is offline.
 async function ensureUserExists () {
-  
+
   // try {
-  const email = await AsyncStorage.getItem("Email")
+  const email = await AsyncStorage.getItem("Email");
   const first = await AsyncStorage.getItem('FirstName');
   const last = await AsyncStorage.getItem('LastName');
   const pic = await AsyncStorage.getItem('Avatar');
   // } catch (error) {
   //   console.log(error);
   // }
-  
+
   console.log("Email: " + email);
   let userPayload = await getUserByEmail(email);
 
@@ -254,7 +252,7 @@ async function ensureUserExists () {
     userPayload = await getUserByEmail(email);
   }
 
-  const payload = userPayload
+  const payload = userPayload;
   return payload;
 }
 
@@ -263,7 +261,7 @@ async function getUserByEmail(email) {
     method: 'GET'
   });
   const userPayload = await userres.json();
-  console.log("Payload 1: " + JSON.stringify(userPayload));
+  console.log("Current user: " + JSON.stringify(userPayload));
   return userPayload;
 }
 
@@ -291,6 +289,25 @@ async function postNewUser(email, first, last, pic) {
   .catch((error) => {
     console.error(error);
   });
+}
+
+async function updatePrivacy(email, privacyAccepted) {
+
+  const postres = fetch (url + '/update-privacy', {
+    method: 'POST',
+    body: JSON.stringify({
+      Email: email,
+      PrivacyAccepted: privacyAccepted
+    }),
+    headers: {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json',
+    }
+  })
+  .catch((error) => {
+    console.error(error);
+  });
+
 }
 
 
@@ -563,10 +580,12 @@ class SplashScreen extends React.Component {
   componentDidMount = () => AsyncStorage.getItem('Email').then((value) => this.setSkipValue(value));
 
   async setSkipValue (value) {
-    curUser = await getCurrentUser(value);
-    mentors = await getMentorsOf(curUser.id);
-    mentees = await getMenteesOf(curUser.id);
-    this.setState({ 'value': value })
+    this.setState({ 'value': value });
+    if (value !== null) {
+      curUser = await getCurrentUser(value);
+      mentors = await getMentorsOf(curUser.id);
+      mentees = await getMenteesOf(curUser.id);
+    }
   }
 
   render () {
@@ -671,8 +690,6 @@ class LoginScreen extends React.Component {
       });
       const checkPayload = await checkres.json();
 
-      console.log(JSON.stringify(checkPayload));
-
       // log user in locally by moving data to AsyncStorage
       try {
         await AsyncStorage.setItem('Email', email);
@@ -688,26 +705,8 @@ class LoginScreen extends React.Component {
       // check if this user needs to be added to DB.
       if (checkPayload.rowsAffected == 0) {
 
-        // create user via POST
-        const postres = fetch(url + '/create-user', {
-          method: 'POST',
-          body: JSON.stringify({
-            Email: email,
-            FirstName: first,
-            LastName: last,
-            Avatar: pic,
-            PrivacyAccepted: 0
-          }),
-          headers: {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json',
-          }
-        })
-        /*.then(response => response.json())
-        .then(json => console.log(json))*/
-        .catch((error) => {
-          console.error(error);
-        });
+        postNewUser(email, first, last, pic);
+        curUser = await getCurrentUser();
 
         this.props.navigation.navigate('Privacy');
 
@@ -720,8 +719,6 @@ class LoginScreen extends React.Component {
         this.props.navigation.navigate('Main');
 
       }
-
-
 
     } else {
       console.log("Authentication Code Received: " + authentication_code);
@@ -740,11 +737,13 @@ class PrivacyScreen extends React.Component {
   }
 
   acceptAgreement = () => {
-    // Handle agreement accept.
+    updatePrivacy(curUser.email, 1);
+    this.props.navigation.navigate("Main");
   }
 
   denyAgreement = () => {
-    // De n agreement deny.
+    updatePrivacy(curUser.email, 0);
+    this.props.navigation.navigate("Main");
   }
 
   render () {

@@ -31,6 +31,7 @@ const colors = {
   white: '#fff',
   lightGrey: '#f6f6f6',
   grey: 'gray',
+  red: '#e74c3c'
 }
 
 const styles = StyleSheet.create({
@@ -227,7 +228,8 @@ async function getCurrentUser () {
     avatar: recordSet["Avatar"],
     created: recordSet["Created"],
     lastUpdate: recordSet["LastUpdate"],
-    PrivacyAccepted: recordSet["PrivacyAccepted"]
+    privacyAccepted: recordSet["PrivacyAccepted"],
+    approved: recordSet["Approved"]
   };
 }
 
@@ -313,7 +315,6 @@ async function updatePrivacy(email, privacyAccepted) {
 
 
 // HOME STACK
-
 function HomeStack() {
   return (
     <Tab.Navigator
@@ -351,7 +352,7 @@ const titleBar = (title, navFunction) => {
       <View style={{flexDirection:'row-reverse', backgroundColor: colors.white, alignItems:'center'}}>
         <View style={{width:15}}></View>
         <TouchableOpacity onPress={navFunction} activeOpacity={0.5}>
-          <Image style={{width:30, height:30}} source={require('./assets/help.png')} />
+          <Image style={{width:30, height:30}} source={require('./assets/settings.png')} />
         </TouchableOpacity>
         <View style={{width:mainTitleWidth,textAlign:'center',alignItems:'center'}}>
           <Text style={{fontSize:22}}>{title}</Text>
@@ -369,7 +370,7 @@ const titleBar = (title, navFunction) => {
 const HomeScreen = ({ navigation }) => {
   return (
     <View style={{flex: 1, flexDirection: 'column'}}>
-      { titleBar("Home", () => navigation.navigate('HelpModal')) }
+      { titleBar("Home", () => navigation.navigate('SettingsModal')) }
       { accountType == 1 ? [unapprovedAccount()] : [approvedHome()] }
     </View>
   ); // removed accountID from approvedHome() call
@@ -556,15 +557,41 @@ const ProposeMeetingScreen = () => {
   return <Text></Text>;
 };
 
-const HelpScreen = ({ navigation }) => {
-  return (
-    <View>
-      { titleBar("Help Screen", () => navigation.goBack()) }
-      <Button color={colors.vikingBlue} onPress={() => navigation.goBack()} title="Dismiss" />
-    </View>
-  );
-};
+// Now has an independent titlebar housed within render, since it only has a single back button.
+class HelpScreen extends React.Component {
+  constructor(props) {
+    super(props)
+    this.state = {
+      refreshing : false
+    };
+  }
 
+  render () {
+    return <View>
+      <View>
+        <View style={{height:25, backgroundColor: colors.vikingBlue}}></View>
+        <View style={{height:30, backgroundColor: colors.white}}></View>
+        <View style={{flexDirection:'row', backgroundColor: colors.white, alignItems:'center'}}>
+          <View style={{width:5}}></View>
+          <TouchableOpacity onPress={() => this.props.navigation.navigate('SettingsModal')} activeOpacity={0.5}>
+            <Image style={{width:30, height:30}} source={require('./assets/icons8-back-50.png')} />
+          </TouchableOpacity>
+          <View style={{width:10}}></View>
+          <View style={{width:mainTitleWidth,textAlign:'center',alignItems:'center'}}>
+            <Text style={{fontSize:22}}>Help</Text>
+          </View>
+        </View>
+        <View style={{height:30, backgroundColor: colors.white}}></View>
+      </View>
+      <ScrollView style={styles.scrollView}>
+        <View style={{height:30}} />
+        <View style={{justifyContent:'center', alignItems:'center'}}>
+        <Text>hi :)</Text>
+        </View>
+      </ScrollView>
+    </View>
+  }
+}
 // SPLASH SCREEN
 
 // For checking user login status...
@@ -767,7 +794,7 @@ class PrivacyScreen extends React.Component {
         {"\n"}{"\n"}
         For a better experience, while using our Service, we may require you to provide us with certain personally identifiable information, including but not limited to your email address, full name, and LinkedIn profile picture. The information requested will be retained on your device and CSWWU servers for the sake of connecting you with mentor/mentees.
         {"\n"}{"\n"}
-        The app does use third party services that may collect information used to identify you. Information collected from this app (namely user profiles and summaries) will be provided to an NSF research group if this agreement is accepted.
+        The app does use third party services that may collect information used to identify you. Information collected from this app (namely user profiles and summaries) will be provided to an NSF research group if this agreement is accepted. You can request from the email below for your account and associated application data to be deleted at any time.
         {"\n"}{"\n"}
         <Text style={styles.basePrivacyTextBolded}>If the agreement is not accepted, you may still use the app, but this information won't be shared with the research group.</Text>
         {"\n"}{"\n"}
@@ -840,7 +867,62 @@ class PrivacyScreen extends React.Component {
   }
 }
 
+class SettingsScreen extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      refreshing: false
+    }
+  }
 
+  logout = () => {
+    AsyncStorage.clear();
+    this.props.navigation.navigate('Login');
+  }
+
+  render () {
+    //
+    return <View>
+      <View>
+        <View style={{height:25, backgroundColor: colors.vikingBlue}}></View>
+        <View style={{height:30, backgroundColor: colors.white}}></View>
+        <View style={{flexDirection:'row', backgroundColor: colors.white, alignItems:'center'}}>
+          <View style={{width:5}}></View>
+          <TouchableOpacity onPress={() => this.props.navigation.navigate('Main')} activeOpacity={0.5}>
+            <Image style={{width:30, height:30}} source={require('./assets/icons8-back-50.png')} />
+          </TouchableOpacity>
+          <View style={{width:10}}></View>
+          <View style={{width:mainTitleWidth,textAlign:'center',alignItems:'center'}}>
+            <Text style={{fontSize:22}}>Account</Text>
+          </View>
+          <TouchableOpacity onPress={() => this.props.navigation.navigate('HelpModal')} activeOpacity={0.5}>
+            <Image style={{width:30, height:30}} source={require('./assets/help.png')} />
+          </TouchableOpacity>
+        </View>
+        <View style={{height:30, backgroundColor: colors.white}}></View>
+      </View>
+      <ScrollView style={styles.scrollView}>
+        <View style={{height:30}}></View>
+        <View style={{justifyContent: 'center',
+        alignItems: 'center',}}>
+          <Button
+            containerStyle={{padding:12, height:45, width:"45%", overflow:'hidden', borderRadius:4, backgroundColor: colors.red}}
+            style={{fontSize: 16, color: 'white'}}
+            onPress={() => this.logout()}>
+            Log Out
+          </Button>
+          <View style={{height:30}} />
+          <Text>
+            <Text style={styles.basePrivacyText}>MentoringApp v1.0</Text>
+            {"\n"}{"\n"}
+            <Text style={styles.basePrivacyText}>Some icons by Icons8</Text>
+          </Text>
+          <View style={{height:15}} />
+        </View>
+      </ScrollView>
+    </View>
+  }
+}
 
 // APP CONTAINER
 
@@ -858,6 +940,7 @@ export default class AppContainer extends React.Component {
             <Stack.Screen name='Login' component={LoginScreen} />
             <Stack.Screen name='Privacy' component={PrivacyScreen} />
             <Stack.Screen name='Main' component={HomeStack} />
+            <Stack.Screen name='SettingsModal' component={SettingsScreen} />
             <Stack.Screen name='HelpModal' component={HelpScreen} />
             <Stack.Screen name='ProposeMeeting' component={ProposeMeetingScreen} />
           </Stack.Navigator>

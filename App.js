@@ -9,6 +9,8 @@ import IonIcon from 'react-native-vector-icons/Ionicons';
 import { color, debug } from 'react-native-reanimated';
 import { Colors } from 'react-native/Libraries/NewAppScreen';
 import Button from 'react-native-button';
+import Tooltip from 'react-native-walkthrough-tooltip';
+
 
 // Needs to be implemented:
 // import Storage from './localstorage';
@@ -39,7 +41,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.white,
     justifyContent: 'center',
-    alignItems: 'center',
+    alignItems: 'center'
   },
 
   scrollView: {
@@ -62,39 +64,51 @@ const styles = StyleSheet.create({
   },
 
   basePrivacyText: {
-    fontFamily: "Arial",
     fontSize: 12,
     textAlign:"center"
   },
 
-  basePrivacyTextBolded: {
-    fontFamily: "Arial",
+  basePrimaryTextBolded: {
     fontSize: 12,
     textAlign:"center",
     fontWeight: "bold"
   },
 
-  titlePrivacyText: {
-    fontFamily: "Arial",
+  titlePrimaryText: {
     fontSize: 16,
     fontWeight: "bold",
     textAlign:"center"
   },
 
-  headerPrivacyText: {
-    fontFamily: "Arial",
+  headerPrimaryText: {
     fontSize: 20,
     fontWeight: "bold",
     textAlign:"center"
   },
 
-  headerSupportPrivacyText: {
-    fontFamily: "Arial",
+  headerSupportPrimaryText: {
     fontSize: 17,
     color: "#95a5a6",
     textAlign: "center"
-  }
+  },
 
+  meetingsTitle: {
+    fontSize:30,
+    alignSelf:'flex-start'
+  },
+
+  meetingsPrimaryNone: {
+    fontSize:16,
+    textAlign:"center"
+  },
+
+  meetingsUpcoming: {
+    paddingTop: 25,
+    paddingLeft: 15,
+    paddingBottom:25,
+    flexDirection: 'row',
+    justifyContent: 'space-between'
+  }
 
 })
 
@@ -109,7 +123,6 @@ const url = "http://mshipapp.loca.lt";
 var curUser;
 var mentors;
 var mentees;
-
 
 
 const testAccounts = {
@@ -171,7 +184,8 @@ async function getMenteesOf (userID) {
 
   console.log("Getting Mentors...")
 
-  const pairs = await getPairsOf('mentee', userID);
+  var pairs = [];
+  pairs = await getPairsOf('mentee', userID);
 
   return pairs;
 }
@@ -180,7 +194,8 @@ async function getMentorsOf (userID) {
 
   console.log("Getting Mentees...");
 
-  const pairs = await getPairsOf('mentor', userID);
+  var pairs = [];
+  pairs = await getPairsOf('mentor', userID);
 
   return pairs;
 }
@@ -194,7 +209,7 @@ async function getPairsOf(type, userID) {
   console.log(pairsPayload);
 
   const recordSets = pairsPayload["recordsets"];
-  const pairs = [];
+  var pairs = [];
 
   for (var i = 0; i < recordSets.length; i++) {
     const recordSet = recordSets[i];
@@ -263,7 +278,6 @@ async function getUserByEmail(email) {
     method: 'GET'
   });
   const userPayload = await userres.json();
-  console.log("Current user: " + JSON.stringify(userPayload));
   return userPayload;
 }
 
@@ -327,7 +341,9 @@ function HomeStack() {
                     ? 'ios-home'
                     : 'ios-home';
                 } else if (route.name === 'Meetings') {
-                    iconName = focused ? 'ios-list-box' : 'ios-list';
+                    iconName = focused ? 'ios-calendar' : 'ios-calendar';
+                } else if (route.name === 'Topics') {
+                    iconName = focused ? 'ios-bulb' : 'ios-bulb';
                 }
 
                 return <IonIcon name={iconName} size={size} color={color} />;
@@ -336,10 +352,12 @@ function HomeStack() {
         tabBarOptions={{
             activeTintColor: colors.vikingBlue,
             inactiveTintColor: 'gray',
+            showLabel: false
         }}
     >
         <Tab.Screen name="Home" component={HomeScreen} />
         <Tab.Screen name="Meetings" component={MeetingsScreen} />
+        <Tab.Screen name="Topics" component={TopicsScreen} />
     </Tab.Navigator>
   );
 }
@@ -415,10 +433,10 @@ const approvedHome = () => { // removed accountID from approvedHome() parameters
   // );
 
   return (
-    <View>
+    <View key="home">
       { accounts[accountID].connections.map( (id) => {
         return(
-          <View>
+          <View key={id}>
             <View style={{height:5}}></View>
             {connectionItem(id)}
           </View>
@@ -457,93 +475,147 @@ const connectionItem = (connectionID) => {
   );
 };
 
+async function getAppointments(type) {
+  var meetings = [];
+  var pairs = [];
+  var user = JSON.parse(await AsyncStorage.getItem('User'));
 
+  const appres = await fetch(url + '/pair/' + user.id, {
+    method: 'GET'
+  });
+  const appPayload = await appres.json();
 
-// MEETING SCREENS
+  pairs = appPayload['recordset'];
 
-const MeetingsScreen = ({ navigation }) => {
-  return (
-    <View style={{flex: 1, flexDirection: 'column'}}>
-      { titleBar("Meetings", () => navigation.navigate('HelpModal')) }
-      { accountType == 1 ? [unapprovedAccount()] : [approvedMeetings(accountID)] }
-    </View>
-  );
-};
+  // Get appointments for each pair the user is a part of.
+  for (var i = 0; i < pairs.length; i++) {
+    const getres = await fetch(url + '/appointment/' + type + "/" + pairs[i].Id, {
+      method: 'GET'
+    });
+    const getPayload = await getres.json();
 
-const approvedMeetings = () => {
-  return (
-    <View>
-      <View style={{alignItems:'center',justifyContent:'center'}}>
-        { upcomingMeetings(accountID) }
-        { pastMeetings(accountID) }
-      </View>
-    </View>
-  );
+    if (getPayload.rowsAffected !== 0) {
+      // Add each appointment to the meetings array with other necessary data.
+      for (var j = 0; j < getPayload.rowsAffected; j++) {
+        var meeting = JSON.parse(JSON.stringify(getPayload['recordset'][j]));
+        // Get mentor/mentee avatar, and mark whether this user is the mentor/mentee.
+        if (pairs[i].MentorId === user.id) {
+          meeting.isMentor = true;
+          const avres = await fetch(url + "/user/id/" + pairs[i].MenteeId, {
+            method: 'GET'
+          });
+          const avPayload = await avres.json();
+          meeting.Avatar = avPayload['recordset'][0].Avatar;
+        } else {
+          meeting.isMentor = false;
+          const avres = await fetch(url + "/user/id/" + pairs[i].MentorId, {
+            method: 'GET'
+          });
+          const avPayload = await avres.json();
+          meeting.Avatar = avPayload['recordset'][0].Avatar;
+        }
+
+        meetings.push(meeting);
+      }
+    }
+  }
+
+  //console.log(type + " meetings: " + JSON.stringify(meetings));
+  return meetings;
 }
 
-const upcomingMeetings = (accountID) => {
-  return (
-    <View style={{alignItems:'center',justifyContent:'center'}}>
-      <View style={{height:30}}></View>
-      <Text style={{fontSize:25}}>Upcoming Meetings</Text>
-      <View style={{height:30}}></View>
-      { newMeetings.length === 0
-      ? [ <Text style={{fontSize:20}}>No meetings scheduled.</Text> ]
-      : [ newMeetings.map( (id) => {
-          return (
-            <View>
-              <View style={{height:5}}></View>
-              { meetingItem(accountID, id) }
-            </View>
-          );
-        })]}
-    </View>
-  );
-};
+// MEETING SCREENS
+class MeetingsScreen extends React.Component {
+  constructor(props) {
+    super(props)
+    this.state = {
+      toolTipVisible: false,
+      upcomingMeetings: [],
+      pastMeetings: [],
+      refreshing: false
+    };
+  }
 
-const pastMeetings = (accountID) => {
-  return (
-    <View style={{alignItems:'center',justifyContent:'center'}}>
-      <View style={{height:30}}></View>
-      <Text style={{fontSize:25}}>Past Meetings</Text>
-      <View style={{height:30}}></View>
-      { oldMeetings.length === 0
-      ? [ <Text style={{fontSize:20}}>No meetings been held yet.</Text> ]
-      : [ oldMeetings.map( (id) => meetingItem(accountID, id) ) ] }
-    </View>
-  );
-};
+  componentDidMount = () => {
+    getAppointments('past')
+    .then((data) => {
+      this.setState({
+        pastMeetings:data,
+        refreshing: false
+      })
+    });
+    getAppointments('upcoming')
+    .then((data) => {
+      this.setState({
+        upcomingMeetings:data,
+        refreshing: false
+      })
+    });
+  };
 
-const meetingItem = (accountID, meetingID) => {
+  printPastMeetings = () => {
+    console.log("P: " + JSON.stringify(this.state.pastMeetings));
+    if (this.state.pastMeetings[0] !== undefined) {
+      return (<View>
+        <Text style={styles.meetingsTitle}>Past</Text>
+      </View>);
+    } else {
+      return (<View>
+      </View>);
+    }
+  }
 
-  const meeting = meetings[meetingID];
-  const currUser = accounts[accountID];
-  const otherUser = accounts[meeting.mentorID === accountID ? meeting.menteeID : meeting.mentorID];
-
-  return (
-    <View style={{width:windowWidth, height:110, flexDirection:'row', alignItems:'center', backgroundColor: colors.lightGrey}} >
-      <View style={{width:80, alignItems:'center', justifyContent:'center'}}>
-        <Image style={{width:60, height:60}} source={require('./assets/avatar.png')} />
-        <View style={{height:5}} />
-        <View style={styles.MentorBox}>
-          <Text style={styles.MentorTag}>{ otherUser.type }</Text>
+  printUpcomingMeetings = () => {
+    console.log("U: " + JSON.stringify(this.state.upcomingMeetings));
+    if (this.state.upcomingMeetings[0] !== undefined) {
+      return (<View>
+        <View style={styles.meetingsUpcoming}>
+          <Text style={styles.meetingsTitle}>Upcoming</Text>
+          <Tooltip animated={true}
+          arrowSize={{width: 16, height: 8}}
+          backgroundColor="rgba(0,0,0,0)"
+          isVisible={this.state.toolTipVisible}
+          placement="left"
+          onClose={() => this.setState({toolTipVisible:false})}
+          content={<Text>Mentees are responsible for proposing meetings. Schedule meetings by tapping on a specific Mentor on the Home tab!</Text>}>
+            <TouchableOpacity
+            onPress={() => this.setState({toolTipVisible:true})}>
+              <IonIcon style={{paddingRight:15,paddingTop:6}} name="ios-help-circle-outline" size="30" color={colors.gray} />
+            </TouchableOpacity>
+          </Tooltip>
         </View>
-      </View>
-      <View style={{width: mainConversationWidth, flexDirection:'column'}}>
-        <View style={{flexDirection:'row'}}>
-          <View style={{flexDirection:'column'}}>
-            <Text style={{fontSize:20}}>{ meeting.date }</Text>
-            <Text style={{fontSize:20}}>{ meeting.time }</Text>
-          </View>
+      </View>);
+    } else {
+      return (<View>
+        <View style={styles.meetingsUpcoming}>
+          <Text style={styles.meetingsTitle}>Upcoming</Text>
+          <Tooltip animated={true}
+          arrowSize={{width: 16, height: 8}}
+          backgroundColor="rgba(0,0,0,0)"
+          isVisible={this.state.toolTipVisible}
+          placement="left"
+          onClose={() => this.setState({toolTipVisible:false})}
+          content={<Text>Propose meetings by tapping on a specific mentor on the Home tab!</Text>}>
+            <TouchableOpacity
+            onPress={() => this.setState({toolTipVisible:true})}>
+              <IonIcon style={{paddingRight:15,paddingTop:6}} name="ios-help-circle-outline" size="30" color={colors.gray} />
+            </TouchableOpacity>
+          </Tooltip>
         </View>
-        <View>
-          <Text></Text>
-        </View>
-      </View>
-      <View style={{height:25, backgroundColor: colors.white}}></View>
-    </View>
-  );
-};
+        <Text style={styles.meetingsPrimaryNone}>No scheduled meetings!</Text>
+      </View>);
+    }
+
+  }
+
+  render () {
+    return (<View style={{flex:1}}>
+    { titleBar("Meetings", () => this.props.navigation.navigate('SettingsModal')) }
+    { this.printUpcomingMeetings() }
+    { this.printPastMeetings() }
+    </View>);
+  }
+}
 
 const ViewDebriefScreen = () => {
   return <Text></Text>;
@@ -556,6 +628,21 @@ const SubmitDebriefScreen = () => {
 const ProposeMeetingScreen = () => {
   return <Text></Text>;
 };
+
+class TopicsScreen extends React.Component {
+  constructor(props) {
+    super(props)
+    this.state = {
+      refreshing : false
+    };
+  }
+
+  render () {
+    return <View>
+    { titleBar("Topics", () => this.props.navigation.navigate('SettingsModal')) }
+    </View>
+  }
+}
 
 // Now has an independent titlebar housed within render, since it only has a single back button.
 class HelpScreen extends React.Component {
@@ -610,8 +697,7 @@ class SplashScreen extends React.Component {
     this.setState({ 'value': value });
     if (value !== null) {
       curUser = await getCurrentUser(value);
-      mentors = await getMentorsOf(curUser.id);
-      mentees = await getMenteesOf(curUser.id);
+      await AsyncStorage.setItem('User', JSON.stringify(curUser));
     }
   }
 
@@ -734,14 +820,13 @@ class LoginScreen extends React.Component {
 
         postNewUser(email, first, last, pic);
         curUser = await getCurrentUser();
-
+        await AsyncStorage.setItem('User', JSON.stringify(curUser));
         this.props.navigation.navigate('Privacy');
 
       } else {
 
         curUser = await getCurrentUser();
-        mentors = await getMentorsOf(curUser.id);
-        mentees = await getMenteesOf(curUser.id);
+        await AsyncStorage.setItem('User', JSON.stringify(curUser));
 
         this.props.navigation.navigate('Main');
 
@@ -779,10 +864,10 @@ class PrivacyScreen extends React.Component {
         <View style={{flexDirection:'row',justifyContent:"center"}}>
           <Image style={{width:100, height:100}} source={require('./assets/logo.png')} />
         </View>
-        <Text style={styles.headerSupportPrivacyText}>Read carefully and decide below.</Text>
+        <Text style={styles.headerSupportPrimaryText}>Read carefully and decide below.</Text>
         <View style={{height:25}}/>
         <Text style={styles.basePrivacyText}>
-        <Text style={styles.titlePrivacyText}>Privacy Policy</Text>
+        <Text style={styles.titlePrimaryText}>Privacy Policy</Text>
         {"\n"}{"\n"}
         WWU CS Department built the CS/M Mentoring app as a free app. This Service is provided by WWU CS Department at no cost and is intended for use as is. This page is used to inform visitors regarding policies with the collection, use, and disclosure of Personal Information if anyone decided to use this Service.
         {"\n"}{"\n"}
@@ -790,30 +875,30 @@ class PrivacyScreen extends React.Component {
         {"\n"}{"\n"}
         The terms used in this Privacy Policy have the same meanings as in our Terms and Conditions, which is accessible at CS/M Mentoring unless otherwise defined in this Privacy Policy.
         {"\n"}{"\n"}
-        <Text style={styles.titlePrivacyText}>Information Collection and Use</Text>
+        <Text style={styles.titlePrimaryText}>Information Collection and Use</Text>
         {"\n"}{"\n"}
         For a better experience, while using our Service, we may require you to provide us with certain personally identifiable information, including but not limited to your email address, full name, and LinkedIn profile picture. The information requested will be retained on your device and CSWWU servers for the sake of connecting you with mentor/mentees.
         {"\n"}{"\n"}
         The app does use third party services that may collect information used to identify you. Information collected from this app (namely user profiles and summaries) will be provided to an NSF research group if this agreement is accepted. You can request from the email below for your account and associated application data to be deleted at any time.
         {"\n"}{"\n"}
-        <Text style={styles.basePrivacyTextBolded}>If the agreement is not accepted, you may still use the app, but this information won't be shared with the research group.</Text>
+        <Text style={styles.basePrimaryTextBolded}>If the agreement is not accepted, you may still use the app, but this information won't be shared with the research group.</Text>
         {"\n"}{"\n"}
         Link to privacy policy of third party service providers used by the app are accessible here:
         {"\n"}{"\n"}
         <Text style={{color: 'blue'}} onPress={() => Linking.openURL('https://www.linkedin.com/legal/privacy-policy')}>LinkedIn </Text>
          and <Text style={{color: 'blue'}} onPress={() => Linking.openURL('https://www.google.com/policies/privacy/')}>Google Play Services</Text> (if on Android)
         {"\n"}{"\n"}
-        <Text style={styles.titlePrivacyText}>Log Data</Text>
+        <Text style={styles.titlePrimaryText}>Log Data</Text>
         {"\n"}{"\n"}
         Whenever you use our Service, in a case of an error in the app we collect data and information (through third party products) on your phone called Log Data. This Log Data may include information such as your device Internet Protocol (“IP”) address, device name, operating system version, the configuration of the app when utilizing my Service, the time and date of your use of the Service, and other statistics.
         {"\n"}{"\n"}
-        <Text style={styles.titlePrivacyText}>Cookies</Text>
+        <Text style={styles.titlePrimaryText}>Cookies</Text>
         {"\n"}{"\n"}
         Cookies are files with a small amount of data that are commonly used as anonymous unique identifiers. These are sent to your browser from the websites that you visit and are stored on your device's internal memory.
         {"\n"}{"\n"}
         This Service does not use these “cookies” explicitly. However, the app may use third party code and libraries that use “cookies” to collect information and improve their services. You have the option to either accept or refuse these cookies and know when a cookie is being sent to your device. If you choose to refuse our cookies, you may not be able to use some portions of this Service.
         {"\n"}{"\n"}
-        <Text style={styles.titlePrivacyText}>Service Providers</Text>
+        <Text style={styles.titlePrimaryText}>Service Providers</Text>
         {"\n"}{"\n"}
         We may employ third-party companies and individuals due to the following reasons:
         {"\n"}{"\n"}
@@ -827,21 +912,21 @@ class PrivacyScreen extends React.Component {
         {"\n"}{"\n"}
         I want to inform users of this Service that these third parties have access to your Personal Information. The reason is to perform the tasks assigned to them on our behalf. However, they are obligated not to disclose or use the information for any other purpose.
         {"\n"}{"\n"}
-        <Text style={styles.titlePrivacyText}>Security</Text>
+        <Text style={styles.titlePrimaryText}>Security</Text>
         {"\n"}{"\n"}
         We value your trust in providing us your Personal Information, thus we are striving to use commercially acceptable means of protecting it. But remember that no method of transmission over the internet, or method of electronic storage is 100% secure and reliable, and we cannot guarantee its absolute security.
         {"\n"}{"\n"}
-        <Text style={styles.titlePrivacyText}>Links to Other Sites</Text>
+        <Text style={styles.titlePrimaryText}>Links to Other Sites</Text>
         {"\n"}{"\n"}
         This Service may contain links to other sites. If you click on a third-party link, you will be directed to that site. Note that these external sites are not operated by us. Therefore, we strongly advise you to review the Privacy Policy of these websites. We have no control over and assume no responsibility for the content, privacy policies, or practices of any third-party sites or services.
         {"\n"}{"\n"}
-        <Text style={styles.titlePrivacyText}>Changes to This Privacy Policy</Text>
+        <Text style={styles.titlePrimaryText}>Changes to This Privacy Policy</Text>
         {"\n"}{"\n"}
         We may update our Privacy Policy from time to time. Thus, you are advised to review this page periodically for any changes. We will notify you of any changes by posting the new Privacy Policy on this page.
         {"\n"}{"\n"}
         This policy is effective as of Jan 1st, 2021.
         {"\n"}{"\n"}
-        <Text style={styles.titlePrivacyText}>Contact Us</Text>
+        <Text style={styles.titlePrimaryText}>Contact Us</Text>
         {"\n"}{"\n"}
         If you have any questions or suggestions about this Privacy Policy, do not hesitate to contact us at cs.support@wwu.edu.
         </Text>
@@ -888,7 +973,7 @@ class SettingsScreen extends React.Component {
         <View style={{height:30, backgroundColor: colors.white}}></View>
         <View style={{flexDirection:'row', backgroundColor: colors.white, alignItems:'center'}}>
           <View style={{width:5}}></View>
-          <TouchableOpacity onPress={() => this.props.navigation.navigate('Main')} activeOpacity={0.5}>
+          <TouchableOpacity onPress={() => this.props.navigation.goBack()} activeOpacity={0.5}>
             <Image style={{width:30, height:30}} source={require('./assets/icons8-back-50.png')} />
           </TouchableOpacity>
           <View style={{width:10}}></View>

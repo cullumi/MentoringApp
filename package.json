@@ -25,6 +25,7 @@
     "react-native-safe-area-context": "~3.0.7",
     "react-native-screens": "~2.9.0",
     "react-native-vector-icons": "^7.1.0",
+    "react-native-walkthrough-tooltip": "^1.1.11",
     "react-native-web": "~0.11.7",
     "react-native-webview": "^10.9.0"
   },

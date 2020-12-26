@@ -2,7 +2,7 @@ import 'react-native-gesture-handler';
 import React, { useState, Component } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
-import { Linking, TouchableOpacity, AsyncStorage, StyleSheet, Text, Image, SafeAreaView, ScrollView, View, ActivityIndicator, StatusBar, Dimensions, Alert } from 'react-native';
+import { Linking, TouchableOpacity, AsyncStorage, StyleSheet, Text, Image, SafeAreaView, ScrollView, View, ActivityIndicator, StatusBar, Dimensions, Alert, TextInput } from 'react-native';
 import LinkedInModal from 'react-native-linkedin';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import IonIcon from 'react-native-vector-icons/Ionicons';
@@ -32,7 +32,9 @@ const colors = {
   white: '#fff',
   lightGrey: '#f6f6f6',
   grey: 'gray',
-  red: '#e74c3c'
+  red: '#e74c3c',
+  green: '#2ecc71',
+  yellow: '#f1c40f'
 }
 
 const styles = StyleSheet.create({
@@ -141,10 +143,28 @@ const styles = StyleSheet.create({
 
   meetingDateText: {
     fontSize:14
+  },
+
+  summaryInput: {
+    height:80,
+    marginLeft:15,
+    marginRight: 15,
+    marginTop: 15,
+    marginBottom:5
+  },
+
+  summaryButton: {
+    padding: 15,
+    backgroundColor: colors.vikingBlue
+  },
+
+  summaryButtonText: {
+    textAlign: 'center',
+    fontSize:16,
+    color: '#fff'
   }
 
-
-})
+});
 
 // Get necessary data for HomeScreen.
 
@@ -571,19 +591,19 @@ async function getAppointments(type) {
           case 'Scheduled':
           meeting.meetingStatus = {
             textAlign:"right",
-            color: '#f1c40f'
+            color: colors.green
           }
           break;
           case 'Done':
           meeting.meetingStatus = {
             textAlign:"right",
-            color: '#f1c40f'
+            color: colors.green
           }
           break;
           case 'Completed':
           meeting.meetingStatus = {
             textAlign:"right",
-            color: '#2ecc71'
+            color: colors.green
           }
           break;
           case 'Cancelled':
@@ -614,12 +634,12 @@ async function getAppointments(type) {
               color: '#fff'
             }
             meeting.buttonText = 'Accept Meeting Time';
-            meeting.buttonPress = ''; meeting.buttonDisabled = true;
+            meeting.buttonPress = 'accept';
             break;
             case 'Scheduled':
             meeting.meetingButton = {
               padding: 15,
-              backgroundColor: '#e74c3c'
+              backgroundColor: colors.red
             }
             meeting.meetingButtonText = {
               textAlign: 'center',
@@ -627,12 +647,12 @@ async function getAppointments(type) {
               color: '#fff'
             }
             meeting.buttonText = 'Cancel Meeting';
-            meeting.buttonPress = () => this.cancelMeetingAlert(m.Id);
+            meeting.buttonPress = 'cancel';
             break;
             case 'Done':
             meeting.meetingButton = {
               padding: 15,
-              backgroundColor: '#e74c3c'
+              backgroundColor: colors.yellow
             }
             meeting.meetingButtonText = {
               textAlign: 'center'
@@ -688,7 +708,7 @@ async function getAppointments(type) {
             case 'Scheduled':
             meeting.meetingButton = {
               padding: 15,
-              backgroundColor: '#e74c3c'
+              backgroundColor: colors.red
             }
             meeting.meetingButtonText = {
               textAlign: 'center',
@@ -696,12 +716,12 @@ async function getAppointments(type) {
               color: '#fff'
             }
             meeting.buttonText = 'Cancel Meeting';
-            meeting.buttonPress = () => this.cancelMeetingAlert(m.Id);
+            meeting.buttonPress = 'cancel';
             break;
             case 'Done':
             meeting.meetingButton = {
               padding: 15,
-              backgroundColor: '#e74c3c'
+              backgroundColor: colors.yellow
             }
             meeting.meetingButtonText = {
               textAlign: 'center',
@@ -709,18 +729,18 @@ async function getAppointments(type) {
               color: '#fff'
             }
             meeting.buttonText = 'Write Summary';
-            meeting.buttonPress = () => this.props.navigation.navigate('WriteSummary');
+            meeting.buttonPress = 'submitSummary';
             break;
             case 'Completed':
             meeting.meetingButton = {
-              width: 0,
-              height: 0
+              padding: 15,
+              backgroundColor: colors.green
             }
             meeting.meetingButtonText = {
               textAlign: 'center'
             }
-            meeting.buttonText = '';
-            meeting.buttonPress = ''; meeting.buttonDisabled = true;
+            meeting.buttonText = 'Edit Summary';
+            meeting.buttonPress = 'editSummary';
             break;
             case 'Cancelled':
             meeting.meetingButton = {
@@ -737,6 +757,7 @@ async function getAppointments(type) {
         }
 
         meetings.push(meeting);
+
       }
     }
   }
@@ -753,7 +774,8 @@ class MeetingsScreen extends React.Component {
       toolTipVisible: false,
       upcomingMeetings: [],
       pastMeetings: [],
-      refreshing: true
+      refreshing: false,
+      keyUpdate: 1
     };
   }
 
@@ -774,6 +796,40 @@ class MeetingsScreen extends React.Component {
     });
   };
 
+  async acceptMeeting (id) {
+    const statusupdateres = await fetch(url + '/update-appointment-status', {
+      method: 'POST',
+      body: JSON.stringify({
+        Id: id,
+        Status: 'Scheduled'
+      }),
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+      }
+    }).catch((error) => {
+      console.error(error);
+    });
+  }
+
+  acceptMeetingAlert = (id) => {
+    // Check if the user is sure they want to accept this meeting time.
+    Alert.alert(
+      "Accept Meeting",
+      "Before accepting, confirm you're available to meet at this time.",
+      [
+        {
+          text: "Nevermind",
+          onPress: () => console.log("Cancel Pressed"),
+          style: "cancel"
+        },
+        { text: "Confirm", onPress: () => this.acceptMeeting(id) }
+      ],
+      { cancelable: false }
+    );
+    this.setState({refreshing: true});
+  }
+
   async cancelMeeting (id) {
     const statusupdateres = await fetch(url + '/update-appointment-status', {
       method: 'POST',
@@ -788,9 +844,8 @@ class MeetingsScreen extends React.Component {
     }).catch((error) => {
       console.error(error);
     });
-    this.forceUpdate();
   }
-  
+
   cancelMeetingAlert = (id) => {
     // Check if the user is sure they want to cancel this meeting.
     Alert.alert(
@@ -802,11 +857,30 @@ class MeetingsScreen extends React.Component {
           onPress: () => console.log("Cancel Pressed"),
           style: "cancel"
         },
-        { text: "OK", onPress: () => this.cancelMeeting(id) }
+        { text: "Confirm", onPress: () => this.cancelMeeting(id) }
       ],
       { cancelable: false }
     );
+    this.setState({refreshing: true});
   }
+
+  handlePress = (type, id) => {
+    switch(type) {
+      case 'accept':
+      this.acceptMeetingAlert(id);
+      break;
+      case 'cancel':
+      this.cancelMeetingAlert(id);
+      break;
+      case 'submitSummary':
+      this.props.navigation.navigate('WriteSummary', { data: { id: m.Id, type: 'submit' }});
+      break;
+      case 'editSummary':
+      this.props.navigation.navigate('WriteSummary', { data: { id: m.Id, type: 'edit' }});
+      break;
+    }
+  }
+
   printPastMeetings = () => {
     console.log("P: " + JSON.stringify(this.state.pastMeetings));
     if (this.state.pastMeetings[0] !== undefined) {
@@ -856,7 +930,7 @@ class MeetingsScreen extends React.Component {
             <Button
               containerStyle={m.meetingButton}
               style={m.meetingButtonText}
-              onPress={m.buttonPress}
+              onPress={() => this.handlePress(m.buttonPress, m.Id)}
               disabled={m.buttonDisabled}>
               {m.buttonText}
             </Button>
@@ -898,13 +972,103 @@ class MeetingsScreen extends React.Component {
 class WriteSummaryScreen extends React.Component {
   constructor(props) {
     super(props)
-    this.state = {
-      refreshing : false
-    };
+  }
+
+  componentDidMount = () => {
+    const { id, type } = this.props.navigation.state.params.data;
+    const storageId = 'summary_' + id;
+    this.setState({storageId:storageId});
+    this.setState({normalId:id});
+    this.setState({type:type});
+    AsyncStorage.getItem(storageId).then((value) => this.setSkipValue(value));
+  }
+
+  async setSkipValue (value) {
+    if (value !== null) {
+      this.setState({ 'curSummary': value });
+    } else {
+      this.setState({ 'curSummary': '' });
+    }
+  }
+
+  async saveSummary (text) {
+    this.setState({'curSummary': text});
+    await AsyncStorage.setItem(this.state.storageId, text);
+  }
+
+  async handleSubmit() {
+    const user = await AsyncStorage.getItem('User');
+    if (this.state.type === 'submit') {
+      // post insert
+      const postres = fetch (url + '/create-summary', {
+        method: 'POST',
+        body: JSON.stringify({
+          AppointmentId: this.state.normalId,
+          SummaryText: this.state.curSummary,
+          UserId: user.Id
+        }),
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        }
+      })
+      .catch((error) => {
+        console.error(error);
+      });
+    } else {
+      // post update
+      const postres = fetch (url + '/update-summary', {
+        method: 'POST',
+        body: JSON.stringify({
+          AppointmentId: this.state.normalId,
+          SummaryText: this.state.curSummary,
+          UserId: user.Id
+        }),
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        }
+      })
+      .catch((error) => {
+        console.error(error);
+      });
+    }
+    this.props.navigation.navigate('Meetings');
   }
 
   render () {
-    //
+    return <View style={{flex:1}}>
+      <View>
+        <View style={{height:25, backgroundColor: colors.vikingBlue}}></View>
+        <View style={{height:30, backgroundColor: colors.white}}></View>
+        <View style={{flexDirection:'row', backgroundColor: colors.white, alignItems:'center'}}>
+          <View style={{width:5}}></View>
+          <TouchableOpacity onPress={() => this.props.navigation.goBack()} activeOpacity={0.5}>
+            <Image style={{width:30, height:30}} source={require('./assets/icons8-back-50.png')} />
+          </TouchableOpacity>
+          <View style={{width:10}}></View>
+          <View style={{width:mainTitleWidth,textAlign:'center',alignItems:'center'}}>
+            <Text style={{fontSize:22}}>Settings</Text>
+          </View>
+          <TouchableOpacity onPress={() => this.props.navigation.navigate('HelpModal')} activeOpacity={0.5}>
+            <Image style={{width:30, height:30}} source={require('./assets/help.png')} />
+          </TouchableOpacity>
+        </View>
+        <View style={{height:30, backgroundColor: colors.white}}></View>
+      </View>
+      <TextInput
+      multiline
+      numberOfLines={6}
+      style={styles.summaryInput}
+      onChangeText={text => saveSummary(text)}
+      value={this.state.curSummary} />
+      <Button
+        containerStyle={styles.summaryButton}
+        style={summaryButtonText}
+        onPress={this.handleSubmit()}>
+        Submit
+      </Button>
+    </View>
   }
 }
 

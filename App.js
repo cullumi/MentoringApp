@@ -2,7 +2,7 @@ import 'react-native-gesture-handler';
 import React, { useState, Component } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
-import { Linking, TouchableOpacity, AsyncStorage, StyleSheet, Text, Image, SafeAreaView, ScrollView, View, ActivityIndicator, StatusBar, Dimensions } from 'react-native';
+import { Linking, TouchableOpacity, AsyncStorage, StyleSheet, Text, Image, SafeAreaView, ScrollView, View, ActivityIndicator, StatusBar, Dimensions, Alert } from 'react-native';
 import LinkedInModal from 'react-native-linkedin';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import IonIcon from 'react-native-vector-icons/Ionicons';
@@ -10,7 +10,6 @@ import { color, debug } from 'react-native-reanimated';
 import { Colors } from 'react-native/Libraries/NewAppScreen';
 import Button from 'react-native-button';
 import Tooltip from 'react-native-walkthrough-tooltip';
-
 
 // Needs to be implemented:
 // import Storage from './localstorage';
@@ -108,7 +107,42 @@ const styles = StyleSheet.create({
     paddingBottom:25,
     flexDirection: 'row',
     justifyContent: 'space-between'
+  },
+
+  meeting: {
+    marginRight:15,
+    marginLeft:15,
+    marginBottom:15,
+    borderRadius:50
+  },
+
+  meetingInfo: {
+    backgroundColor:"white",
+    flexDirection:"column",
+    padding:15
+  },
+
+  meetingAvatar: {
+    width:60,
+    height:60,
+    marginRight:10,
+    backgroundColor:"#ddd",
+    borderRadius:100
+  },
+
+  meetingMainRow: {
+    flexDirection:"row",
+    alignItems:"center"
+  },
+
+  meetingTitleText: {
+    fontSize:20
+  },
+
+  meetingDateText: {
+    fontSize:14
   }
+
 
 })
 
@@ -370,7 +404,7 @@ const titleBar = (title, navFunction) => {
       <View style={{flexDirection:'row-reverse', backgroundColor: colors.white, alignItems:'center'}}>
         <View style={{width:15}}></View>
         <TouchableOpacity onPress={navFunction} activeOpacity={0.5}>
-          <Image style={{width:30, height:30}} source={require('./assets/settings.png')} />
+          <IonIcon name="ios-settings" size="30" color={colors.vikingBlue} />
         </TouchableOpacity>
         <View style={{width:mainTitleWidth,textAlign:'center',alignItems:'center'}}>
           <Text style={{fontSize:22}}>{title}</Text>
@@ -498,21 +532,208 @@ async function getAppointments(type) {
       // Add each appointment to the meetings array with other necessary data.
       for (var j = 0; j < getPayload.rowsAffected; j++) {
         var meeting = JSON.parse(JSON.stringify(getPayload['recordset'][j]));
-        // Get mentor/mentee avatar, and mark whether this user is the mentor/mentee.
+        let date = new Date(meeting.ScheduledAt);
+        let cur = new Date();
+        //Check if Status needs to be updated due to this meeting happening.
+        if (type === 'past' && cur > date && meeting.Status === 'Scheduled') {
+          const statusupdateres = await fetch(url + '/update-appointment-status', {
+            method: 'POST',
+            body: JSON.stringify({
+              Id: meeting.Id,
+              Status: 'Done'
+            }),
+            headers: {
+              'Accept': 'application/json',
+              'Content-Type': 'application/json',
+            }
+          }).catch((error) => {
+            console.error(error);
+          });
+          meeting.Status = 'Done';
+        }
+
+        var months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+        var hours = date.getHours();
+        var minutes = date.getMinutes();
+        var ampm = hours >= 12 ? 'PM' : 'AM';
+        hours = hours % 12;
+        hours = hours ? hours : 12;
+        minutes = minutes < 10 ? '0'+minutes : minutes;
+        meeting.dateText = months[date.getMonth()] + " " + date.getDate() + ", " + date.getFullYear() + " " + hours + ":" + minutes + " " + ampm;
+        meeting.buttonDisabled = false;
+        switch(meeting.Status) {
+          case 'Pending':
+          meeting.meetingStatus = {
+            textAlign:"right",
+            color: '#003F87'
+          }
+          break;
+          case 'Scheduled':
+          meeting.meetingStatus = {
+            textAlign:"right",
+            color: '#f1c40f'
+          }
+          break;
+          case 'Done':
+          meeting.meetingStatus = {
+            textAlign:"right",
+            color: '#f1c40f'
+          }
+          break;
+          case 'Completed':
+          meeting.meetingStatus = {
+            textAlign:"right",
+            color: '#2ecc71'
+          }
+          break;
+          case 'Cancelled':
+          meeting.meetingStatus = {
+            textAlign:"right",
+            color: '#e74c3c'
+          }
+          break;
+        }
+        // Get mentor/mentee avatar, and mark whether this user is the mentor/mentee, and provide title/date text.
         if (pairs[i].MentorId === user.id) {
           meeting.isMentor = true;
+          meeting.titleText = "Mentee Meeting";
           const avres = await fetch(url + "/user/id/" + pairs[i].MenteeId, {
             method: 'GET'
           });
           const avPayload = await avres.json();
           meeting.Avatar = avPayload['recordset'][0].Avatar;
+          switch(meeting.Status) {
+            case 'Pending':
+            meeting.meetingButton = {
+              padding: 15,
+              backgroundColor: colors.vikingBlue
+            }
+            meeting.meetingButtonText = {
+              textAlign: 'center',
+              fontSize:16,
+              color: '#fff'
+            }
+            meeting.buttonText = 'Accept Meeting Time';
+            meeting.buttonPress = ''; meeting.buttonDisabled = true;
+            break;
+            case 'Scheduled':
+            meeting.meetingButton = {
+              padding: 15,
+              backgroundColor: '#e74c3c'
+            }
+            meeting.meetingButtonText = {
+              textAlign: 'center',
+              fontSize:16,
+              color: '#fff'
+            }
+            meeting.buttonText = 'Cancel Meeting';
+            meeting.buttonPress = () => this.cancelMeetingAlert(m.Id);
+            break;
+            case 'Done':
+            meeting.meetingButton = {
+              padding: 15,
+              backgroundColor: '#e74c3c'
+            }
+            meeting.meetingButtonText = {
+              textAlign: 'center'
+            }
+            meeting.buttonText = 'Waiting for Mentee Summary';
+            meeting.buttonPress = ''; meeting.buttonDisabled = true;
+            break;
+            case 'Completed':
+            meeting.meetingButton = {
+              width: 0,
+              height: 0
+            }
+            meeting.meetingButtonText = {
+              textAlign: 'center'
+            }
+            meeting.buttonText = '';
+            meeting.buttonPress = ''; meeting.buttonDisabled = true;
+            break;
+            case 'Cancelled':
+            meeting.meetingButton = {
+              width: 0,
+              height: 0
+            }
+            meeting.meetingButtonText = {
+              textAlign: 'center'
+            }
+            meeting.buttonText = '';
+            meeting.buttonPress = ''; meeting.buttonDisabled = true;
+            break;
+          }
         } else {
           meeting.isMentor = false;
+          meeting.titleText = "Mentor Meeting";
           const avres = await fetch(url + "/user/id/" + pairs[i].MentorId, {
             method: 'GET'
           });
           const avPayload = await avres.json();
           meeting.Avatar = avPayload['recordset'][0].Avatar;
+          switch(meeting.Status) {
+            case 'Pending':
+            meeting.meetingButton = {
+              padding: 15,
+              backgroundColor: colors.vikingBlue
+            }
+            meeting.meetingButtonText = {
+              textAlign: 'center',
+              fontSize:16,
+              color: '#fff'
+            }
+            meeting.buttonText = 'Waiting for Mentor to Confirm...';
+            meeting.buttonPress = ''; meeting.buttonDisabled = true;
+            break;
+            case 'Scheduled':
+            meeting.meetingButton = {
+              padding: 15,
+              backgroundColor: '#e74c3c'
+            }
+            meeting.meetingButtonText = {
+              textAlign: 'center',
+              fontSize:16,
+              color: '#fff'
+            }
+            meeting.buttonText = 'Cancel Meeting';
+            meeting.buttonPress = () => this.cancelMeetingAlert(m.Id);
+            break;
+            case 'Done':
+            meeting.meetingButton = {
+              padding: 15,
+              backgroundColor: '#e74c3c'
+            }
+            meeting.meetingButtonText = {
+              textAlign: 'center',
+              fontSize:16,
+              color: '#fff'
+            }
+            meeting.buttonText = 'Write Summary';
+            meeting.buttonPress = () => this.props.navigation.navigate('WriteSummary');
+            break;
+            case 'Completed':
+            meeting.meetingButton = {
+              width: 0,
+              height: 0
+            }
+            meeting.meetingButtonText = {
+              textAlign: 'center'
+            }
+            meeting.buttonText = '';
+            meeting.buttonPress = ''; meeting.buttonDisabled = true;
+            break;
+            case 'Cancelled':
+            meeting.meetingButton = {
+              width: 0,
+              height: 0
+            }
+            meeting.meetingButtonText = {
+              textAlign: 'center'
+            }
+            meeting.buttonText = '';
+            meeting.buttonPress = ''; meeting.buttonDisabled = true;
+            break;
+          }
         }
 
         meetings.push(meeting);
@@ -532,7 +753,7 @@ class MeetingsScreen extends React.Component {
       toolTipVisible: false,
       upcomingMeetings: [],
       pastMeetings: [],
-      refreshing: false
+      refreshing: true
     };
   }
 
@@ -553,6 +774,39 @@ class MeetingsScreen extends React.Component {
     });
   };
 
+  async cancelMeeting (id) {
+    const statusupdateres = await fetch(url + '/update-appointment-status', {
+      method: 'POST',
+      body: JSON.stringify({
+        Id: id,
+        Status: 'Cancelled'
+      }),
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+      }
+    }).catch((error) => {
+      console.error(error);
+    });
+    this.forceUpdate();
+  }
+  
+  cancelMeetingAlert = (id) => {
+    // Check if the user is sure they want to cancel this meeting.
+    Alert.alert(
+      "Cancel Meeting",
+      "Are you sure you want to cancel? The mentee will need to schedule a new meeting.",
+      [
+        {
+          text: "Nevermind",
+          onPress: () => console.log("Cancel Pressed"),
+          style: "cancel"
+        },
+        { text: "OK", onPress: () => this.cancelMeeting(id) }
+      ],
+      { cancelable: false }
+    );
+  }
   printPastMeetings = () => {
     console.log("P: " + JSON.stringify(this.state.pastMeetings));
     if (this.state.pastMeetings[0] !== undefined) {
@@ -584,6 +838,30 @@ class MeetingsScreen extends React.Component {
             </TouchableOpacity>
           </Tooltip>
         </View>
+        { this.state.upcomingMeetings.map((m) => {
+          return (<View style={styles.meeting}>
+            <View style={styles.meetingInfo}>
+              <View style={styles.meetingMainRow}>
+                <Image style={styles.meetingAvatar} source={m.Avatar} />
+                <View style={styles.meetingMainInfo}>
+                  <Text style={styles.meetingTitleText}>{m.titleText}</Text>
+                  <Text style={styles.meetingDateText}>{m.dateText}</Text>
+                </View>
+                <View style={{flex: 1}}>
+                  <Text style={m.meetingStatus}>{m.Status}</Text>
+                </View>
+
+              </View>
+            </View>
+            <Button
+              containerStyle={m.meetingButton}
+              style={m.meetingButtonText}
+              onPress={m.buttonPress}
+              disabled={m.buttonDisabled}>
+              {m.buttonText}
+            </Button>
+          </View>);
+        })}
       </View>);
     } else {
       return (<View>
@@ -617,17 +895,31 @@ class MeetingsScreen extends React.Component {
   }
 }
 
-const ViewDebriefScreen = () => {
-  return <Text></Text>;
-};
+class WriteSummaryScreen extends React.Component {
+  constructor(props) {
+    super(props)
+    this.state = {
+      refreshing : false
+    };
+  }
 
-const SubmitDebriefScreen = () => {
-  return <Text></Text>;
-};
+  render () {
+    //
+  }
+}
 
-const ProposeMeetingScreen = () => {
-  return <Text></Text>;
-};
+class ProposeMeetingScreen extends React.Component {
+  constructor(props) {
+    super(props)
+    this.state = {
+      refreshing : false
+    };
+  }
+
+  render () {
+    //
+  }
+}
 
 class TopicsScreen extends React.Component {
   constructor(props) {
@@ -978,7 +1270,7 @@ class SettingsScreen extends React.Component {
           </TouchableOpacity>
           <View style={{width:10}}></View>
           <View style={{width:mainTitleWidth,textAlign:'center',alignItems:'center'}}>
-            <Text style={{fontSize:22}}>Account</Text>
+            <Text style={{fontSize:22}}>Settings</Text>
           </View>
           <TouchableOpacity onPress={() => this.props.navigation.navigate('HelpModal')} activeOpacity={0.5}>
             <Image style={{width:30, height:30}} source={require('./assets/help.png')} />
@@ -999,8 +1291,6 @@ class SettingsScreen extends React.Component {
           <View style={{height:30}} />
           <Text>
             <Text style={styles.basePrivacyText}>MentoringApp v1.0</Text>
-            {"\n"}{"\n"}
-            <Text style={styles.basePrivacyText}>Some icons by Icons8</Text>
           </Text>
           <View style={{height:15}} />
         </View>
@@ -1028,6 +1318,7 @@ export default class AppContainer extends React.Component {
             <Stack.Screen name='SettingsModal' component={SettingsScreen} />
             <Stack.Screen name='HelpModal' component={HelpScreen} />
             <Stack.Screen name='ProposeMeeting' component={ProposeMeetingScreen} />
+            <Stack.Screen name='WriteSummary' component={WriteSummaryScreen} />
           </Stack.Navigator>
         </NavigationContainer>
     );

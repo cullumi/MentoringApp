@@ -424,7 +424,7 @@ const titleBar = (title, navFunction) => {
       <View style={{flexDirection:'row-reverse', backgroundColor: colors.white, alignItems:'center'}}>
         <View style={{width:15}}></View>
         <TouchableOpacity onPress={navFunction} activeOpacity={0.5}>
-          <IonIcon name="ios-settings" size="30" color={colors.vikingBlue} />
+          <IonIcon name="ios-settings" size={30} color={colors.vikingBlue} />
         </TouchableOpacity>
         <View style={{width:mainTitleWidth,textAlign:'center',alignItems:'center'}}>
           <Text style={{fontSize:22}}>{title}</Text>
@@ -624,64 +624,64 @@ async function getAppointments(type) {
           meeting.Avatar = avPayload['recordset'][0].Avatar;
           switch(meeting.Status) {
             case 'Pending':
-            meeting.meetingButton = {
-              padding: 15,
-              backgroundColor: colors.vikingBlue
-            }
-            meeting.meetingButtonText = {
-              textAlign: 'center',
-              fontSize:16,
-              color: '#fff'
-            }
-            meeting.buttonText = 'Accept Meeting Time';
-            meeting.buttonPress = 'accept';
-            break;
+              meeting.meetingButton = {
+                padding: 15,
+                backgroundColor: colors.vikingBlue
+              }
+              meeting.meetingButtonText = {
+                textAlign: 'center',
+                fontSize:16,
+                color: '#fff'
+              }
+              meeting.buttonText = 'Accept Meeting Time';
+              meeting.buttonPress = 'accept';
+              break;
             case 'Scheduled':
-            meeting.meetingButton = {
-              padding: 15,
-              backgroundColor: colors.red
-            }
-            meeting.meetingButtonText = {
-              textAlign: 'center',
-              fontSize:16,
-              color: '#fff'
-            }
-            meeting.buttonText = 'Cancel Meeting';
-            meeting.buttonPress = 'cancel';
-            break;
+              meeting.meetingButton = {
+                padding: 15,
+                backgroundColor: colors.red
+              }
+              meeting.meetingButtonText = {
+                textAlign: 'center',
+                fontSize:16,
+                color: '#fff'
+              }
+              meeting.buttonText = 'Cancel Meeting';
+              meeting.buttonPress = 'cancel';
+              break;
             case 'Done':
-            meeting.meetingButton = {
-              padding: 15,
-              backgroundColor: colors.yellow
-            }
-            meeting.meetingButtonText = {
-              textAlign: 'center'
-            }
-            meeting.buttonText = 'Waiting for Mentee Summary';
-            meeting.buttonPress = ''; meeting.buttonDisabled = true;
-            break;
+              meeting.meetingButton = {
+                padding: 15,
+                backgroundColor: colors.yellow
+              }
+              meeting.meetingButtonText = {
+                textAlign: 'center'
+              }
+              meeting.buttonText = 'Waiting for Mentee Summary';
+              meeting.buttonPress = ''; meeting.buttonDisabled = true;
+              break;
             case 'Completed':
-            meeting.meetingButton = {
-              width: 0,
-              height: 0
-            }
-            meeting.meetingButtonText = {
-              textAlign: 'center'
-            }
-            meeting.buttonText = '';
-            meeting.buttonPress = ''; meeting.buttonDisabled = true;
-            break;
+              meeting.meetingButton = {
+                width: 0,
+                height: 0
+              }
+              meeting.meetingButtonText = {
+                textAlign: 'center'
+              }
+              meeting.buttonText = '';
+              meeting.buttonPress = ''; meeting.buttonDisabled = true;
+              break;
             case 'Cancelled':
-            meeting.meetingButton = {
-              width: 0,
-              height: 0
-            }
-            meeting.meetingButtonText = {
-              textAlign: 'center'
-            }
-            meeting.buttonText = '';
-            meeting.buttonPress = ''; meeting.buttonDisabled = true;
-            break;
+              meeting.meetingButton = {
+                width: 0,
+                height: 0
+              }
+              meeting.meetingButtonText = {
+                textAlign: 'center'
+              }
+              meeting.buttonText = '';
+              meeting.buttonPress = ''; meeting.buttonDisabled = true;
+              break;
           }
         } else {
           meeting.isMentor = false;
@@ -693,66 +693,66 @@ async function getAppointments(type) {
           meeting.Avatar = avPayload['recordset'][0].Avatar;
           switch(meeting.Status) {
             case 'Pending':
-            meeting.meetingButton = {
-              padding: 15,
-              backgroundColor: colors.vikingBlue
-            }
-            meeting.meetingButtonText = {
-              textAlign: 'center',
-              fontSize:16,
-              color: '#fff'
-            }
-            meeting.buttonText = 'Waiting for Mentor to Confirm...';
-            meeting.buttonPress = ''; meeting.buttonDisabled = true;
-            break;
+              meeting.meetingButton = {
+                padding: 15,
+                backgroundColor: colors.vikingBlue
+              }
+              meeting.meetingButtonText = {
+                textAlign: 'center',
+                fontSize:16,
+                color: '#fff'
+              }
+              meeting.buttonText = 'Waiting for Mentor to Confirm...';
+              meeting.buttonPress = ''; meeting.buttonDisabled = true;
+              break;
             case 'Scheduled':
-            meeting.meetingButton = {
-              padding: 15,
-              backgroundColor: colors.red
-            }
-            meeting.meetingButtonText = {
-              textAlign: 'center',
-              fontSize:16,
-              color: '#fff'
-            }
-            meeting.buttonText = 'Cancel Meeting';
-            meeting.buttonPress = 'cancel';
-            break;
+              meeting.meetingButton = {
+                padding: 15,
+                backgroundColor: colors.red
+              }
+              meeting.meetingButtonText = {
+                textAlign: 'center',
+                fontSize:16,
+                color: '#fff'
+              }
+              meeting.buttonText = 'Cancel Meeting';
+              meeting.buttonPress = 'cancel';
+              break;
             case 'Done':
-            meeting.meetingButton = {
-              padding: 15,
-              backgroundColor: colors.yellow
-            }
-            meeting.meetingButtonText = {
-              textAlign: 'center',
-              fontSize:16,
-              color: '#fff'
-            }
-            meeting.buttonText = 'Write Summary';
-            meeting.buttonPress = 'submitSummary';
-            break;
+              meeting.meetingButton = {
+                padding: 15,
+                backgroundColor: colors.yellow
+              }
+              meeting.meetingButtonText = {
+                textAlign: 'center',
+                fontSize:16,
+                color: '#fff'
+              }
+              meeting.buttonText = 'Write Summary';
+              meeting.buttonPress = 'submitSummary';
+              break;
             case 'Completed':
-            meeting.meetingButton = {
-              padding: 15,
-              backgroundColor: colors.green
-            }
-            meeting.meetingButtonText = {
-              textAlign: 'center'
-            }
-            meeting.buttonText = 'Edit Summary';
-            meeting.buttonPress = 'editSummary';
-            break;
+              meeting.meetingButton = {
+                padding: 15,
+                backgroundColor: colors.green
+              }
+              meeting.meetingButtonText = {
+                textAlign: 'center'
+              }
+              meeting.buttonText = 'Edit Summary';
+              meeting.buttonPress = 'editSummary';
+              break;
             case 'Cancelled':
-            meeting.meetingButton = {
-              width: 0,
-              height: 0
-            }
-            meeting.meetingButtonText = {
-              textAlign: 'center'
-            }
-            meeting.buttonText = '';
-            meeting.buttonPress = ''; meeting.buttonDisabled = true;
-            break;
+              meeting.meetingButton = {
+                width: 0,
+                height: 0
+              }
+              meeting.meetingButtonText = {
+                textAlign: 'center'
+              }
+              meeting.buttonText = '';
+              meeting.buttonPress = ''; meeting.buttonDisabled = true;
+              break;
           }
         }
 

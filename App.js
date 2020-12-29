@@ -460,124 +460,192 @@ const titleBar = (title, navFunction) => {
 
 // HOME SCREEN
 
-// Note: Separated unapprovedAccount and approvedAccount code into their own methods, but just because I could.
-const HomeScreen = ({ navigation }) => {
-  return (
+class HomeScreen extends React.Component {
+  constructor(props) {
+    super(props)
+    this.state = {
+      mentors: {},
+      mentees: {}
+    };
+  }
+
+  async setPairs() {
+
+    var mentors;
+    var mentees;
+    var doSetAsyncStorage = false;
+
+    try {
+      mentors = await getMentorsOf(curUser);
+      mentees = await getMenteesOf(curUser);
+      doSetAsyncStorage = true;
+    } catch (error) {
+      try {
+        mentors = await AsyncStorage.getItem('Mentors');
+        mentees = await AsyncStorage.getItem('Mentees');
+      } catch (error) {
+        console.log(error);
+      } 
+    }
+
+    // Save mentor/mentee info from the database into local storage, for when you're offline.
+    if (doSetAsyncStorage) {
+      try {
+        await AsyncStorage.setItem('Mentors', mentors);
+        await AsyncStorage.setItem('Mentees', mentees);
+      } catch (error) {
+        console.log(error);
+      }
+    }
+
+    this.setState({mentors: getMentorsOf(curUser), mentees: getMenteesOf(curUser)});
+  }
+
+  unapprovedAccount() {
+    return (
+    <View style={{height:50, width:windowWidth}} />,
+    <View style={{width: windowWidth, flexDirection: 'row-reverse', alignItems:'center'}}>
+      <View style={{width: 25}} />
+      <View style={{width: mainWidth, alignItems:'center', justifyContent:'center'}}>
+        <View style={{height: 50}} />
+        <Text style={{textAlign:'center', fontSize:22}}>Welcome to the CSWWU Mentors!</Text>
+        <View style={{height: 25}} />
+        <Text style={{textAlign:'center', fontSize:22}}>Admins are verifying your profile, check back later to be connected with your mentor/mentee.</Text>
+      </View>
+    </View>
+    );
+  };
+
+  approvedHome() { // removed accountID from approvedHome() parameters
+    this.setPairs()
+    return (
+      <View>
+        <Text>Mentors</Text>
+        {
+          this.state.mentors.map( (mentor) => {
+            <View style = {{height:5}}></View>
+            {this.pairItem(mentor, "Mentor")}
+          })
+        }
+        <Text>Mentees</Text>
+        {
+          this.state.mentees.map( (mentee) => {
+            <View style = {{height:5}}></View>
+            {this.pairItem(mentee, "Mentee")}
+          })
+        }
+      </View>
+    );
+  };
+
+  pairItem(otherUser, otherType) {
+    return (
+      <View style={{width:windowWidth, height:110, flexDirection:'row', alignItems:'center', backgroundColor: colors.lightGrey}} >
+        <View style={{width:80, alignItems:'center', justifyContent:'center'}}>
+          {/* <Image style={{width:60, height:60}} source={require('./assets/avatar.png')} /> */}
+          <Image style={{width:60, height:60}} source={otherUser.avatar} />
+          <View style={{height:5}} />
+          <View style={styles.MentorBox}>
+            <Text style={styles.MentorTag}>{ otherType } </Text>
+          </View>
+        </View>
+        <View style={{width: mainConversationWidth, flexDirection:'column'}}>
+        <View style={{flexDirection:'row'}}>
+          <Text style={{fontSize:20}}>{otherUser.firstName + " " + otherUser.lastName}</Text>
+        </View>
+          <View style={{height:4}} />
+          <View>
+            <Text></Text>
+          </View>
+        </View>
+        {/* <View style={{width:40, alignItems:'center', justifyContent:'center'}}>
+          <IonIcon type='Ionicons' name='ios-arrow-dropright' size={30} color='#000000' onPress={() => navigation.navigate('Messaging')} />
+        </View> */}
+      </View>
+    );
+  };
+
+  render() {
+    return (
     <View style={{flex: 1, flexDirection: 'column'}}>
       { titleBar("Home", () => navigation.navigate('SettingsModal')) }
-      { accountType == 1 ? [unapprovedAccount()] : [approvedHome()] }
+      { accountType == 1 ? [this.unapprovedAccount()] : [this.approvedHome()] }
     </View>
-  ); // removed accountID from approvedHome() call
-};
+    );
+  }
+}
 
-const unapprovedAccount = () => {
-  return (
-  <View style={{height:50, width:windowWidth}} />,
-  <View style={{width: windowWidth, flexDirection: 'row-reverse', alignItems:'center'}}>
-    <View style={{width: 25}} />
-    <View style={{width: mainWidth, alignItems:'center', justifyContent:'center'}}>
-      <View style={{height: 50}} />
-      <Text style={{textAlign:'center', fontSize:22}}>Welcome to the CSWWU Mentors!</Text>
-      <View style={{height: 25}} />
-      <Text style={{textAlign:'center', fontSize:22}}>Admins are verifying your profile, check back later to be connected with your mentor/mentee.</Text>
-    </View>
-  </View>
-  );
-};
-
-const approvedHome = () => { // removed accountID from approvedHome() parameters
-
-  const accounts = testAccounts;
-
-  // return (
-  //   <View>
-  //     <Text>Mentors</Text>
-  //     {
-  //       mentors.map( (mentor) => {
-  //         <View style = {{height:5}}></View>
-  //         {pairItem(mentor, "Mentor")}
-  //       })
-  //     }
-  //     <Text>Mentees</Text>
-  //     {
-  //       mentees.map( (mentee) => {
-  //         <View style = {{height:5}}></View>
-  //         {pairItem(mentee, "Mentee")}
-  //       })
-  //     }
-  //   </View>
-  // );
-
-  return (
-    <View key="home">
-      { accounts[accountID].connections.map( (id) => {
-        return(
-          <View key={id}>
-            <View style={{height:5}}></View>
-            {connectionItem(id)}
-          </View>
-        );
-      })}
-    </View>
-  );
-};
-
-// const pairItem = (otherUser, otherType) => {
-
+// // Note: Separated unapprovedAccount and approvedAccount code into their own methods, but just because I could.
+// const HomeScreen = ({ navigation }) => {
 //   return (
-//     <View style={{width:windowWidth, height:110, flexDirection:'row', alignItems:'center', backgroundColor: colors.lightGrey}} >
-//       <View style={{width:80, alignItems:'center', justifyContent:'center'}}>
-//         {/* <Image style={{width:60, height:60}} source={require('./assets/avatar.png')} /> */}
-//         <Image style={{width:60, height:60}} source={otherUser.avatar} />
-//         <View style={{height:5}} />
-//         <View style={styles.MentorBox}>
-//           <Text style={styles.MentorTag}>{ otherType } </Text>
-//         </View>
-//       </View>
-//       <View style={{width: mainConversationWidth, flexDirection:'column'}}>
-//       <View style={{flexDirection:'row'}}>
-//         <Text style={{fontSize:20}}>{otherUser.firstName + " " + otherUser.lastName}</Text>
-//       </View>
-//         <View style={{height:4}} />
-//         <View>
-//           <Text></Text>
-//         </View>
-//       </View>
-//       {/* <View style={{width:40, alignItems:'center', justifyContent:'center'}}>
-//         <IonIcon type='Ionicons' name='ios-arrow-dropright' size={30} color='#000000' onPress={() => navigation.navigate('Messaging')} />
-//       </View> */}
+//     <View style={{flex: 1, flexDirection: 'column'}}>
+//       { titleBar("Home", () => navigation.navigate('SettingsModal')) }
+//       { accountType == 1 ? [unapprovedAccount()] : [approvedHome()] }
 //     </View>
+//   ); // removed accountID from approvedHome() call
+// };
+
+// const unapprovedAccount = () => {
+//   return (
+//   <View style={{height:50, width:windowWidth}} />,
+//   <View style={{width: windowWidth, flexDirection: 'row-reverse', alignItems:'center'}}>
+//     <View style={{width: 25}} />
+//     <View style={{width: mainWidth, alignItems:'center', justifyContent:'center'}}>
+//       <View style={{height: 50}} />
+//       <Text style={{textAlign:'center', fontSize:22}}>Welcome to the CSWWU Mentors!</Text>
+//       <View style={{height: 25}} />
+//       <Text style={{textAlign:'center', fontSize:22}}>Admins are verifying your profile, check back later to be connected with your mentor/mentee.</Text>
+//     </View>
+//   </View>
 //   );
 // };
 
-const connectionItem = (connectionID) => {
+// const approvedHome = () => { // removed accountID from approvedHome() parameters
 
-  const accounts = testAccounts;
+//   // const accounts = testAccounts;
 
-  return (
-    <View style={{width:windowWidth, height:110, flexDirection:'row', alignItems:'center', backgroundColor: colors.lightGrey}} >
-      <View style={{width:80, alignItems:'center', justifyContent:'center'}}>
-        <Image style={{width:60, height:60}} source={require('./assets/avatar.png')} />
-        <View style={{height:5}} />
-        <View style={styles.MentorBox}>
-          <Text style={styles.MentorTag}>{ accounts[connectionID].type } </Text>
-        </View>
-      </View>
-      <View style={{width: mainConversationWidth, flexDirection:'column'}}>
-      <View style={{flexDirection:'row'}}>
-        <Text style={{fontSize:20}}>John Smith</Text>
-      </View>
-        <View style={{height:4}} />
-        <View>
-          <Text></Text>
-        </View>
-      </View>
-      {/* <View style={{width:40, alignItems:'center', justifyContent:'center'}}>
-        <IonIcon type='Ionicons' name='ios-arrow-dropright' size={30} color='#000000' onPress={() => navigation.navigate('Messaging')} />
-      </View> */}
-    </View>
-  );
-};
+//   // return (
+//   //   <View key="home">
+//   //     { accounts[accountID].connections.map( (id) => {
+//   //       return(
+//   //         <View key={id}>
+//   //           <View style={{height:5}}></View>
+//   //           {connectionItem(id)}
+//   //         </View>
+//   //       );
+//   //     })}
+//   //   </View>
+//   // );
+// };
+
+// // const connectionItem = (connectionID) => {
+
+// //   const accounts = testAccounts;
+
+// //   return (
+// //     <View style={{width:windowWidth, height:110, flexDirection:'row', alignItems:'center', backgroundColor: colors.lightGrey}} >
+// //       <View style={{width:80, alignItems:'center', justifyContent:'center'}}>
+// //         <Image style={{width:60, height:60}} source={require('./assets/avatar.png')} />
+// //         <View style={{height:5}} />
+// //         <View style={styles.MentorBox}>
+// //           <Text style={styles.MentorTag}>{ accounts[connectionID].type } </Text>
+// //         </View>
+// //       </View>
+// //       <View style={{width: mainConversationWidth, flexDirection:'column'}}>
+// //       <View style={{flexDirection:'row'}}>
+// //         <Text style={{fontSize:20}}>John Smith</Text>
+// //       </View>
+// //         <View style={{height:4}} />
+// //         <View>
+// //           <Text></Text>
+// //         </View>
+// //       </View>
+// //       {/* <View style={{width:40, alignItems:'center', justifyContent:'center'}}>
+// //         <IonIcon type='Ionicons' name='ios-arrow-dropright' size={30} color='#000000' onPress={() => navigation.navigate('Messaging')} />
+// //       </View> */}
+// //     </View>
+// //   );
+// // };
 
 async function getAppointments(type) {
   var meetings = [];

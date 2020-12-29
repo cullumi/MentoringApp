@@ -234,24 +234,32 @@ const oldMeetings = ["0-1-11/19/2020"];
 
 // API GET and POST Methods
 
+// Gets all pairs containing the given user as a mentor, then gets a list of mentees using those pairs.
 async function getMenteesOf (userID) {
 
   console.log("Getting Mentors...")
 
-  var pairs = [];
-  pairs = await getPairsOf('mentee', userID);
+  const pairs = await getPairsOf('mentee', userID);
+  const mentees = [];
+  for (var i = 0; i < pairs.length; i++) {
+    mentees.push(getUserByID(pairs[i].menteeID));
+  }
 
-  return pairs;
+  return mentees;
 }
 
+// Gets all pairs containing the given user as a mentee, then gets a list of mentors using those pairs.
 async function getMentorsOf (userID) {
 
   console.log("Getting Mentees...");
 
-  var pairs = [];
-  pairs = await getPairsOf('mentor', userID);
+  const pairs = await getPairsOf('mentor', userID);
+  const mentors = [];
+  for (var i = 0; i < pairs.length; i++) {
+    mentors.push(getUserByID(pairs[i].mentorID));
+  }
 
-  return pairs;
+  return mentors;
 }
 
 async function getPairsOf(type, userID) {
@@ -281,14 +289,21 @@ async function getPairsOf(type, userID) {
   return pairs;
 }
 
-// Simply gets the Current User, after running the ensureUserExists method.
+// Gets the Current User via the ensureUserExists method.
 async function getCurrentUser () {
-
   const userPayload = await ensureUserExists();
+  return createLocalUser(userPayload);
+}
 
+// Gets a user based on a certain user id.
+async function getUserByID(id) {
+  const userPayload = await getUserByID(id);
+  return createLocalUser(userPayload);
+}
+
+// Creates a javascript object out of a user payload for use elsewhere in the React Native app.
+function createLocalUser(userPayload) {
   const recordSet = userPayload["recordset"][0];
-  //console.log(recordSet);
-
   return {
     id: recordSet["Id"],
     email: recordSet["Email"],
@@ -304,7 +319,6 @@ async function getCurrentUser () {
 
 // Probably temporary, but this effectively accounts for when the user was created offline, or for when the API is offline.
 async function ensureUserExists () {
-
   // try {
   const email = await AsyncStorage.getItem("Email");
   const first = await AsyncStorage.getItem('FirstName');
@@ -315,20 +329,28 @@ async function ensureUserExists () {
   // }
 
   console.log("Email: " + email);
-  let userPayload = await getUserByEmail(email);
+  let userPayload = await getUserPayloadByEmail(email);
 
   // check if this user needs to be added to DB.
   while (userPayload.rowsAffected == 0) {
     await postNewUser(email, first, last, pic);
-    userPayload = await getUserByEmail(email);
+    userPayload = await getUserPayloadByEmail(email);
   }
 
   const payload = userPayload;
   return payload;
 }
 
-async function getUserByEmail(email) {
+async function getUserPayloadByEmail(email) {
   const userres = await fetch(url + '/user/email/' + email, {
+    method: 'GET'
+  });
+  const userPayload = await userres.json();
+  return userPayload;
+}
+
+async function getUserPayloadByID(id) {
+  const userres = await fetch(url + '/user/id/' + id, {
     method: 'GET'
   });
   const userPayload = await userres.json();
@@ -473,14 +495,14 @@ const approvedHome = () => { // removed accountID from approvedHome() parameters
   //     {
   //       mentors.map( (mentor) => {
   //         <View style = {{height:5}}></View>
-  //         {connectionItem(mentor)}
+  //         {pairItem(mentor, "Mentor")}
   //       })
   //     }
   //     <Text>Mentees</Text>
   //     {
   //       mentees.map( (mentee) => {
   //         <View style = {{height:5}}></View>
-  //         {connectionItem(mentee)}
+  //         {pairItem(mentee, "Mentee")}
   //       })
   //     }
   //   </View>
@@ -499,6 +521,34 @@ const approvedHome = () => { // removed accountID from approvedHome() parameters
     </View>
   );
 };
+
+// const pairItem = (otherUser, otherType) => {
+
+//   return (
+//     <View style={{width:windowWidth, height:110, flexDirection:'row', alignItems:'center', backgroundColor: colors.lightGrey}} >
+//       <View style={{width:80, alignItems:'center', justifyContent:'center'}}>
+//         {/* <Image style={{width:60, height:60}} source={require('./assets/avatar.png')} /> */}
+//         <Image style={{width:60, height:60}} source={otherUser.avatar} />
+//         <View style={{height:5}} />
+//         <View style={styles.MentorBox}>
+//           <Text style={styles.MentorTag}>{ otherType } </Text>
+//         </View>
+//       </View>
+//       <View style={{width: mainConversationWidth, flexDirection:'column'}}>
+//       <View style={{flexDirection:'row'}}>
+//         <Text style={{fontSize:20}}>{otherUser.firstName + " " + otherUser.lastName}</Text>
+//       </View>
+//         <View style={{height:4}} />
+//         <View>
+//           <Text></Text>
+//         </View>
+//       </View>
+//       {/* <View style={{width:40, alignItems:'center', justifyContent:'center'}}>
+//         <IonIcon type='Ionicons' name='ios-arrow-dropright' size={30} color='#000000' onPress={() => navigation.navigate('Messaging')} />
+//       </View> */}
+//     </View>
+//   );
+// };
 
 const connectionItem = (connectionID) => {
 

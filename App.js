@@ -175,8 +175,8 @@ const accountID = 1;
 const accountType = 0;
 const url = "http://mshipapp.loca.lt";
 var curUser;
-var mentors;
-var mentees;
+// var mentors;
+// var mentees;
 
 
 const testAccounts = {
@@ -237,7 +237,7 @@ const oldMeetings = ["0-1-11/19/2020"];
 // Gets all pairs containing the given user as a mentor, then gets a list of mentees using those pairs.
 async function getMenteesOf (userID) {
 
-  console.log("Getting Mentors...")
+  console.log("Getting Mentees...")
 
   const pairs = await getPairsOf('mentee', userID);
   const mentees = [];
@@ -251,7 +251,7 @@ async function getMenteesOf (userID) {
 // Gets all pairs containing the given user as a mentee, then gets a list of mentors using those pairs.
 async function getMentorsOf (userID) {
 
-  console.log("Getting Mentees...");
+  console.log("Getting Mentors...");
 
   const pairs = await getPairsOf('mentor', userID);
   const mentors = [];
@@ -464,41 +464,49 @@ class HomeScreen extends React.Component {
   constructor(props) {
     super(props)
     this.state = {
-      mentors: {},
-      mentees: {}
+      shouldUpdate: true,
+      mentors: [],
+      mentees: []
     };
   }
 
   async setPairs() {
 
-    var mentors;
-    var mentees;
+    var newMentors = [];
+    var newMentees = [];
     var doSetAsyncStorage = false;
 
     try {
-      mentors = await getMentorsOf(curUser);
-      mentees = await getMenteesOf(curUser);
+      newMentors = await getMentorsOf(curUser);
+      newMentees = await getMenteesOf(curUser);
       doSetAsyncStorage = true;
     } catch (error) {
       try {
-        mentors = await AsyncStorage.getItem('Mentors');
-        mentees = await AsyncStorage.getItem('Mentees');
-      } catch (error) {
-        console.log(error);
-      } 
-    }
-
-    // Save mentor/mentee info from the database into local storage, for when you're offline.
-    if (doSetAsyncStorage) {
-      try {
-        await AsyncStorage.setItem('Mentors', mentors);
-        await AsyncStorage.setItem('Mentees', mentees);
+        var tempMentors = await AsyncStorage.getItem('Mentors');
+        var tempMentees = await AsyncStorage.getItem('Mentees');
+        
+        if (tempMentors != null && Array.isArray(tempMentors)) {
+          newMentors = tempMentors;
+        }
+        if (tempMentees != null && Array.isArray(tempMentees)) {
+          newMentees = tempMentees;
+        }
       } catch (error) {
         console.log(error);
       }
     }
 
-    this.setState({mentors: getMentorsOf(curUser), mentees: getMenteesOf(curUser)});
+    // Save mentor/mentee info from the database into local storage, for when you're offline.
+    if (doSetAsyncStorage) {
+      try {
+        await AsyncStorage.setItem('Mentors', newMentors);
+        await AsyncStorage.setItem('Mentees', newMentees);
+      } catch (error) {
+        console.log(error);
+      }
+    }
+
+    this.setState({shouldUpdate: false, mentors: newMentors, mentees: newMentees});
   }
 
   unapprovedAccount() {
@@ -517,7 +525,10 @@ class HomeScreen extends React.Component {
   };
 
   approvedHome() { // removed accountID from approvedHome() parameters
-    this.setPairs()
+    if (this.state.shouldUpdate) {
+      this.setPairs();
+    }
+
     return (
       <View>
         <Text>Mentors</Text>

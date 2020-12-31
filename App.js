@@ -1209,23 +1209,101 @@ class ProposeMeetingScreen extends React.Component {
     };
   }
 
-  render () {
+  render() {
     //
   }
 }
 
+async function getAllTopics() {
+  getCurrentUser();
+  return 0;
+}
+
 class TopicsScreen extends React.Component {
+
   constructor(props) {
     super(props)
     this.state = {
-      refreshing : false
+      shouldUpdate: true,
+      topics: [0, 1, 2, 3]
     };
   }
 
+  async setTopics() {
+    var newTopics = [0, 1, 2, 3];
+    var doSetAsyncStorage = false;
+
+    try {
+      newTopics = await getAllTopics();
+      doSetAsyncStorage = true;
+    } catch (error) {
+      try {
+        var tempTopics = await AsyncStorage.getItem('Topics');
+        
+        if (tempTopics != null && Array.isArray(tempMentors)) {
+          newTopics = tempTopics;
+        }
+      } catch (error) {
+        console.log(error);
+      }
+    }
+
+    if (doSetAsyncStorage) {
+      await AsyncStorage.setItem('Topics', newTopics);
+    }
+
+    this.setState({shouldUpdate: false, topics: newTopics})
+  }
+
+  topicItem(topic) {
+
+    console.log("Topic Item")
+
+    return (
+      <View style={{width:windowWidth, height:110, flexDirection:'row', alignItems:'center', backgroundColor: colors.lightGrey}} >
+        <Text>Test Stuff</Text>
+        <View style={{width:80, alignItems:'center', justifyContent:'center'}}>
+          <View style={{height:5}} />
+          <View style={styles.MentorBox}>
+            <Text style={styles.MentorTag}>{ "Test" } </Text>
+          </View>
+        </View>
+        <View style={{width: mainConversationWidth, flexDirection:'column'}}>
+          <View style={{flexDirection:'row'}}>
+            <Text style={{fontSize:50}}>TITLE!</Text>
+            <Text style={{fontSize:20}}>This is a topic description! :P</Text>
+          </View>
+        </View>
+        <View style={{height:4}} />
+        <View>
+          <Text></Text>
+        </View>
+        {/* <View style={{width:40, alignItems:'center', justifyContent:'center'}}>
+          <IonIcon type='Ionicons' name='ios-arrow-dropright' size={30} color='#000000' onPress={() => navigation.navigate('Messaging')} />
+        </View> */}
+     </View>
+    );
+  }
+
   render () {
-    return <View>
-    { titleBar("Topics", () => this.props.navigation.navigate('SettingsModal')) }
-    </View>
+
+    // if (this.state.shouldUpdate) {
+    //   this.setTopics();
+    // }
+
+    const testTopics = [0, 1, 2, 3];
+
+    return (<View style={{flex: 1, flexDirection: 'column'}}>
+        { titleBar("Topics", () => this.props.navigation.navigate('SettingsModal')) }
+        <View>
+          <Text>Topics</Text>
+          { testTopics.map( (topic) => {
+            <View style = {{height:5}}></View>
+            {this.topicItem(topic)}
+          })}
+        </View>
+      </View>
+    );
   }
 }
 
@@ -1264,6 +1342,7 @@ class HelpScreen extends React.Component {
     </View>
   }
 }
+
 // SPLASH SCREEN
 
 // For checking user login status...

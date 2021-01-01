@@ -175,8 +175,8 @@ const accountID = 1;
 const accountType = 0;
 const url = "http://mshipapp.loca.lt";
 var curUser;
-// var mentors;
-// var mentees;
+// var mentors
+// var mentees
 
 
 const testAccounts = {
@@ -440,7 +440,7 @@ function HomeStack() {
 
 const titleBar = (title, navFunction) => {
   return (
-    <View>
+    <View key={title}>
       <View style={{height:25, backgroundColor: colors.vikingBlue}}></View>
       <View style={{height:30, backgroundColor: colors.white}}></View>
       <View style={{flexDirection:'row-reverse', backgroundColor: colors.white, alignItems:'center'}}>
@@ -551,7 +551,7 @@ class HomeScreen extends React.Component {
 
   pairItem(otherUser, otherType) {
     return (
-      <View style={{width:windowWidth, height:110, flexDirection:'row', alignItems:'center', backgroundColor: colors.lightGrey}} >
+      <View key={otherUser.id.toString()} style={{width:windowWidth, height:110, flexDirection:'row', alignItems:'center', backgroundColor: colors.lightGrey}} >
         <View style={{width:80, alignItems:'center', justifyContent:'center'}}>
           {/* <Image style={{width:60, height:60}} source={require('./assets/avatar.png')} /> */}
           <Image style={{width:60, height:60}} source={otherUser.avatar} />
@@ -585,78 +585,6 @@ class HomeScreen extends React.Component {
     );
   }
 }
-
-// // Note: Separated unapprovedAccount and approvedAccount code into their own methods, but just because I could.
-// const HomeScreen = ({ navigation }) => {
-//   return (
-//     <View style={{flex: 1, flexDirection: 'column'}}>
-//       { titleBar("Home", () => navigation.navigate('SettingsModal')) }
-//       { accountType == 1 ? [unapprovedAccount()] : [approvedHome()] }
-//     </View>
-//   ); // removed accountID from approvedHome() call
-// };
-
-// const unapprovedAccount = () => {
-//   return (
-//   <View style={{height:50, width:windowWidth}} />,
-//   <View style={{width: windowWidth, flexDirection: 'row-reverse', alignItems:'center'}}>
-//     <View style={{width: 25}} />
-//     <View style={{width: mainWidth, alignItems:'center', justifyContent:'center'}}>
-//       <View style={{height: 50}} />
-//       <Text style={{textAlign:'center', fontSize:22}}>Welcome to the CSWWU Mentors!</Text>
-//       <View style={{height: 25}} />
-//       <Text style={{textAlign:'center', fontSize:22}}>Admins are verifying your profile, check back later to be connected with your mentor/mentee.</Text>
-//     </View>
-//   </View>
-//   );
-// };
-
-// const approvedHome = () => { // removed accountID from approvedHome() parameters
-
-//   // const accounts = testAccounts;
-
-//   // return (
-//   //   <View key="home">
-//   //     { accounts[accountID].connections.map( (id) => {
-//   //       return(
-//   //         <View key={id}>
-//   //           <View style={{height:5}}></View>
-//   //           {connectionItem(id)}
-//   //         </View>
-//   //       );
-//   //     })}
-//   //   </View>
-//   // );
-// };
-
-// // const connectionItem = (connectionID) => {
-
-// //   const accounts = testAccounts;
-
-// //   return (
-// //     <View style={{width:windowWidth, height:110, flexDirection:'row', alignItems:'center', backgroundColor: colors.lightGrey}} >
-// //       <View style={{width:80, alignItems:'center', justifyContent:'center'}}>
-// //         <Image style={{width:60, height:60}} source={require('./assets/avatar.png')} />
-// //         <View style={{height:5}} />
-// //         <View style={styles.MentorBox}>
-// //           <Text style={styles.MentorTag}>{ accounts[connectionID].type } </Text>
-// //         </View>
-// //       </View>
-// //       <View style={{width: mainConversationWidth, flexDirection:'column'}}>
-// //       <View style={{flexDirection:'row'}}>
-// //         <Text style={{fontSize:20}}>John Smith</Text>
-// //       </View>
-// //         <View style={{height:4}} />
-// //         <View>
-// //           <Text></Text>
-// //         </View>
-// //       </View>
-// //       {/* <View style={{width:40, alignItems:'center', justifyContent:'center'}}>
-// //         <IonIcon type='Ionicons' name='ios-arrow-dropright' size={30} color='#000000' onPress={() => navigation.navigate('Messaging')} />
-// //       </View> */}
-// //     </View>
-// //   );
-// // };
 
 async function getAppointments(type) {
   var meetings = [];
@@ -1232,6 +1160,9 @@ async function getAllTopics() {
   getCurrentUser();
   return 0;
 }
+
+
+// Topic Screen -- for displaying a list of all current and past monthly topics.
 
 class TopicsScreen extends React.Component {
 

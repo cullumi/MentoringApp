@@ -484,7 +484,7 @@ class HomeScreen extends React.Component {
       try {
         var tempMentors = await AsyncStorage.getItem('Mentors');
         var tempMentees = await AsyncStorage.getItem('Mentees');
-        
+
         if (tempMentors != null && Array.isArray(tempMentors)) {
           newMentors = tempMentors;
         }
@@ -908,7 +908,7 @@ class MeetingsScreen extends React.Component {
     };
   }
 
-  componentDidMount = () => {
+  componentDidMount() {
     getAppointments('past')
     .then((data) => {
       this.setState({
@@ -925,6 +925,18 @@ class MeetingsScreen extends React.Component {
     });
   };
 
+  componentDidUpdate() {
+    if (this.state.refreshing == true) {
+      getAppointments('upcoming')
+      .then((data) => {
+        this.setState({
+          upcomingMeetings:data,
+          refreshing: false
+        })
+      });
+    }
+  };
+
   async acceptMeeting (id) {
     const statusupdateres = await fetch(url + '/update-appointment-status', {
       method: 'POST',
@@ -936,9 +948,11 @@ class MeetingsScreen extends React.Component {
         'Accept': 'application/json',
         'Content-Type': 'application/json',
       }
-    }).catch((error) => {
+    })
+    .catch((error) => {
       console.error(error);
     });
+    this.setState({refreshing: true});
   }
 
   acceptMeetingAlert = (id) => {
@@ -956,7 +970,6 @@ class MeetingsScreen extends React.Component {
       ],
       { cancelable: false }
     );
-    this.setState({refreshing: true});
   }
 
   async cancelMeeting (id) {
@@ -990,16 +1003,17 @@ class MeetingsScreen extends React.Component {
       ],
       { cancelable: false }
     );
-    this.setState({refreshing: true});
   }
 
   handlePress = (type, id) => {
     switch(type) {
       case 'accept':
       this.acceptMeetingAlert(id);
+      this.setState({refreshing: true});
       break;
       case 'cancel':
       this.cancelMeetingAlert(id);
+      this.setState({refreshing: true});
       break;
       case 'submitSummary':
       this.props.navigation.navigate('WriteSummary', { data: { id: m.Id, type: 'submit' }});
@@ -1090,7 +1104,7 @@ class MeetingsScreen extends React.Component {
   }
 
   render () {
-    return (<View style={{flex:1}}>
+    return (<View style={{flex:1}} key={this.state.refreshing}>
     { titleBar("Meetings", () => this.props.navigation.navigate('SettingsModal')) }
     { this.printUpcomingMeetings() }
     { this.printPastMeetings() }
@@ -1239,7 +1253,7 @@ class TopicsScreen extends React.Component {
     } catch (error) {
       try {
         var tempTopics = await AsyncStorage.getItem('Topics');
-        
+
         if (tempTopics != null && Array.isArray(tempMentors)) {
           newTopics = tempTopics;
         }

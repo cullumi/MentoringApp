@@ -2,7 +2,7 @@ import 'react-native-gesture-handler';
 import React, { useState, Component } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
-import { Linking, TouchableOpacity, AsyncStorage, StyleSheet, Text, Image, SafeAreaView, ScrollView, View, ActivityIndicator, StatusBar, Dimensions, Alert, TextInput } from 'react-native';
+import { Animated, Linking, TouchableOpacity, AsyncStorage, StyleSheet, Text, Image, SafeAreaView, ScrollView, View, ActivityIndicator, StatusBar, Dimensions, Alert, TextInput } from 'react-native';
 import LinkedInModal from 'react-native-linkedin';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import IonIcon from 'react-native-vector-icons/Ionicons';
@@ -103,7 +103,7 @@ const styles = StyleSheet.create({
     textAlign:"center"
   },
 
-  meetingsUpcoming: {
+  meetingsGroup: {
     paddingTop: 25,
     paddingLeft: 15,
     paddingBottom:25,
@@ -145,23 +145,54 @@ const styles = StyleSheet.create({
     fontSize:14
   },
 
-  summaryInput: {
-    height:80,
+  summaryInputBox: {
     marginLeft:15,
     marginRight: 15,
     marginTop: 15,
-    marginBottom:5
+    marginBottom:15,
+    paddingTop:5,
+    paddingLeft:10,
+    paddingRight:10,
+    backgroundColor:'#fff'
+  },
+
+  summaryInput: {
+    height:200,
+    backgroundColor:'#fff'
   },
 
   summaryButton: {
     padding: 15,
-    backgroundColor: colors.vikingBlue
+    backgroundColor: colors.vikingBlue,
+    alignItems:'center',
+    marginLeft:15,
+    marginRight:15,
+    marginBottom:45,
+    marginBottom:15
   },
 
   summaryButtonText: {
     textAlign: 'center',
     fontSize:16,
     color: '#fff'
+  },
+
+  summaryTitle: {
+    fontSize:16,
+    textAlign:'center',
+    alignItems:'center',
+    marginTop:15
+  },
+
+  savedNotification: {
+    textAlign:'center',
+    width:'100%',
+    height:18,
+    alignContent:'center',
+    justifyContent:'center',
+    color:'#000',
+    fontSize:18,
+    marginBottom:15
   }
 
 });
@@ -679,6 +710,7 @@ async function getAppointments(type) {
           });
           const avPayload = await avres.json();
           meeting.Avatar = avPayload['recordset'][0].Avatar;
+          meeting.summaryTitle = "Reflect on your conversation with " + avPayload['recordset'][0].FirstName + ":";
           switch(meeting.Status) {
             case 'Pending':
               meeting.meetingButton = {
@@ -707,15 +739,15 @@ async function getAppointments(type) {
               meeting.buttonPress = 'cancel';
               break;
             case 'Done':
-              meeting.meetingButton = {
-                padding: 15,
-                backgroundColor: colors.yellow
-              }
-              meeting.meetingButtonText = {
-                textAlign: 'center'
-              }
-              meeting.buttonText = 'Waiting for Mentee Summary';
-              meeting.buttonPress = ''; meeting.buttonDisabled = true;
+            meeting.meetingButton = {
+              width: 0,
+              height: 0
+            }
+            meeting.meetingButtonText = {
+              textAlign: 'center'
+            }
+            meeting.buttonText = '';
+            meeting.buttonPress = ''; meeting.buttonDisabled = true;
               break;
             case 'Completed':
               meeting.meetingButton = {
@@ -748,6 +780,7 @@ async function getAppointments(type) {
           });
           const avPayload = await avres.json();
           meeting.Avatar = avPayload['recordset'][0].Avatar;
+          meeting.summaryTitle = "Reflect on your conversation with " + avPayload['recordset'][0].FirstName + ":";
           switch(meeting.Status) {
             case 'Pending':
               meeting.meetingButton = {
@@ -794,7 +827,8 @@ async function getAppointments(type) {
                 backgroundColor: colors.green
               }
               meeting.meetingButtonText = {
-                textAlign: 'center'
+                textAlign: 'center',
+                color:'#fff'
               }
               meeting.buttonText = 'Edit Summary';
               meeting.buttonPress = 'editSummary';
@@ -816,8 +850,12 @@ async function getAppointments(type) {
         meetings.push(meeting);
 
       }
+
     }
+
   }
+
+  meetings.sort((a,b) => new Date(b.dateText) - new Date(a.dateText));
 
   //console.log(type + " meetings: " + JSON.stringify(meetings));
   return meetings;
@@ -933,7 +971,7 @@ class MeetingsScreen extends React.Component {
     );
   }
 
-  handlePress = (type, id) => {
+  handlePress = (type, id, str) => {
     switch(type) {
       case 'accept':
       this.acceptMeetingAlert(id);
@@ -944,10 +982,10 @@ class MeetingsScreen extends React.Component {
       this.setState({refreshing: true});
       break;
       case 'submitSummary':
-      this.props.navigation.navigate('WriteSummary', { data: { id: m.Id, type: 'submit' }});
+      this.props.navigation.navigate('WriteSummary', { id: id, type: 'submit', summaryTitle: str });
       break;
       case 'editSummary':
-      this.props.navigation.navigate('WriteSummary', { data: { id: m.Id, type: 'edit' }});
+      this.props.navigation.navigate('WriteSummary', { id: id, type: 'edit', summaryTitle: str });
       break;
     }
   }
@@ -956,7 +994,33 @@ class MeetingsScreen extends React.Component {
     console.log("P: " + JSON.stringify(this.state.pastMeetings));
     if (this.state.pastMeetings[0] !== undefined) {
       return (<View>
-        <Text style={styles.meetingsTitle}>Past</Text>
+        <View style={styles.meetingsGroup}>
+          <Text style={styles.meetingsTitle}>Past</Text>
+        </View>
+        { this.state.pastMeetings.map((m) => {
+          return (<View style={styles.meeting}>
+            <View style={styles.meetingInfo}>
+              <View style={styles.meetingMainRow}>
+                <Image style={styles.meetingAvatar} source={{uri: m.Avatar}} />
+                <View style={styles.meetingMainInfo}>
+                  <Text style={styles.meetingTitleText}>{m.titleText}</Text>
+                  <Text style={styles.meetingDateText}>{m.dateText}</Text>
+                </View>
+                <View style={{flex: 1}}>
+                  <Text style={m.meetingStatus}>{m.Status}</Text>
+                </View>
+
+              </View>
+            </View>
+            <Button
+              containerStyle={m.meetingButton}
+              style={m.meetingButtonText}
+              onPress={() => this.handlePress(m.buttonPress, m.Id, m.summaryTitle)}
+              disabled={m.buttonDisabled}>
+              {m.buttonText}
+            </Button>
+          </View>);
+        })}
       </View>);
     } else {
       return (<View>
@@ -968,7 +1032,7 @@ class MeetingsScreen extends React.Component {
     console.log("U: " + JSON.stringify(this.state.upcomingMeetings));
     if (this.state.upcomingMeetings[0] !== undefined) {
       return (<View>
-        <View style={styles.meetingsUpcoming}>
+        <View style={styles.meetingsGroup}>
           <Text style={styles.meetingsTitle}>Upcoming</Text>
           <Tooltip animated={true}
           arrowSize={{width: 16, height: 8}}
@@ -1010,7 +1074,7 @@ class MeetingsScreen extends React.Component {
       </View>);
     } else {
       return (<View>
-        <View style={styles.meetingsUpcoming}>
+        <View style={styles.meetingsGroup}>
           <Text style={styles.meetingsTitle}>Upcoming</Text>
           <Tooltip animated={true}
           arrowSize={{width: 16, height: 8}}
@@ -1018,7 +1082,7 @@ class MeetingsScreen extends React.Component {
           isVisible={this.state.toolTipVisible}
           placement="left"
           onClose={() => this.setState({toolTipVisible:false})}
-          content={<Text>Propose meetings by tapping on a specific mentor on the Home tab!</Text>}>
+          content={<Text>Mentees can propose meetings by tapping on a specific mentor on the Home tab!</Text>}>
             <TouchableOpacity
             onPress={() => this.setState({toolTipVisible:true})}>
               <IonIcon style={{paddingRight:15,paddingTop:6}} name="ios-help-circle-outline" size="30" color={colors.gray} />
@@ -1043,14 +1107,25 @@ class MeetingsScreen extends React.Component {
 class WriteSummaryScreen extends React.Component {
   constructor(props) {
     super(props)
+    this.state = {
+      storageId: '',
+      normalId: -1,
+      type: '',
+      curSummary: '',
+      summaryTitle: '',
+      fadeOut: new Animated.Value(0)
+    }
   }
 
   componentDidMount = () => {
-    const { id, type } = this.props.navigation.state.params.data;
+    const id = this.props.route.params.id;
+    const type = this.props.route.params.type;
+    const summaryTitle = this.props.route.params.summaryTitle;
     const storageId = 'summary_' + id;
     this.setState({storageId:storageId});
     this.setState({normalId:id});
     this.setState({type:type});
+    this.setState({summaryTitle:summaryTitle});
     AsyncStorage.getItem(storageId).then((value) => this.setSkipValue(value));
   }
 
@@ -1068,7 +1143,7 @@ class WriteSummaryScreen extends React.Component {
   }
 
   async handleSubmit() {
-    const user = await AsyncStorage.getItem('User');
+    const user = JSON.parse(await AsyncStorage.getItem('User'));
     if (this.state.type === 'submit') {
       // post insert
       const postres = fetch (url + '/create-summary', {
@@ -1076,7 +1151,21 @@ class WriteSummaryScreen extends React.Component {
         body: JSON.stringify({
           AppointmentId: this.state.normalId,
           SummaryText: this.state.curSummary,
-          UserId: user.Id
+          UserId: user.id
+        }),
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        }
+      })
+      .catch((error) => {
+        console.error(error);
+      });
+      const statusupdateres = await fetch(url + '/update-appointment-status', {
+        method: 'POST',
+        body: JSON.stringify({
+          Id: this.state.normalId,
+          Status: 'Completed'
         }),
         headers: {
           'Accept': 'application/json',
@@ -1093,7 +1182,7 @@ class WriteSummaryScreen extends React.Component {
         body: JSON.stringify({
           AppointmentId: this.state.normalId,
           SummaryText: this.state.curSummary,
-          UserId: user.Id
+          UserId: user.id
         }),
         headers: {
           'Accept': 'application/json',
@@ -1104,7 +1193,21 @@ class WriteSummaryScreen extends React.Component {
         console.error(error);
       });
     }
-    this.props.navigation.navigate('Meetings');
+    this.fadeOut();
+  }
+
+  fadeOut() {
+    this.setState({ fadeOut: new Animated.Value(1), type:'edit' },
+    () => {
+      Animated.timing(
+        this.state.fadeOut,
+        {
+          toValue: 0,
+          duration: 2000,
+          useNativeDriver: true
+        }
+      ).start();
+    })
   }
 
   render () {
@@ -1119,26 +1222,31 @@ class WriteSummaryScreen extends React.Component {
           </TouchableOpacity>
           <View style={{width:10}}></View>
           <View style={{width:mainTitleWidth,textAlign:'center',alignItems:'center'}}>
-            <Text style={{fontSize:22}}>Settings</Text>
+            <Text style={{fontSize:18}}>Edit Summary</Text>
           </View>
-          <TouchableOpacity onPress={() => this.props.navigation.navigate('HelpModal')} activeOpacity={0.5}>
-            <Image style={{width:30, height:30}} source={require('./assets/help.png')} />
-          </TouchableOpacity>
         </View>
         <View style={{height:30, backgroundColor: colors.white}}></View>
       </View>
+      <Text style={styles.summaryTitle}>{this.state.summaryTitle}</Text>
+      <View style={styles.summaryInputBox}>
       <TextInput
       multiline
       numberOfLines={6}
       style={styles.summaryInput}
-      onChangeText={text => saveSummary(text)}
+      onChangeText={text => this.saveSummary(text)}
       value={this.state.curSummary} />
+      </View>
       <Button
         containerStyle={styles.summaryButton}
-        style={summaryButtonText}
-        onPress={this.handleSubmit()}>
-        Submit
+        style={styles.summaryButtonText}
+        onPress={() => this.handleSubmit()}>
+        Save
       </Button>
+      <Animated.View style={{opacity: this.state.fadeOut}}>
+        <View style={styles.savedNotification}>
+          <Text style={{textAlign: 'center'}}>Summary saved!</Text>
+        </View>
+      </Animated.View>
     </View>
   }
 }

@@ -595,15 +595,13 @@ class HomeScreen extends React.Component {
         <Text>Mentors</Text>
         {
           this.state.mentors.map( (mentor) => {
-            <View style = {{height:5}}></View>
-            {this.pairItem(mentor, "Mentor")}
+            return this.pairItem(mentor, "Mentor");
           })
         }
         <Text>Mentees</Text>
         {
           this.state.mentees.map( (mentee) => {
-            <View style = {{height:5}}></View>
-            {this.pairItem(mentee, "Mentee")}
+            return this.pairItem(mentee, "Mentee");
           })
         }
       </View>
@@ -612,27 +610,30 @@ class HomeScreen extends React.Component {
 
   pairItem(otherUser, otherType) {
     return (
-      <View key={otherUser.id.toString()} style={{width:windowWidth, height:110, flexDirection:'row', alignItems:'center', backgroundColor: colors.lightGrey}} >
-        <View style={{width:80, alignItems:'center', justifyContent:'center'}}>
-          {/* <Image style={{width:60, height:60}} source={require('./assets/avatar.png')} /> */}
-          <Image style={{width:60, height:60}} source={otherUser.avatar} />
-          <View style={{height:5}} />
-          <View style={styles.MentorBox}>
-            <Text style={styles.MentorTag}>{ otherType } </Text>
+      <View>
+        <View style = {{height:5}}></View>
+        <View key={otherUser.id.toString()} style={{width:windowWidth, height:110, flexDirection:'row', alignItems:'center', backgroundColor: colors.lightGrey}} >
+          <View style={{width:80, alignItems:'center', justifyContent:'center'}}>
+            {/* <Image style={{width:60, height:60}} source={require('./assets/avatar.png')} /> */}
+            <Image style={{width:60, height:60}} source={otherUser.avatar} />
+            <View style={{height:5}} />
+            <View style={styles.MentorBox}>
+              <Text style={styles.MentorTag}>{ otherType } </Text>
+            </View>
           </View>
-        </View>
-        <View style={{width: mainConversationWidth, flexDirection:'column'}}>
-        <View style={{flexDirection:'row'}}>
-          <Text style={{fontSize:20}}>{otherUser.firstName + " " + otherUser.lastName}</Text>
-        </View>
-          <View style={{height:4}} />
-          <View>
-            <Text></Text>
+          <View style={{width: mainConversationWidth, flexDirection:'column'}}>
+          <View style={{flexDirection:'row'}}>
+            <Text style={{fontSize:20}}>{otherUser.firstName + " " + otherUser.lastName}</Text>
           </View>
+            <View style={{height:4}} />
+            <View>
+              <Text></Text>
+            </View>
+          </View>
+          {/* <View style={{width:40, alignItems:'center', justifyContent:'center'}}>
+            <IonIcon type='Ionicons' name='ios-arrow-dropright' size={30} color='#000000' onPress={() => navigation.navigate('Messaging')} />
+          </View> */}
         </View>
-        {/* <View style={{width:40, alignItems:'center', justifyContent:'center'}}>
-          <IonIcon type='Ionicons' name='ios-arrow-dropright' size={30} color='#000000' onPress={() => navigation.navigate('Messaging')} />
-        </View> */}
       </View>
     );
   };
@@ -1312,28 +1313,24 @@ class ProposeMeetingScreen extends React.Component {
 
 async function getAllTopics() {
 
-  const topicsres = await fetch(url + '/all-topics/', {
+  const topicsres = await fetch(url + '/all-topics', {
     method: 'GET'
   });
-  console.log("Creating json payload");
   const topicsPayload = await topicsres.json();
+  // console.log(topicsPayload);
 
-  console.log("Attempting to print payload");
-  console.log(topicsPayload);
-
-  const recordSets = topicsPayload["recordsets"];
+  const recordSet = topicsPayload["recordset"];
   var topics = [];
-
-  for (var i = 0; i < recordSets.length; i++) {
-    const recordSet = recordSets[i];
+  for (var i = 0; i < recordSet.length; i++) {
+    const record = recordSet[i];
     const topic = {
-      id: recordSet["Id"],
-      postedBy: recordSet["PostedBy"],
-      dueDate: recordSet["DueDate"],
-      title: recordSet["Title"],
-      description: recordSet["Description"],
-      created: recordSet["Created"],
-      lastUpdate: recordSet["LastUpdate"]
+      id: record["Id"],
+      postedBy: record["PostedBy"],
+      dueDate: record["DueDate"],
+      title: record["Title"],
+      description: record["Description"],
+      created: record["Created"],
+      lastUpdate: record["LastUpdate"]
     }
     topics.push(topic);
   }
@@ -1362,9 +1359,9 @@ class TopicsScreen extends React.Component {
       newTopics = await getAllTopics();
       doSetAsyncStorage = true;
     } catch (error) {
+      console.log(error);
       try {
         var tempTopics = await AsyncStorage.getItem('Topics');
-
         if (tempTopics != null && Array.isArray(tempMentors)) {
           newTopics = tempTopics;
         }
@@ -1373,60 +1370,56 @@ class TopicsScreen extends React.Component {
       }
     }
 
-    if (doSetAsyncStorage) {
-      await AsyncStorage.setItem('Topics', newTopics);
-    }
+    // if (doSetAsyncStorage) {
+    //   await AsyncStorage.setItem('Topics', newTopics);
+    // }
 
-    this.setState({shouldUpdate: false, topics: newTopics})
+    this.setState({shouldUpdate: false, topics: newTopics});
   }
 
   topicItem(topic) {
 
-    console.log("Topic Item")
+    console.log("Topic Item: " + topic);
 
     return (
-      <View style={{width:windowWidth, height:110, flexDirection:'row', alignItems:'center', backgroundColor: colors.lightGrey}} >
-        <Text>Test Stuff</Text>
-        <View style={{width:80, alignItems:'center', justifyContent:'center'}}>
-          <View style={{height:5}} />
-          <View style={styles.MentorBox}>
-            <Text style={styles.MentorTag}>{ "Test" } </Text>
+      <View style={styles.meeting}>
+            <View style={styles.meetingInfo}>
+              <View style={styles.meetingMainRow}>
+                <View style={styles.meetingMainInfo}>
+                  <Text style={styles.meetingTitleText}>{topic.title}</Text>
+                  <Text>{topic.description}</Text>
+                </View>
+                <Text style={styles.meetingDateText}>{topic.dueDate}</Text>
+                <View style={{flex: 1}}>
+                  
+                </View>
+
+              </View>
+            </View>
+            <Button/>
           </View>
-        </View>
-        <View style={{width: mainConversationWidth, flexDirection:'column'}}>
-          <View style={{flexDirection:'row'}}>
-            <Text style={{fontSize:50}}>TITLE!</Text>
-            <Text style={{fontSize:20}}>This is a topic description! :P</Text>
-          </View>
-        </View>
-        <View style={{height:4}} />
-        <View>
-          <Text></Text>
-        </View>
-        {/* <View style={{width:40, alignItems:'center', justifyContent:'center'}}>
-          <IonIcon type='Ionicons' name='ios-arrow-dropright' size={30} color='#000000' onPress={() => navigation.navigate('Messaging')} />
-        </View> */}
-     </View>
     );
   }
 
   render () {
 
-    // if (this.state.shouldUpdate) {
-    //   this.setTopics();
-    // }
+    if (this.state.shouldUpdate) {
+      this.setTopics();
+    }
 
-    const testTopics = [0, 1, 2, 3];
+    console.log(this.state.topics);
 
-    return (<View style={{flex: 1, flexDirection: 'column'}}>
+    return (
+      <View style={{flex: 1, flexDirection: 'column'}}>
         { titleBar("Topics", () => this.props.navigation.navigate('SettingsModal')) }
-        <View>
-          <Text>Topics</Text>
-          { testTopics.map( (topic) => {
-            <View style = {{height:5}}></View>
-            {this.topicItem(topic)}
-          })}
+        <View style={styles.meetingsGroup}>
+          <Text style={styles.meetingsTitle}>Topics</Text>
         </View>
+        {
+          this.state.topics.map( (topic) => {
+            return this.topicItem(topic);
+          })
+        }
       </View>
     );
   }

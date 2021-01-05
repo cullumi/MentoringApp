@@ -324,8 +324,10 @@ async function getPairsOf(type, userID) {
   const pairsres = await fetch(url + '/pair/' + type + '/' + userID, {
     method: 'GET'
   });
+  console.log("Creating json payload");
   const pairsPayload = await pairsres.json();
 
+  console.log("Attempting to print payload");
   console.log(pairsPayload);
 
   const recordSets = pairsPayload["recordsets"];
@@ -539,6 +541,7 @@ class HomeScreen extends React.Component {
       newMentees = await getMenteesOf(curUser);
       doSetAsyncStorage = true;
     } catch (error) {
+      console.log(error);
       try {
         var tempMentors = await AsyncStorage.getItem('Mentors');
         var tempMentees = await AsyncStorage.getItem('Mentees');
@@ -645,6 +648,9 @@ class HomeScreen extends React.Component {
 }
 
 async function getAppointments(type) {
+
+  console.log("Getting Appointments...")
+
   var meetings = [];
   var pairs = [];
   var user = JSON.parse(await AsyncStorage.getItem('User'));
@@ -1305,8 +1311,34 @@ class ProposeMeetingScreen extends React.Component {
 }
 
 async function getAllTopics() {
-  getCurrentUser();
-  return 0;
+
+  const topicsres = await fetch(url + '/all-topics/', {
+    method: 'GET'
+  });
+  console.log("Creating json payload");
+  const topicsPayload = await topicsres.json();
+
+  console.log("Attempting to print payload");
+  console.log(topicsPayload);
+
+  const recordSets = topicsPayload["recordsets"];
+  var topics = [];
+
+  for (var i = 0; i < recordSets.length; i++) {
+    const recordSet = recordSets[i];
+    const topic = {
+      id: recordSet["Id"],
+      postedBy: recordSet["PostedBy"],
+      dueDate: recordSet["DueDate"],
+      title: recordSet["Title"],
+      description: recordSet["Description"],
+      created: recordSet["Created"],
+      lastUpdate: recordSet["LastUpdate"]
+    }
+    topics.push(topic);
+  }
+
+  return topics;
 }
 
 

@@ -648,6 +648,23 @@ class HomeScreen extends React.Component {
   }
 }
 
+function parseDateText(date) {
+  
+  var months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];      
+  var hours = date.getHours();
+  var minutes = date.getMinutes();
+  var ampm = hours >= 12 ? 'PM' : 'AM';
+  hours = hours % 12;
+  hours = hours ? hours : 12;
+  minutes = minutes < 10 ? '0'+minutes : minutes;
+  const dateText = months[date.getMonth()] + 
+                        " " + date.getDate() + 
+                        ", " + date.getFullYear() + 
+                        " " + hours + ":" + minutes + 
+                        " " + ampm;
+  return dateText;
+}
+
 async function getAppointments(type) {
 
   console.log("Getting Appointments...")
@@ -694,14 +711,8 @@ async function getAppointments(type) {
           meeting.Status = 'Done';
         }
 
-        var months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-        var hours = date.getHours();
-        var minutes = date.getMinutes();
-        var ampm = hours >= 12 ? 'PM' : 'AM';
-        hours = hours % 12;
-        hours = hours ? hours : 12;
-        minutes = minutes < 10 ? '0'+minutes : minutes;
-        meeting.dateText = months[date.getMonth()] + " " + date.getDate() + ", " + date.getFullYear() + " " + hours + ":" + minutes + " " + ampm;
+        meeting.dateText = parseDateText(date);
+        
         meeting.buttonDisabled = false;
         switch(meeting.Status) {
           case 'Pending':
@@ -1327,9 +1338,11 @@ async function getAllTopics() {
       id: record["Id"],
       postedBy: record["PostedBy"],
       dueDate: record["DueDate"],
+      dueDateText: parseDateText(new Date(record["DueDate"])),
       title: record["Title"],
       description: record["Description"],
       created: record["Created"],
+      createdText: parseDateText(new Date(record["Created"])),
       lastUpdate: record["LastUpdate"]
     }
     topics.push(topic);
@@ -1347,12 +1360,12 @@ class TopicsScreen extends React.Component {
     super(props)
     this.state = {
       shouldUpdate: true,
-      topics: [0, 1, 2, 3]
+      topics: []
     };
   }
 
   async setTopics() {
-    var newTopics = [0, 1, 2, 3];
+    var newTopics = [];
     var doSetAsyncStorage = false;
 
     try {
@@ -1383,21 +1396,22 @@ class TopicsScreen extends React.Component {
 
     return (
       <View style={styles.meeting}>
-            <View style={styles.meetingInfo}>
-              <View style={styles.meetingMainRow}>
-                <View style={styles.meetingMainInfo}>
-                  <Text style={styles.meetingTitleText}>{topic.title}</Text>
-                  <Text>{topic.description}</Text>
-                </View>
-                <Text style={styles.meetingDateText}>{topic.dueDate}</Text>
-                <View style={{flex: 1}}>
-                  
-                </View>
-
-              </View>
+        <View style={styles.meetingInfo}>
+          <View style={styles.meetingMainInfo}>
+            <View style={styles.meetingMainRow}>
+              <Text style={styles.meetingTitleText}>{topic.title}</Text>
+              <View style={{width:20}}/>      
             </View>
-            <Button/>
+            <View style={{height:10}}/>
+            <Text style={styles.meetingDateText}>Created: {topic.createdText}</Text>
+            <View style={{height:10}}/>
+            <Text style={styles.meetingDateText}>Due: {topic.dueDateText}</Text>
+            <View style={{height:20}}/>
+            <Text>{topic.description}</Text>
           </View>
+        </View>
+        <Button/>
+      </View>
     );
   }
 

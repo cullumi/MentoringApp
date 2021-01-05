@@ -46,7 +46,7 @@ const styles = StyleSheet.create({
   },
 
   scrollView: {
-    margin:0
+    color:'#000'
   },
 
   MentorBox: {
@@ -193,6 +193,33 @@ const styles = StyleSheet.create({
     color:'#000',
     fontSize:18,
     marginBottom:15
+  },
+
+  helpContainer: {
+    justifyContent:'center',
+    alignItems:'center',
+    marginLeft:15,
+    marginRight:15
+  },
+
+  helpTitle: {
+    fontSize:20
+  },
+
+  helpPara: {
+    textAlign:'center'
+  },
+
+  helpPending: {
+    fontWeight: 'bold',
+    color: '#003F87',
+    textAlign:'center'
+  },
+
+  helpGreen: {
+    fontWeight: 'bold',
+    color: colors.green,
+    textAlign:'center'
   }
 
 });
@@ -610,7 +637,7 @@ class HomeScreen extends React.Component {
   render() {
     return (
     <View style={{flex: 1, flexDirection: 'column'}}>
-      { titleBar("Home", () => navigation.navigate('SettingsModal')) }
+      { titleBar("Home", () => this.props.navigation.navigate('SettingsModal')) }
       { accountType == 1 ? [this.unapprovedAccount()] : [this.approvedHome()] }
     </View>
     );
@@ -1399,10 +1426,50 @@ class HelpScreen extends React.Component {
         </View>
         <View style={{height:30, backgroundColor: colors.white}}></View>
       </View>
-      <ScrollView style={styles.scrollView}>
+      <ScrollView style={{marginBottom:80}}>
         <View style={{height:30}} />
-        <View style={{justifyContent:'center', alignItems:'center'}}>
-        <Text>hi :)</Text>
+        <View style={styles.helpContainer}>
+        <Text style={styles.helpPara}>This app servers to schedule meetings between mentor-mentee pairs
+        and allows users to write summaries for how each meeting went.{"\n"}{"\n"}</Text>
+        <Text style={styles.helpTitle}>Home</Text>
+        <Text style={styles.helpPara}>
+        After an admin has assigned you a mentor and/or mentee, their profile will be
+        viewable here. Tap on a user to view contact info and schedule a meeting, if they are your mentor.
+        {"\n"}{"\n"}
+        </Text>
+        <Text style={styles.helpTitle}>Meetings</Text>
+        <Text style={styles.helpPara}>
+          Meetings have several status types to inform you of your progression.
+          {"\n"}{"\n"}
+          <Text style={styles.helpPending}>Pending</Text>
+          {"\n"}
+          At this stage, a mentee has proposed a meeting from Home and the mentor needs to approve it.
+          {"\n"}
+          <IonIcon name="ios-arrow-down" size={30} color="#000" />
+          {"\n"}
+          <Text style={styles.helpGreen}>Scheduled</Text>
+          {"\n"}
+          After the mentor accepts the proposed meeting time, it will be Scheduled. The pair should communicate to establish
+          how they will meet now that they have an agreed time.
+          {"\n"}
+          <IonIcon name="ios-arrow-down" size={30} color="#000" />
+          {"\n"}
+          <Text style={styles.helpGreen}>Done</Text>
+          {"\n"}
+          When returning to the Meetings screen after the agreed upon time, the meeting will be Done.
+          At this point, the mentee should tap on Write Summary to submit a recap of the meeting. Only the mentee writes a summary!
+          {"\n"}
+          <IonIcon name="ios-arrow-down" size={30} color="#000" />
+          {"\n"}
+          <Text style={styles.helpGreen}>Completed</Text>
+          {"\n"}
+          After a summary is submitted, a meeting is marked as Completed. Mentees can still make summary edits if they wish, but it's not necessary.
+          {"\n"}{"\n"}
+        </Text>
+        <Text style={styles.helpTitle}>Topic</Text>
+        <Text style={styles.helpPara}>View meeting topics for each month here. When you create a meeting proposal, it is tied to the active topic,
+        and that topic will be displayed as a reminder when you go to complete your summary.
+        {"\n"}{"\n"}{"\n"}{"\n"}</Text>
         </View>
       </ScrollView>
     </View>

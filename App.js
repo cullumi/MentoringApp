@@ -1089,7 +1089,7 @@ class MeetingsScreen extends React.Component {
           content={<Text>Mentees can propose meetings by tapping on a specific mentor on the Home tab!</Text>}>
             <TouchableOpacity
             onPress={() => this.setState({toolTipVisible:true})}>
-              <IonIcon style={{paddingRight:15,paddingTop:6}} name="ios-help-circle-outline" size="30" color={colors.gray} />
+              <IonIcon style={{paddingRight:15,paddingTop:6}} name="ios-help-circle-outline" size={30} color={colors.gray} />
             </TouchableOpacity>
           </Tooltip>
         </View>

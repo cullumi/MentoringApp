@@ -46,7 +46,7 @@ const styles = StyleSheet.create({
   },
 
   scrollView: {
-    paddingHorizontal: 30
+    margin:0
   },
 
   MentorBox: {
@@ -875,6 +875,22 @@ class MeetingsScreen extends React.Component {
   }
 
   componentDidMount() {
+    this.getData();
+  };
+
+  componentDidUpdate() {
+    if (this.state.refreshing == true) {
+      getAppointments('upcoming')
+      .then((data) => {
+        this.setState({
+          upcomingMeetings:data,
+          refreshing: false
+        })
+      });
+    }
+  };
+
+  getData() {
     getAppointments('past')
     .then((data) => {
       this.setState({
@@ -889,19 +905,7 @@ class MeetingsScreen extends React.Component {
         refreshing: false
       })
     });
-  };
-
-  componentDidUpdate() {
-    if (this.state.refreshing == true) {
-      getAppointments('upcoming')
-      .then((data) => {
-        this.setState({
-          upcomingMeetings:data,
-          refreshing: false
-        })
-      });
-    }
-  };
+  }
 
   async acceptMeeting (id) {
     const statusupdateres = await fetch(url + '/update-appointment-status', {
@@ -982,10 +986,10 @@ class MeetingsScreen extends React.Component {
       this.setState({refreshing: true});
       break;
       case 'submitSummary':
-      this.props.navigation.navigate('WriteSummary', { id: id, type: 'submit', summaryTitle: str });
+      this.props.navigation.navigate('WriteSummary', { id: id, type: 'submit', summaryTitle: str, onGoBack: () => this.getData() });
       break;
       case 'editSummary':
-      this.props.navigation.navigate('WriteSummary', { id: id, type: 'edit', summaryTitle: str });
+      this.props.navigation.navigate('WriteSummary', { id: id, type: 'edit', summaryTitle: str, onGoBack: () => this.getData() });
       break;
     }
   }
@@ -1098,8 +1102,10 @@ class MeetingsScreen extends React.Component {
   render () {
     return (<View style={{flex:1}} key={this.state.refreshing}>
     { titleBar("Meetings", () => this.props.navigation.navigate('SettingsModal')) }
+    <ScrollView style={styles.scrollView}>
     { this.printUpcomingMeetings() }
     { this.printPastMeetings() }
+    </ScrollView>
     </View>);
   }
 }
@@ -1117,7 +1123,12 @@ class WriteSummaryScreen extends React.Component {
     }
   }
 
-  componentDidMount = () => {
+  handleBack() {
+    this.props.route.params.onGoBack();
+    this.props.navigation.goBack();
+   }
+
+  componentDidMount() {
     const id = this.props.route.params.id;
     const type = this.props.route.params.type;
     const summaryTitle = this.props.route.params.summaryTitle;
@@ -1217,7 +1228,7 @@ class WriteSummaryScreen extends React.Component {
         <View style={{height:30, backgroundColor: colors.white}}></View>
         <View style={{flexDirection:'row', backgroundColor: colors.white, alignItems:'center'}}>
           <View style={{width:5}}></View>
-          <TouchableOpacity onPress={() => this.props.navigation.goBack()} activeOpacity={0.5}>
+          <TouchableOpacity onPress={() => this.handleBack()} activeOpacity={0.5}>
             <Image style={{width:30, height:30}} source={require('./assets/icons8-back-50.png')} />
           </TouchableOpacity>
           <View style={{width:10}}></View>
@@ -1227,26 +1238,28 @@ class WriteSummaryScreen extends React.Component {
         </View>
         <View style={{height:30, backgroundColor: colors.white}}></View>
       </View>
-      <Text style={styles.summaryTitle}>{this.state.summaryTitle}</Text>
-      <View style={styles.summaryInputBox}>
-      <TextInput
-      multiline
-      numberOfLines={6}
-      style={styles.summaryInput}
-      onChangeText={text => this.saveSummary(text)}
-      value={this.state.curSummary} />
-      </View>
-      <Button
-        containerStyle={styles.summaryButton}
-        style={styles.summaryButtonText}
-        onPress={() => this.handleSubmit()}>
-        Save
-      </Button>
-      <Animated.View style={{opacity: this.state.fadeOut}}>
-        <View style={styles.savedNotification}>
-          <Text style={{textAlign: 'center'}}>Summary saved!</Text>
+      <ScrollView style={styles.scrollView}>
+        <Text style={styles.summaryTitle}>{this.state.summaryTitle}</Text>
+        <View style={styles.summaryInputBox}>
+        <TextInput
+        multiline
+        numberOfLines={6}
+        style={styles.summaryInput}
+        onChangeText={text => this.saveSummary(text)}
+        value={this.state.curSummary} />
         </View>
-      </Animated.View>
+        <Button
+          containerStyle={styles.summaryButton}
+          style={styles.summaryButtonText}
+          onPress={() => this.handleSubmit()}>
+          Save
+        </Button>
+        <Animated.View style={{opacity: this.state.fadeOut}}>
+          <View style={styles.savedNotification}>
+            <Text style={{textAlign: 'center'}}>Summary saved!</Text>
+          </View>
+        </Animated.View>
+      </ScrollView>
     </View>
   }
 }

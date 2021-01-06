@@ -558,14 +558,14 @@ class HomeScreen extends React.Component {
     }
 
     // Save mentor/mentee info from the database into local storage, for when you're offline.
-    if (doSetAsyncStorage) {
-      try {
-        await AsyncStorage.setItem('Mentors', newMentors);
-        await AsyncStorage.setItem('Mentees', newMentees);
-      } catch (error) {
-        console.log(error);
-      }
-    }
+    // if (doSetAsyncStorage) {
+    //   try {
+    //     await AsyncStorage.setItem('Mentors', newMentors);
+    //     await AsyncStorage.setItem('Mentees', newMentees);
+    //   } catch (error) {
+    //     console.log(error);
+    //   }
+    // }
 
     this.setState({shouldUpdate: false, mentors: newMentors, mentees: newMentees});
   }
@@ -590,15 +590,22 @@ class HomeScreen extends React.Component {
       this.setPairs();
     }
 
+    console.log(this.state.mentors);
+    console.log(this.state.mentees);
+
     return (
-      <View>
-        <Text>Mentors</Text>
+      <View style={{flex: 1, flexDirection: 'column'}}>
+        <View style={styles.meetingsGroup}>
+          <Text style={styles.meetingsTitle}>Mentors</Text>
+        </View>
         {
           this.state.mentors.map( (mentor) => {
             return this.pairItem(mentor, "Mentor");
           })
         }
-        <Text>Mentees</Text>
+        <View style={styles.meetingsGroup}>
+          <Text style={styles.meetingsTitle}>Mentees</Text>
+        </View>
         {
           this.state.mentees.map( (mentee) => {
             return this.pairItem(mentee, "Mentee");
@@ -622,13 +629,13 @@ class HomeScreen extends React.Component {
             </View>
           </View>
           <View style={{width: mainConversationWidth, flexDirection:'column'}}>
-          <View style={{flexDirection:'row'}}>
-            <Text style={{fontSize:20}}>{otherUser.firstName + " " + otherUser.lastName}</Text>
-          </View>
-            <View style={{height:4}} />
+            <View style={{flexDirection:'row'}}>
+              <Text style={{fontSize:20}}>{otherUser.firstName + " " + otherUser.lastName}</Text>
+            </View>
+            {/* <View style={{height:4}} />
             <View>
               <Text></Text>
-            </View>
+            </View> */}
           </View>
           {/* <View style={{width:40, alignItems:'center', justifyContent:'center'}}>
             <IonIcon type='Ionicons' name='ios-arrow-dropright' size={30} color='#000000' onPress={() => navigation.navigate('Messaging')} />
@@ -642,7 +649,7 @@ class HomeScreen extends React.Component {
     return (
     <View style={{flex: 1, flexDirection: 'column'}}>
       { titleBar("Home", () => this.props.navigation.navigate('SettingsModal')) }
-      { accountType == 1 ? [this.unapprovedAccount()] : [this.approvedHome()] }
+      { accountType == 1 ? this.unapprovedAccount() : this.approvedHome() }
     </View>
     );
   }
@@ -1322,11 +1329,37 @@ class ProposeMeetingScreen extends React.Component {
   }
 }
 
+async function getCurrentTopic() {
+  const topicres = await fetch(url + '/current-topic', {
+    method: 'GET'
+  });
+  // console.log(topicres);
+  const topicPayload = await topicres.json();
+  // console.log(topicsPayload);
+
+  const recordSet = topicPayload["recordset"];
+  const record = recordSet[0];
+  const topic = {
+    id: record["Id"],
+    postedBy: record["PostedBy"],
+    dueDate: record["DueDate"],
+    dueDateText: parseDateText(new Date(record["DueDate"])),
+    title: record["Title"],
+    description: record["Description"],
+    created: record["Created"],
+    createdText: parseDateText(new Date(record["Created"])),
+    lastUpdate: record["LastUpdate"]
+  }
+
+  return topic;
+}
+
 async function getAllTopics() {
 
   const topicsres = await fetch(url + '/all-topics', {
     method: 'GET'
   });
+  // console.log(topicsres);
   const topicsPayload = await topicsres.json();
   // console.log(topicsPayload);
 
@@ -1360,23 +1393,30 @@ class TopicsScreen extends React.Component {
     super(props)
     this.state = {
       shouldUpdate: true,
-      topics: []
+      topics: [],
+      currentTopic: null,
     };
   }
 
   async setTopics() {
     var newTopics = [];
+    var newCurrentTopic = null;
     var doSetAsyncStorage = false;
 
     try {
       newTopics = await getAllTopics();
+      newCurrentTopic = await getCurrentTopic();
       doSetAsyncStorage = true;
     } catch (error) {
       console.log(error);
       try {
-        var tempTopics = await AsyncStorage.getItem('Topics');
+        const tempTopics = await AsyncStorage.getItem('Topics');
+        const tempCurrentTopic = await AsyncStorage.getItem('CurrentTopic');
         if (tempTopics != null && Array.isArray(tempMentors)) {
           newTopics = tempTopics;
+        }
+        if (tempCurrentTopic != null) {
+          newCurrentTopic = tempCurrentTopic;
         }
       } catch (error) {
         console.log(error);
@@ -1387,7 +1427,7 @@ class TopicsScreen extends React.Component {
     //   await AsyncStorage.setItem('Topics', newTopics);
     // }
 
-    this.setState({shouldUpdate: false, topics: newTopics});
+    this.setState({shouldUpdate: false, topics: newTopics, currentTopic: newCurrentTopic});
   }
 
   topicItem(topic) {
@@ -1421,13 +1461,19 @@ class TopicsScreen extends React.Component {
       this.setTopics();
     }
 
-    console.log(this.state.topics);
+    // console.log(this.state.topics);
 
     return (
       <View style={{flex: 1, flexDirection: 'column'}}>
         { titleBar("Topics", () => this.props.navigation.navigate('SettingsModal')) }
         <View style={styles.meetingsGroup}>
-          <Text style={styles.meetingsTitle}>Topics</Text>
+          <Text style={styles.meetingsTitle}>Current Topic</Text>
+        </View>
+        {
+          this.state.currentTopic != null ? this.topicItem(this.state.currentTopic) : <View/>
+        }
+        <View style={styles.meetingsGroup}>
+          <Text style={styles.meetingsTitle}>All Topics</Text>
         </View>
         {
           this.state.topics.map( (topic) => {

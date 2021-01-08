@@ -220,7 +220,41 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     color: colors.green,
     textAlign:'center'
+  },
+
+  topicContainer: {
+    margin:15,
+    flexDirection:'column',
+    backgroundColor:'#fff'
+  },
+
+  topicHeader: {
+    backgroundColor:colors.vikingBlue,
+    color:'#fff',
+    padding:10,
+    flexDirection:'row',
+    justifyContent:'space-between',
+    width:'100%',
+    alignItems:'center'
+  },
+
+  topicTitleText: {
+    color:'#fff',
+    fontSize:20
+  },
+
+  topicHeaderDateText: {
+    color:'#fff'
+  },
+
+  topicInfo: {
+    padding:10
+  },
+
+  topicDateText: {
+    marginBottom:10
   }
+
 
 });
 
@@ -656,21 +690,36 @@ class HomeScreen extends React.Component {
 }
 
 function parseDateText(date) {
-  
-  var months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];      
+
+  var months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
   var hours = date.getHours();
   var minutes = date.getMinutes();
   var ampm = hours >= 12 ? 'PM' : 'AM';
   hours = hours % 12;
   hours = hours ? hours : 12;
   minutes = minutes < 10 ? '0'+minutes : minutes;
-  const dateText = months[date.getMonth()] + 
-                        " " + date.getDate() + 
-                        ", " + date.getFullYear() + 
-                        " " + hours + ":" + minutes + 
+  const dateText = months[date.getMonth()] +
+                        " " + date.getDate() +
+                        ", " + date.getFullYear() +
+                        " " + hours + ":" + minutes +
                         " " + ampm;
   return dateText;
 }
+
+function parseSimpleDateText(date) {
+
+  var months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  var hours = date.getHours();
+  var minutes = date.getMinutes();
+  var ampm = hours >= 12 ? 'PM' : 'AM';
+  hours = hours % 12;
+  hours = hours ? hours : 12;
+  minutes = minutes < 10 ? '0'+minutes : minutes;
+  const dateText = months[date.getMonth()] +
+                        " " + date.getDate();
+  return dateText;
+}
+
 
 async function getAppointments(type) {
 
@@ -719,7 +768,7 @@ async function getAppointments(type) {
         }
 
         meeting.dateText = parseDateText(date);
-        
+
         meeting.buttonDisabled = false;
         switch(meeting.Status) {
           case 'Pending':
@@ -1347,7 +1396,7 @@ async function getCurrentTopic() {
     title: record["Title"],
     description: record["Description"],
     created: record["Created"],
-    createdText: parseDateText(new Date(record["Created"])),
+    createdText: parseSimpleDateText(new Date(record["Created"])),
     lastUpdate: record["LastUpdate"]
   }
 
@@ -1375,7 +1424,7 @@ async function getAllTopics() {
       title: record["Title"],
       description: record["Description"],
       created: record["Created"],
-      createdText: parseDateText(new Date(record["Created"])),
+      createdText: parseSimpleDateText(new Date(record["Created"])),
       lastUpdate: record["LastUpdate"]
     }
     topics.push(topic);
@@ -1435,22 +1484,15 @@ class TopicsScreen extends React.Component {
     console.log("Topic Item: " + topic);
 
     return (
-      <View style={styles.meeting}>
-        <View style={styles.meetingInfo}>
-          <View style={styles.meetingMainInfo}>
-            <View style={styles.meetingMainRow}>
-              <Text style={styles.meetingTitleText}>{topic.title}</Text>
-              <View style={{width:20}}/>      
-            </View>
-            <View style={{height:10}}/>
-            <Text style={styles.meetingDateText}>Created: {topic.createdText}</Text>
-            <View style={{height:10}}/>
-            <Text style={styles.meetingDateText}>Due: {topic.dueDateText}</Text>
-            <View style={{height:20}}/>
-            <Text>{topic.description}</Text>
-          </View>
+      <View style={styles.topicContainer}>
+        <View style={styles.topicHeader}>
+          <Text style={styles.topicTitleText}>{topic.title}</Text>
+          <Text style={styles.topicHeaderDateText}>{topic.createdText}</Text>
         </View>
-        <Button/>
+        <View style={styles.topicInfo}>
+          <Text style={styles.topicDateText}>Due: {topic.dueDateText}</Text>
+          <Text>{topic.description}</Text>
+        </View>
       </View>
     );
   }

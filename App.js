@@ -1076,7 +1076,7 @@ class MeetingsScreen extends React.Component {
     );
   }
 
-  handlePress = (type, id, str) => {
+  handlePress = (type, id, topicId, str) => {
     switch(type) {
       case 'accept':
       this.acceptMeetingAlert(id);
@@ -1087,10 +1087,10 @@ class MeetingsScreen extends React.Component {
       this.setState({refreshing: true});
       break;
       case 'submitSummary':
-      this.props.navigation.navigate('WriteSummary', { id: id, type: 'submit', summaryTitle: str, onGoBack: () => this.getData() });
+      this.props.navigation.navigate('WriteSummary', { id: id, topicId: topicId, type: 'submit', summaryTitle: str, onGoBack: () => this.getData() });
       break;
       case 'editSummary':
-      this.props.navigation.navigate('WriteSummary', { id: id, type: 'edit', summaryTitle: str, onGoBack: () => this.getData() });
+      this.props.navigation.navigate('WriteSummary', { id: id, topicId: topicId, type: 'edit', summaryTitle: str, onGoBack: () => this.getData() });
       break;
     }
   }
@@ -1120,7 +1120,7 @@ class MeetingsScreen extends React.Component {
             <Button
               containerStyle={m.meetingButton}
               style={m.meetingButtonText}
-              onPress={() => this.handlePress(m.buttonPress, m.Id, m.summaryTitle)}
+              onPress={() => this.handlePress(m.buttonPress, m.Id, m.TopicId, m.summaryTitle)}
               disabled={m.buttonDisabled}>
               {m.buttonText}
             </Button>
@@ -1231,14 +1231,27 @@ class WriteSummaryScreen extends React.Component {
 
   componentDidMount() {
     const id = this.props.route.params.id;
+    const topicId = this.props.route.params.topicId;
     const type = this.props.route.params.type;
     const summaryTitle = this.props.route.params.summaryTitle;
     const storageId = 'summary_' + id;
-    this.setState({storageId:storageId});
-    this.setState({normalId:id});
-    this.setState({type:type});
-    this.setState({summaryTitle:summaryTitle});
+    this.setState({storageId:storageId, normalId:id, topicId:topicId, type:type, summaryTitle:summaryTitle});
+    this.setTopicState();
     AsyncStorage.getItem(storageId).then((value) => this.setSkipValue(value));
+  }
+
+  async setTopicState() {
+    const topicRes = await fetch(url + '/topic/' + this.state.topicId, {
+      method: 'GET'
+    });
+    const topicPayload = await topicRes.json();
+
+    var top = JSON.parse(JSON.stringify(topicPayload["recordset"][0]));
+
+    top['dueDateText'] = parseDateText(new Date(topic["DueDate"]));
+    top['createdText'] = parseSimpleDateText(new Date(topic["Created"]));
+    this.setState({topic:top});
+
   }
 
   async setSkipValue (value) {
@@ -1322,6 +1335,24 @@ class WriteSummaryScreen extends React.Component {
     })
   }
 
+  getRelatedTopic() {
+
+    var top = this.state.topic;
+
+    return (<View style={styles.topicContainer}>
+      <View style={{textAlign:'center'}}>Here's a reminder of what this meeting's prompt was:</View>
+      <View style={styles.topicHeader}>
+        <Text style={styles.topicTitleText}>{top.Title}</Text>
+        <Text style={styles.topicHeaderDateText}>{top.createdText}</Text>
+      </View>
+      <View style={styles.topicInfo}>
+        <Text style={styles.topicDateText}>Due: {top.dueDateText}</Text>
+        <Text>{top.Description}</Text>
+      </View>
+    </View>);
+
+  }
+
   render () {
     return <View style={{flex:1}}>
       <View>
@@ -1360,6 +1391,7 @@ class WriteSummaryScreen extends React.Component {
             <Text style={{textAlign: 'center'}}>Summary saved!</Text>
           </View>
         </Animated.View>
+        { this.getRelatedTopic() }
       </ScrollView>
     </View>
   }

@@ -95,7 +95,8 @@ const styles = StyleSheet.create({
 
   meetingsTitle: {
     fontSize:30,
-    alignSelf:'flex-start'
+    alignSelf:'flex-start',
+    marginBottom:25
   },
 
   meetingsPrimaryNone: {
@@ -106,7 +107,6 @@ const styles = StyleSheet.create({
   meetingsGroup: {
     paddingTop: 25,
     paddingLeft: 15,
-    paddingBottom:25,
     flexDirection: 'row',
     justifyContent: 'space-between'
   },
@@ -114,7 +114,6 @@ const styles = StyleSheet.create({
   meeting: {
     marginRight:15,
     marginLeft:15,
-    marginBottom:15,
     borderRadius:50
   },
 
@@ -180,8 +179,7 @@ const styles = StyleSheet.create({
   summaryTitle: {
     fontSize:16,
     textAlign:'center',
-    alignItems:'center',
-    marginTop:15
+    alignItems:'center'
   },
 
   savedNotification: {
@@ -191,8 +189,7 @@ const styles = StyleSheet.create({
     alignContent:'center',
     justifyContent:'center',
     color:'#000',
-    fontSize:18,
-    marginBottom:15
+    fontSize:18
   },
 
   helpContainer: {
@@ -222,8 +219,18 @@ const styles = StyleSheet.create({
     textAlign:'center'
   },
 
+  reminderText: {
+    textAlign:'center',
+    marginLeft:25,
+    marginRight:25,
+    marginTop:15,
+    fontSize:16,
+  },
+
   topicContainer: {
-    margin:15,
+    marginLeft:15,
+    marginRight:15,
+    marginBottom:15,
     flexDirection:'column',
     backgroundColor:'#fff'
   },
@@ -253,6 +260,20 @@ const styles = StyleSheet.create({
 
   topicDateText: {
     marginBottom:10
+  },
+
+  settingsAvatar: {
+    width:200,
+    height:200,
+    borderRadius:200,
+    backgroundColor:"#ddd",
+    marginBottom:15
+  },
+
+  settingsName: {
+    textAlign:'center',
+    fontSize:20,
+    paddingBottom:25
   }
 
 
@@ -543,7 +564,7 @@ const titleBar = (title, navFunction) => {
           <IonIcon name="ios-settings" size={30} color={colors.vikingBlue} />
         </TouchableOpacity>
         <View style={{width:mainTitleWidth,textAlign:'center',alignItems:'center'}}>
-          <Text style={{fontSize:22}}>{title}</Text>
+          <Text style={{fontSize:22,textAlign:'center'}}>{title}</Text>
         </View>
       </View>
       <View style={{height:30, backgroundColor: colors.white}}></View>
@@ -1114,7 +1135,6 @@ class MeetingsScreen extends React.Component {
                 <View style={{flex: 1}}>
                   <Text style={m.meetingStatus}>{m.Status}</Text>
                 </View>
-
               </View>
             </View>
             <Button
@@ -1211,6 +1231,21 @@ class MeetingsScreen extends React.Component {
   }
 }
 
+async function retTopic(topicId) {
+
+  const topicRes = await fetch(url + '/topic/' + topicId, {
+    method: 'GET'
+  });
+  const topicPayload = await topicRes.json();
+
+  var top = JSON.parse(JSON.stringify(topicPayload["recordset"][0]));
+  top['dueDateText'] = parseDateText(new Date(top["DueDate"]));
+  top['createdText'] = parseSimpleDateText(new Date(top["Created"]));
+
+  return top;
+
+}
+
 class WriteSummaryScreen extends React.Component {
   constructor(props) {
     super(props)
@@ -1220,7 +1255,8 @@ class WriteSummaryScreen extends React.Component {
       type: '',
       curSummary: '',
       summaryTitle: '',
-      fadeOut: new Animated.Value(0)
+      fadeOut: new Animated.Value(0),
+      topic: []
     }
   }
 
@@ -1235,23 +1271,21 @@ class WriteSummaryScreen extends React.Component {
     const type = this.props.route.params.type;
     const summaryTitle = this.props.route.params.summaryTitle;
     const storageId = 'summary_' + id;
-    this.setState({storageId:storageId, normalId:id, topicId:topicId, type:type, summaryTitle:summaryTitle});
-    this.setTopicState();
+    this.setState({storageId:storageId});
+    this.setState({normalId:id});
+    this.setState({topicId:topicId});
+    this.setState({type:type});
+    this.setState({summaryTitle:summaryTitle});
     AsyncStorage.getItem(storageId).then((value) => this.setSkipValue(value));
   }
 
-  async setTopicState() {
-    const topicRes = await fetch(url + '/topic/' + this.state.topicId, {
-      method: 'GET'
+  getData() {
+    retTopic(this.state.topicId)
+    .then((data) => {
+      this.setState({
+        topic:data
+      })
     });
-    const topicPayload = await topicRes.json();
-
-    var top = JSON.parse(JSON.stringify(topicPayload["recordset"][0]));
-
-    top['dueDateText'] = parseDateText(new Date(topic["DueDate"]));
-    top['createdText'] = parseSimpleDateText(new Date(topic["Created"]));
-    this.setState({topic:top});
-
   }
 
   async setSkipValue (value) {
@@ -1335,25 +1369,10 @@ class WriteSummaryScreen extends React.Component {
     })
   }
 
-  getRelatedTopic() {
-
-    var top = this.state.topic;
-
-    return (<View style={styles.topicContainer}>
-      <View style={{textAlign:'center'}}>Here's a reminder of what this meeting's prompt was:</View>
-      <View style={styles.topicHeader}>
-        <Text style={styles.topicTitleText}>{top.Title}</Text>
-        <Text style={styles.topicHeaderDateText}>{top.createdText}</Text>
-      </View>
-      <View style={styles.topicInfo}>
-        <Text style={styles.topicDateText}>Due: {top.dueDateText}</Text>
-        <Text>{top.Description}</Text>
-      </View>
-    </View>);
-
-  }
-
   render () {
+
+    this.getData();
+
     return <View style={{flex:1}}>
       <View>
         <View style={{height:25, backgroundColor: colors.vikingBlue}}></View>
@@ -1371,6 +1390,17 @@ class WriteSummaryScreen extends React.Component {
         <View style={{height:30, backgroundColor: colors.white}}></View>
       </View>
       <ScrollView style={styles.scrollView}>
+        <Text style={styles.reminderText}>Review this meeting's topic then scroll down:</Text>
+        <View style={styles.topicContainer}>
+          <View style={styles.topicHeader}>
+            <Text style={styles.topicTitleText}>{this.state.topic.Title}</Text>
+            <Text style={styles.topicHeaderDateText}>{this.state.topic.createdText}</Text>
+          </View>
+          <View style={styles.topicInfo}>
+            <Text style={styles.topicDateText}>Due: {this.state.topic.dueDateText}</Text>
+            <Text>{this.state.topic.Description}</Text>
+          </View>
+        </View>
         <Text style={styles.summaryTitle}>{this.state.summaryTitle}</Text>
         <View style={styles.summaryInputBox}>
         <TextInput
@@ -1391,7 +1421,6 @@ class WriteSummaryScreen extends React.Component {
             <Text style={{textAlign: 'center'}}>Summary saved!</Text>
           </View>
         </Animated.View>
-        { this.getRelatedTopic() }
       </ScrollView>
     </View>
   }
@@ -1912,7 +1941,8 @@ class SettingsScreen extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      refreshing: false
+      refreshing: false,
+      user: []
     }
   }
 
@@ -1921,8 +1951,20 @@ class SettingsScreen extends React.Component {
     this.props.navigation.navigate('Login');
   }
 
+  async getUser() {
+    const u = JSON.parse(await AsyncStorage.getItem('User'));
+    this.setState({user:u});
+  }
+
+  componentDidMount() {
+    this.getUser();
+    console.log(JSON.stringify(this.state.user));
+  }
+
+
+
   render () {
-    //
+
     return <View>
       <View>
         <View style={{height:25, backgroundColor: colors.vikingBlue}}></View>
@@ -1943,9 +1985,10 @@ class SettingsScreen extends React.Component {
         <View style={{height:30, backgroundColor: colors.white}}></View>
       </View>
       <ScrollView style={styles.scrollView}>
-        <View style={{height:30}}></View>
         <View style={{justifyContent: 'center',
-        alignItems: 'center',}}>
+        alignItems: 'center',paddingTop:25}}>
+          <Image style={styles.settingsAvatar} source={{uri: this.state.user.avatar}} />
+          <Text style={styles.settingsName}>{this.state.user.firstName} {this.state.user.lastName}</Text>
           <Button
             containerStyle={{padding:12, height:45, width:"45%", overflow:'hidden', borderRadius:4, backgroundColor: colors.red}}
             style={{fontSize: 16, color: 'white'}}

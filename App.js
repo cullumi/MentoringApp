@@ -10,6 +10,7 @@ import { color, debug } from 'react-native-reanimated';
 import { Colors } from 'react-native/Libraries/NewAppScreen';
 import Button from 'react-native-button';
 import Tooltip from 'react-native-walkthrough-tooltip';
+import { SystemMessage } from 'react-native-gifted-chat';
 
 // Needs to be implemented:
 // import Storage from './localstorage';
@@ -412,7 +413,9 @@ async function getCurrentUser () {
 
 // Gets a user based on a certain user id.
 async function getUserByID(id) {
-  const userPayload = await getUserByID(id);
+  const userPayload = await getUserPayloadByID(id);
+  console.log("User Payload Gotten");
+  console.log(userPayload);
   return createLocalUser(userPayload);
 }
 
@@ -1446,20 +1449,12 @@ async function getCurrentTopic() {
   // console.log(topicres);
   const topicPayload = await topicres.json();
   // console.log(topicsPayload);
-
-  const recordSet = topicPayload["recordset"];
-  const record = recordSet[0];
-  const topic = {
-    id: record["Id"],
-    postedBy: record["PostedBy"],
-    dueDate: record["DueDate"],
-    dueDateText: parseDateText(new Date(record["DueDate"])),
-    title: record["Title"],
-    description: record["Description"],
-    created: record["Created"],
-    createdText: parseSimpleDateText(new Date(record["Created"])),
-    lastUpdate: record["LastUpdate"]
-  }
+  
+  var topic = JSON.parse(JSON.stringify(topicPayload['recordset'][0]));
+  console.log(topic);
+  topic.DueDateText = parseDateText(new Date(topic.DueDate));
+  topic.CreatedText = parseSimpleDateText(new Date(topic.Created));
+  console.log(topic);
 
   return topic;
 }
@@ -1476,18 +1471,9 @@ async function getAllTopics() {
   const recordSet = topicsPayload["recordset"];
   var topics = [];
   for (var i = 0; i < recordSet.length; i++) {
-    const record = recordSet[i];
-    const topic = {
-      id: record["Id"],
-      postedBy: record["PostedBy"],
-      dueDate: record["DueDate"],
-      dueDateText: parseDateText(new Date(record["DueDate"])),
-      title: record["Title"],
-      description: record["Description"],
-      created: record["Created"],
-      createdText: parseSimpleDateText(new Date(record["Created"])),
-      lastUpdate: record["LastUpdate"]
-    }
+    var topic = JSON.parse(JSON.stringify(recordSet[i]));
+    topic.DueDateText = parseDateText(new Date(topic.DueDate));
+    topic.CreatedText = parseSimpleDateText(new Date(topic.Created));
     topics.push(topic);
   }
 
@@ -1547,12 +1533,12 @@ class TopicsScreen extends React.Component {
     return (
       <View style={styles.topicContainer}>
         <View style={styles.topicHeader}>
-          <Text style={styles.topicTitleText}>{topic.title}</Text>
-          <Text style={styles.topicHeaderDateText}>{topic.createdText}</Text>
+          <Text style={styles.topicTitleText}>{topic.Title}</Text>
+          <Text style={styles.topicHeaderDateText}>{topic.CreatedText}</Text>
         </View>
         <View style={styles.topicInfo}>
-          <Text style={styles.topicDateText}>Due: {topic.dueDateText}</Text>
-          <Text>{topic.description}</Text>
+          <Text style={styles.topicDateText}>Due: {topic.DueDateText}</Text>
+          <Text>{topic.Description}</Text>
         </View>
       </View>
     );

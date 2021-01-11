@@ -10,6 +10,7 @@ import { color, debug } from 'react-native-reanimated';
 import { Colors } from 'react-native/Libraries/NewAppScreen';
 import Button from 'react-native-button';
 import Tooltip from 'react-native-walkthrough-tooltip';
+import { SystemMessage } from 'react-native-gifted-chat';
 
 // Needs to be implemented:
 // import Storage from './localstorage';
@@ -379,25 +380,17 @@ async function getPairsOf(type, userID) {
   const pairsres = await fetch(url + '/pair/' + type + '/' + userID, {
     method: 'GET'
   });
-  console.log("Creating json payload");
+  console.log(pairsres);
+  console.log("Creating json pairs payload");
   const pairsPayload = await pairsres.json();
 
-  console.log("Attempting to print payload");
+  console.log("Attempting to print pairs payload");
   console.log(pairsPayload);
 
-  const recordSets = pairsPayload["recordsets"];
+  const recordSet = pairsPayload["recordset"];
   var pairs = [];
-
-  for (var i = 0; i < recordSets.length; i++) {
-    const recordSet = recordSets[i];
-    const pair = {
-      id: recordSet["Id"],
-      mentorID: recordSet["MentorID"],
-      menteeID: recordSet["MenteeID"],
-      created: recordSet["Created"],
-      lastUpdate: recordSet["LastUpdate"],
-      privacyAccepted: recordSet["PrivacyAccepted"]
-    }
+  for (var i = 0; i < recordSet.length; i++) {
+    var pair = JSON.parse(JSON.stringify(recordSet[i]));
     pairs.push(pair);
   }
 
@@ -407,19 +400,22 @@ async function getPairsOf(type, userID) {
 // Gets the Current User via the ensureUserExists method.
 async function getCurrentUser () {
   const userPayload = await ensureUserExists();
+  // console.log(userPayload);
   return createLocalUser(userPayload);
 }
 
 // Gets a user based on a certain user id.
 async function getUserByID(id) {
-  const userPayload = await getUserByID(id);
+  const userPayload = await getUserPayloadByID(id);
+  // console.log("User Payload Gotten");
+  // console.log(userPayload);
   return createLocalUser(userPayload);
 }
 
 // Creates a javascript object out of a user payload for use elsewhere in the React Native app.
 function createLocalUser(userPayload) {
   const recordSet = userPayload["recordset"][0];
-  return {
+  const user = {
     id: recordSet["Id"],
     email: recordSet["Email"],
     firstName: recordSet["FirstName"],
@@ -430,6 +426,9 @@ function createLocalUser(userPayload) {
     privacyAccepted: recordSet["PrivacyAccepted"],
     approved: recordSet["Approved"]
   };
+  console.log(user);
+  return user;
+  // return JSON.parse(JSON.stringify(userPayload['recordset'][0]));
 }
 
 // Probably temporary, but this effectively accounts for when the user was created offline, or for when the API is offline.
@@ -592,8 +591,13 @@ class HomeScreen extends React.Component {
     var doSetAsyncStorage = false;
 
     try {
-      newMentors = await getMentorsOf(curUser);
-      newMentees = await getMenteesOf(curUser);
+      console.log(curUser);
+      const curUser = await getCurrentUser();
+      newMentors = await getMentorsOf(curUser.id);
+      newMentees = await getMenteesOf(curUser.id);
+      console.log("Set Pairs Test");
+      console.log(newMentors);
+      console.log("End of Set Pairs Test");
       doSetAsyncStorage = true;
     } catch (error) {
       console.log(error);
@@ -1447,20 +1451,12 @@ async function getCurrentTopic() {
   // console.log(topicres);
   const topicPayload = await topicres.json();
   // console.log(topicsPayload);
-
-  const recordSet = topicPayload["recordset"];
-  const record = recordSet[0];
-  const topic = {
-    id: record["Id"],
-    postedBy: record["PostedBy"],
-    dueDate: record["DueDate"],
-    dueDateText: parseDateText(new Date(record["DueDate"])),
-    title: record["Title"],
-    description: record["Description"],
-    created: record["Created"],
-    createdText: parseSimpleDateText(new Date(record["Created"])),
-    lastUpdate: record["LastUpdate"]
-  }
+  
+  var topic = JSON.parse(JSON.stringify(topicPayload['recordset'][0]));
+  console.log(topic);
+  topic.DueDateText = parseDateText(new Date(topic.DueDate));
+  topic.CreatedText = parseSimpleDateText(new Date(topic.Created));
+  console.log(topic);
 
   return topic;
 }
@@ -1477,18 +1473,9 @@ async function getAllTopics() {
   const recordSet = topicsPayload["recordset"];
   var topics = [];
   for (var i = 0; i < recordSet.length; i++) {
-    const record = recordSet[i];
-    const topic = {
-      id: record["Id"],
-      postedBy: record["PostedBy"],
-      dueDate: record["DueDate"],
-      dueDateText: parseDateText(new Date(record["DueDate"])),
-      title: record["Title"],
-      description: record["Description"],
-      created: record["Created"],
-      createdText: parseSimpleDateText(new Date(record["Created"])),
-      lastUpdate: record["LastUpdate"]
-    }
+    var topic = JSON.parse(JSON.stringify(recordSet[i]));
+    topic.DueDateText = parseDateText(new Date(topic.DueDate));
+    topic.CreatedText = parseSimpleDateText(new Date(topic.Created));
     topics.push(topic);
   }
 
@@ -1548,12 +1535,12 @@ class TopicsScreen extends React.Component {
     return (
       <View style={styles.topicContainer}>
         <View style={styles.topicHeader}>
-          <Text style={styles.topicTitleText}>{topic.title}</Text>
-          <Text style={styles.topicHeaderDateText}>{topic.createdText}</Text>
+          <Text style={styles.topicTitleText}>{topic.Title}</Text>
+          <Text style={styles.topicHeaderDateText}>{topic.CreatedText}</Text>
         </View>
         <View style={styles.topicInfo}>
-          <Text style={styles.topicDateText}>Due: {topic.dueDateText}</Text>
-          <Text>{topic.description}</Text>
+          <Text style={styles.topicDateText}>Due: {topic.DueDateText}</Text>
+          <Text>{topic.Description}</Text>
         </View>
       </View>
     );
@@ -1682,6 +1669,7 @@ class SplashScreen extends React.Component {
   async setSkipValue (value) {
     this.setState({ 'value': value });
     if (value !== null) {
+      console.log("Test: " + value);
       curUser = await getCurrentUser(value);
       await AsyncStorage.setItem('User', JSON.stringify(curUser));
     }

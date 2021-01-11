@@ -708,6 +708,7 @@ class HomeScreen extends React.Component {
     </View>
     );
   }
+  
 }
 
 function parseDateText(date) {

@@ -27,6 +27,7 @@ const windowHeight6 = windowHeight / 6;
 const mainWidth = windowWidth - 60;
 const mainConversationWidth = windowWidth - 130;
 const mainTitleWidth = windowWidth - 90;
+const homeItemWidth = windowWidth - 175;
 
 const colors = {
   vikingBlue: '#003F87',
@@ -48,21 +49,6 @@ const styles = StyleSheet.create({
 
   scrollView: {
     color:'#000'
-  },
-
-  MentorBox: {
-    borderWidth: 1,
-    borderRadius: 10,
-    borderColor: '#006B3F',
-    padding: 1,
-    backgroundColor: '#338965'
-  },
-
-  MentorTag: {
-    textAlign: 'center',
-    color:'white',
-    padding:3,
-    fontSize: 12
   },
 
   basePrivacyText: {
@@ -225,6 +211,7 @@ const styles = StyleSheet.create({
     marginLeft:25,
     marginRight:25,
     marginTop:15,
+    marginBottom:15,
     fontSize:16,
   },
 
@@ -275,7 +262,67 @@ const styles = StyleSheet.create({
     textAlign:'center',
     fontSize:20,
     paddingBottom:25
+  },
+
+  homeItem: {
+    flexDirection:'row',
+    alignItems:'center',
+    backgroundColor: colors.lightGrey,
+    padding:15,
+    marginLeft:15,
+    marginRight:15
+  },
+
+  homeItemForward: {
+    width:40,
+    alignItems:'center',
+    justifyContent:'center'
+  },
+
+  homeItemInfo: {
+    width:homeItemWidth,
+    flexDirection:'column',
+    justifyContent:'center'
+  },
+
+  homeItemName: {
+    fontSize:20
+  },
+
+  homeItemEmail: {
+    fontSize:16
+  },
+
+  homeItemAvatar: {
+    width:75,
+    height:75,
+    borderRadius:100,
+    marginBottom:5
+  },
+
+  homeMentorBox: {
+    borderRadius: 10,
+    backgroundColor: colors.green
+  },
+
+  homeMenteeBox: {
+    borderRadius: 10,
+    backgroundColor: colors.vikingBlue
+  },
+
+  homeTag: {
+    textAlign: 'center',
+    color:'white',
+    padding:3,
+    fontSize: 12
+  },
+
+  homeAvatarColumn: {
+    alignItems:'center',
+    justifyContent:'center',
+    marginRight:15
   }
+
 
 
 });
@@ -353,10 +400,14 @@ async function getMenteesOf (userID) {
 
   console.log("Getting Mentees...")
 
-  const pairs = await getPairsOf('mentee', userID);
+  const pairs = await getPairsOf('mentor', userID);
   const mentees = [];
   for (var i = 0; i < pairs.length; i++) {
-    mentees.push(getUserByID(pairs[i].menteeID));
+    const index = i;
+    const value = await getUserPayloadByID(pairs[index]["MenteeId"]);
+    const mentee = JSON.parse(JSON.stringify(value["recordset"][0]));
+    mentee.homeBoxStyle = styles.homeMenteeBox;
+    mentees.push(mentee);
   }
 
   return mentees;
@@ -367,10 +418,14 @@ async function getMentorsOf (userID) {
 
   console.log("Getting Mentors...");
 
-  const pairs = await getPairsOf('mentor', userID);
+  const pairs = await getPairsOf('mentee', userID);
   const mentors = [];
   for (var i = 0; i < pairs.length; i++) {
-    mentors.push(getUserByID(pairs[i].mentorID));
+    const index = i;
+    const value = await getUserPayloadByID(pairs[index]["MentorId"]);
+    const mentor = JSON.parse(JSON.stringify(value["recordset"][0]));
+    mentor.homeBoxStyle = styles.homeMentorBox;
+    mentors.push(mentor);
   }
 
   return mentors;
@@ -380,12 +435,8 @@ async function getPairsOf(type, userID) {
   const pairsres = await fetch(url + '/pair/' + type + '/' + userID, {
     method: 'GET'
   });
-  console.log(pairsres);
-  console.log("Creating json pairs payload");
-  const pairsPayload = await pairsres.json();
 
-  console.log("Attempting to print pairs payload");
-  console.log(pairsPayload);
+  const pairsPayload = await pairsres.json();
 
   const recordSet = pairsPayload["recordset"];
   var pairs = [];
@@ -400,15 +451,12 @@ async function getPairsOf(type, userID) {
 // Gets the Current User via the ensureUserExists method.
 async function getCurrentUser () {
   const userPayload = await ensureUserExists();
-  // console.log(userPayload);
   return createLocalUser(userPayload);
 }
 
 // Gets a user based on a certain user id.
 async function getUserByID(id) {
   const userPayload = await getUserPayloadByID(id);
-  // console.log("User Payload Gotten");
-  // console.log(userPayload);
   return createLocalUser(userPayload);
 }
 
@@ -426,7 +474,6 @@ function createLocalUser(userPayload) {
     privacyAccepted: recordSet["PrivacyAccepted"],
     approved: recordSet["Approved"]
   };
-  console.log(user);
   return user;
   // return JSON.parse(JSON.stringify(userPayload['recordset'][0]));
 }
@@ -442,7 +489,6 @@ async function ensureUserExists () {
   //   console.log(error);
   // }
 
-  console.log("Email: " + email);
   let userPayload = await getUserPayloadByEmail(email);
 
   // check if this user needs to be added to DB.
@@ -468,13 +514,12 @@ async function getUserPayloadByID(id) {
     method: 'GET'
   });
   const userPayload = await userres.json();
-  return userPayload;
+  const value = JSON.parse(JSON.stringify(userPayload));
+  return value;
 }
 
 // create user via POST
 async function postNewUser(email, first, last, pic) {
-
-  console.log("Post new user...");
 
   const postres = fetch(url + '/create-user', {
     method: 'POST',
@@ -490,11 +535,10 @@ async function postNewUser(email, first, last, pic) {
       'Content-Type': 'application/json',
     }
   })
-  /*.then(response => response.json())
-  .then(json => console.log(json))*/
   .catch((error) => {
     console.error(error);
   });
+
 }
 
 async function updatePrivacy(email, privacyAccepted) {
@@ -584,6 +628,12 @@ class HomeScreen extends React.Component {
     };
   }
 
+  async componentDidMount() {
+    if (this.state.shouldUpdate) {
+      this.setPairs();
+    }
+  }
+
   async setPairs() {
 
     var newMentors = [];
@@ -591,14 +641,12 @@ class HomeScreen extends React.Component {
     var doSetAsyncStorage = false;
 
     try {
-      console.log(curUser);
+
       const curUser = await getCurrentUser();
       newMentors = await getMentorsOf(curUser.id);
       newMentees = await getMenteesOf(curUser.id);
-      console.log("Set Pairs Test");
-      console.log(newMentors);
-      console.log("End of Set Pairs Test");
       doSetAsyncStorage = true;
+
     } catch (error) {
       console.log(error);
       try {
@@ -645,12 +693,9 @@ class HomeScreen extends React.Component {
   };
 
   approvedHome() { // removed accountID from approvedHome() parameters
-    if (this.state.shouldUpdate) {
-      this.setPairs();
-    }
 
-    console.log(this.state.mentors);
-    console.log(this.state.mentees);
+    console.log("MO: " + JSON.stringify(this.state.mentors));
+    console.log("ME: " + JSON.stringify(this.state.mentees));
 
     return (
       <View style={{flex: 1, flexDirection: 'column'}}>
@@ -675,30 +720,26 @@ class HomeScreen extends React.Component {
   };
 
   pairItem(otherUser, otherType) {
+
     return (
       <View>
-        <View style = {{height:5}}></View>
-        <View key={otherUser.id.toString()} style={{width:windowWidth, height:110, flexDirection:'row', alignItems:'center', backgroundColor: colors.lightGrey}} >
-          <View style={{width:80, alignItems:'center', justifyContent:'center'}}>
-            {/* <Image style={{width:60, height:60}} source={require('./assets/avatar.png')} /> */}
-            <Image style={{width:60, height:60}} source={otherUser.avatar} />
-            <View style={{height:5}} />
-            <View style={styles.MentorBox}>
-              <Text style={styles.MentorTag}>{ otherType } </Text>
+        <View key={otherUser.Id.toString()} style={styles.homeItem} >
+          <View style={styles.homeAvatarColumn}>
+            <Image style={styles.homeItemAvatar} source={{uri: otherUser.Avatar}} />
+            <View style={otherUser.homeBoxStyle}>
+              <Text style={styles.homeTag}>{ otherType } </Text>
             </View>
           </View>
-          <View style={{width: mainConversationWidth, flexDirection:'column'}}>
-            <View style={{flexDirection:'row'}}>
-              <Text style={{fontSize:20}}>{otherUser.firstName + " " + otherUser.lastName}</Text>
-            </View>
-            {/* <View style={{height:4}} />
-            <View>
-              <Text></Text>
-            </View> */}
+          <View style={styles.homeItemInfo}>
+            <Text style={styles.homeItemName}>{otherUser.FirstName + " " + otherUser.LastName}</Text>
+            <Text style={styles.homeItemEmail}>{otherUser.Email}</Text>
           </View>
-          {/* <View style={{width:40, alignItems:'center', justifyContent:'center'}}>
-            <IonIcon type='Ionicons' name='ios-arrow-dropright' size={30} color='#000000' onPress={() => navigation.navigate('Messaging')} />
-          </View> */}
+          <View style={styles.homeItemForward}>
+            <IonIcon type='Ionicons' name='ios-arrow-forward' size={30} color='#000000' onPress={() =>
+              this.props.navigation.navigate('WhateverScreen', { id: otherUser.Id })} />
+              {/* Use this to pass data to your next screen.
+                Check out lines 1157 and 1315 for an example of passing data. */ }
+          </View>
         </View>
       </View>
     );
@@ -712,7 +753,7 @@ class HomeScreen extends React.Component {
     </View>
     );
   }
-  
+
 }
 
 function parseDateText(date) {
@@ -1448,15 +1489,13 @@ async function getCurrentTopic() {
   const topicres = await fetch(url + '/current-topic', {
     method: 'GET'
   });
-  // console.log(topicres);
+
   const topicPayload = await topicres.json();
-  // console.log(topicsPayload);
-  
+
   var topic = JSON.parse(JSON.stringify(topicPayload['recordset'][0]));
-  console.log(topic);
+
   topic.DueDateText = parseDateText(new Date(topic.DueDate));
   topic.CreatedText = parseSimpleDateText(new Date(topic.Created));
-  console.log(topic);
 
   return topic;
 }
@@ -1466,9 +1505,8 @@ async function getAllTopics() {
   const topicsres = await fetch(url + '/all-topics', {
     method: 'GET'
   });
-  // console.log(topicsres);
+
   const topicsPayload = await topicsres.json();
-  // console.log(topicsPayload);
 
   const recordSet = topicsPayload["recordset"];
   var topics = [];
@@ -1530,8 +1568,6 @@ class TopicsScreen extends React.Component {
 
   topicItem(topic) {
 
-    console.log("Topic Item: " + topic);
-
     return (
       <View style={styles.topicContainer}>
         <View style={styles.topicHeader}>
@@ -1551,8 +1587,6 @@ class TopicsScreen extends React.Component {
     if (this.state.shouldUpdate) {
       this.setTopics();
     }
-
-    // console.log(this.state.topics);
 
     return (
       <View style={{flex: 1, flexDirection: 'column'}}>
@@ -1669,7 +1703,6 @@ class SplashScreen extends React.Component {
   async setSkipValue (value) {
     this.setState({ 'value': value });
     if (value !== null) {
-      console.log("Test: " + value);
       curUser = await getCurrentUser(value);
       await AsyncStorage.setItem('User', JSON.stringify(curUser));
     }
@@ -1947,7 +1980,6 @@ class SettingsScreen extends React.Component {
 
   componentDidMount() {
     this.getUser();
-    console.log(JSON.stringify(this.state.user));
   }
 
 

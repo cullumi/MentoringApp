@@ -603,9 +603,7 @@ const titleBar = (title, navFunction) => {
       <View style={{height:30, backgroundColor: colors.white}}></View>
       <View style={{flexDirection:'row-reverse', backgroundColor: colors.white, alignItems:'center'}}>
         <View style={{width:15}}></View>
-        <TouchableOpacity onPress={navFunction} activeOpacity={0.5}>
-          <IonIcon name="ios-settings" size={30} color={colors.vikingBlue} />
-        </TouchableOpacity>
+        { settingsModal(navFunction) }
         <View style={{width:mainTitleWidth,textAlign:'center',alignItems:'center'}}>
           <Text style={{fontSize:22,textAlign:'center'}}>{title}</Text>
         </View>
@@ -614,6 +612,65 @@ const titleBar = (title, navFunction) => {
     </View>
   );
 };
+
+const settingsModal = (navFunction) => {
+  return (
+    <TouchableOpacity onPress={navFunction} activeOpacity={0.5}>
+        <IonIcon name="ios-settings" size={30} color={colors.vikingBlue} />
+    </TouchableOpacity>
+  );
+}
+
+const backTitleBar = (title, navFunction, navigation) => {
+  return (
+    <View key={title}>
+      <View style={{height:25, backgroundColor: colors.vikingBlue}}></View>
+      <View style={{height:30, backgroundColor: colors.white}}></View>
+      <View style={{flexDirection:'row', backgroundColor: colors.white, alignItems:'center'}}>
+        <View style={{width:10}}></View>
+        <TouchableOpacity onPress={() => navigation.goBack()} activeOpacity={0.5}>
+          <Image style={{width:30, height:30}} source={require('./assets/icons8-back-50.png')} />
+        </TouchableOpacity>
+        <View style={{width:10}}></View>
+        <View style={{width:mainTitleWidth,textAlign:'center',alignItems:'center'}}>
+          <Text style={{fontSize:22,textAlign:'center'}}>{title}</Text>
+        </View>
+        { settingsModal(navFunction) }
+      </View>
+      <View style={{height:30, backgroundColor: colors.white}}></View>
+    </View>
+  );
+}
+
+const helpModal = (navigation) => {
+  return (
+    <TouchableOpacity onPress={() => navigation.navigate('HelpModal')} activeOpacity={0.5}>
+      <Image style={{width:30, height:30}} source={require('./assets/help.png')} />
+    </TouchableOpacity>
+  );
+}
+
+const backTitleBarHelp = (title, navFunction, navigation) => {
+  return (
+    <View key={title}>
+      <View style={{height:25, backgroundColor: colors.vikingBlue}}></View>
+      <View style={{height:30, backgroundColor: colors.white}}></View>
+      <View style={{flexDirection:'row', backgroundColor: colors.white, alignItems:'center'}}>
+        <View style={{width:10}}></View>
+        <TouchableOpacity onPress={() => navigation.goBack()} activeOpacity={0.5}>
+          <Image style={{width:30, height:30}} source={require('./assets/icons8-back-50.png')} />
+        </TouchableOpacity>
+        <View style={{width:10}}></View>
+        <View style={{width:mainTitleWidth,textAlign:'center',alignItems:'center'}}>
+          <Text style={{fontSize:22,textAlign:'center'}}>{title}</Text>
+        </View>
+        { helpModal(navigation) }
+      </View>
+      <View style={{height:30, backgroundColor: colors.white}}></View>
+    </View>
+  );
+}
+
 
 
 // HOME SCREEN
@@ -650,8 +707,8 @@ class HomeScreen extends React.Component {
     } catch (error) {
       console.log(error);
       try {
-        var tempMentors = await AsyncStorage.getItem('Mentors');
-        var tempMentees = await AsyncStorage.getItem('Mentees');
+        var tempMentors = JSON.parse(await AsyncStorage.getItem('Mentors'));
+        var tempMentees = JSON.parse(await AsyncStorage.getItem('Mentees'));
 
         if (tempMentors != null && Array.isArray(tempMentors)) {
           newMentors = tempMentors;
@@ -665,14 +722,14 @@ class HomeScreen extends React.Component {
     }
 
     // Save mentor/mentee info from the database into local storage, for when you're offline.
-    // if (doSetAsyncStorage) {
-    //   try {
-    //     await AsyncStorage.setItem('Mentors', newMentors);
-    //     await AsyncStorage.setItem('Mentees', newMentees);
-    //   } catch (error) {
-    //     console.log(error);
-    //   }
-    // }
+    if (doSetAsyncStorage) {
+      try {
+        await AsyncStorage.setItem('Mentors', JSON.stringify(newMentors));
+        await AsyncStorage.setItem('Mentees', JSON.stringify(newMentees));
+      } catch (error) {
+        console.log(error);
+      }
+    }
 
     this.setState({shouldUpdate: false, mentors: newMentors, mentees: newMentees});
   }
@@ -736,7 +793,7 @@ class HomeScreen extends React.Component {
           </View>
           <View style={styles.homeItemForward}>
             <IonIcon type='Ionicons' name='ios-arrow-forward' size={30} color='#000000' onPress={() =>
-              this.props.navigation.navigate('WhateverScreen', { id: otherUser.Id })} />
+              this.props.navigation.navigate('ContactInfo', { id: otherUser.Id })} />
               {/* Use this to pass data to your next screen.
                 Check out lines 1157 and 1315 for an example of passing data. */ }
           </View>
@@ -755,6 +812,32 @@ class HomeScreen extends React.Component {
   }
 
 }
+
+
+class ContactInfoScreen extends React.Component {
+  constructor(props) {
+    super(props)
+    this.state = {
+      refreshing : false
+    };
+  }
+
+  displayCI() {
+    return(
+
+    );
+  }
+
+  render() {
+    return (
+      <View style={{flex: 1, flexDirection: 'column'}}>
+        { backTitleBar("Contact Info", () => this.props.navigation.navigate('SettingsModal'), this.props.navigation) }
+      </View>
+    );
+  }
+}
+
+
 
 function parseDateText(date) {
 
@@ -1546,8 +1629,8 @@ class TopicsScreen extends React.Component {
     } catch (error) {
       console.log(error);
       try {
-        const tempTopics = await AsyncStorage.getItem('Topics');
-        const tempCurrentTopic = await AsyncStorage.getItem('CurrentTopic');
+        const tempTopics = JSON.parse(await AsyncStorage.getItem('Topics'));
+        const tempCurrentTopic = JSON.parse(await AsyncStorage.getItem('CurrentTopic'));
         if (tempTopics != null && Array.isArray(tempMentors)) {
           newTopics = tempTopics;
         }
@@ -1559,9 +1642,14 @@ class TopicsScreen extends React.Component {
       }
     }
 
-    // if (doSetAsyncStorage) {
-    //   await AsyncStorage.setItem('Topics', newTopics);
-    // }
+    if (doSetAsyncStorage) {
+      try {
+        await AsyncStorage.setItem('Topics', JSON.stringify(newTopics));
+        await AsyncStorage.setItem('CurrentTopic', JSON.stringify(newCurrentTopic));
+      } catch (error) {
+        console.log(error);
+      }
+    }
 
     this.setState({shouldUpdate: false, topics: newTopics, currentTopic: newCurrentTopic});
   }
@@ -1982,29 +2070,10 @@ class SettingsScreen extends React.Component {
     this.getUser();
   }
 
-
-
   render () {
 
     return <View>
-      <View>
-        <View style={{height:25, backgroundColor: colors.vikingBlue}}></View>
-        <View style={{height:30, backgroundColor: colors.white}}></View>
-        <View style={{flexDirection:'row', backgroundColor: colors.white, alignItems:'center'}}>
-          <View style={{width:5}}></View>
-          <TouchableOpacity onPress={() => this.props.navigation.goBack()} activeOpacity={0.5}>
-            <Image style={{width:30, height:30}} source={require('./assets/icons8-back-50.png')} />
-          </TouchableOpacity>
-          <View style={{width:10}}></View>
-          <View style={{width:mainTitleWidth,textAlign:'center',alignItems:'center'}}>
-            <Text style={{fontSize:22}}>Settings</Text>
-          </View>
-          <TouchableOpacity onPress={() => this.props.navigation.navigate('HelpModal')} activeOpacity={0.5}>
-            <Image style={{width:30, height:30}} source={require('./assets/help.png')} />
-          </TouchableOpacity>
-        </View>
-        <View style={{height:30, backgroundColor: colors.white}}></View>
-      </View>
+      { backTitleBarHelp("Settings", () => this.props.navigation.navigate('HelpModal'), this.props.navigation) }
       <ScrollView style={styles.scrollView}>
         <View style={{justifyContent: 'center',
         alignItems: 'center',paddingTop:25}}>
@@ -2047,6 +2116,7 @@ export default class AppContainer extends React.Component {
             <Stack.Screen name='HelpModal' component={HelpScreen} />
             <Stack.Screen name='ProposeMeeting' component={ProposeMeetingScreen} />
             <Stack.Screen name='WriteSummary' component={WriteSummaryScreen} />
+            <Stack.Screen name='ContactInfo' component={ContactInfoScreen} />
           </Stack.Navigator>
         </NavigationContainer>
     );

@@ -321,9 +321,60 @@ const styles = StyleSheet.create({
     alignItems:'center',
     justifyContent:'center',
     marginRight:15
+  },
+
+  contactAvatar: {
+    width:130,
+    height:130,
+    borderRadius:100,
+    marginBottom:10
+  },
+
+  contactTag: {
+    textAlign: 'center',
+    color:'white',
+    padding:6,
+    fontSize: 16
+  },
+
+  contactText: {
+    textAlign:'center',
+    marginTop:15,
+    marginBottom:25
+  },
+
+  contactName: {
+    fontSize:22,
+    textAlign:'center',
+    marginBottom:10
+  },
+
+  contactRow: {
+    backgroundColor:'#fff',
+    padding:5,
+    flexDirection:'row',
+    marginLeft:10,
+    marginRight:10
+  },
+
+  contactRowType: {
+    fontWeight:'bold',
+    fontSize:16,
+    textAlign:'left',
+    width:'33%'
+  },
+
+  contactRowValue: {
+    fontSize:16,
+    textAlign:'right',
+    alignSelf:'stretch',
+    width:'66%'
+  },
+
+  hiddenButton: {
+    width:0,
+    height:0
   }
-
-
 
 });
 
@@ -407,6 +458,8 @@ async function getMenteesOf (userID) {
     const value = await getUserPayloadByID(pairs[index]["MenteeId"]);
     const mentee = JSON.parse(JSON.stringify(value["recordset"][0]));
     mentee.homeBoxStyle = styles.homeMenteeBox;
+    mentee.contactButtonStatus = true;
+    mentee.contactButtonStyle = styles.hiddenButton;
     mentees.push(mentee);
   }
 
@@ -425,6 +478,8 @@ async function getMentorsOf (userID) {
     const value = await getUserPayloadByID(pairs[index]["MentorId"]);
     const mentor = JSON.parse(JSON.stringify(value["recordset"][0]));
     mentor.homeBoxStyle = styles.homeMentorBox;
+    mentor.contactButtonStatus = false;
+    mentor.contactButtonStyle = styles.summaryButton;
     mentors.push(mentor);
   }
 
@@ -794,8 +849,6 @@ class HomeScreen extends React.Component {
           <View style={styles.homeItemForward}>
             <IonIcon type='Ionicons' name='ios-arrow-forward' size={30} color='#000000' onPress={() =>
               this.props.navigation.navigate('ContactInfo', { user: otherUser, type: otherType })} />
-              {/* Use this to pass data to your next screen.
-                Check out lines 1157 and 1315 for an example of passing data. */ }
           </View>
         </View>
       </View>
@@ -815,22 +868,22 @@ class HomeScreen extends React.Component {
 
 
 async function getContactInfoOf(userID) {
-  
+
   const cInfores = await fetch(url + '/contact/' + userID, {
     method: 'GET'
   });
 
   const cInfoPayload = await cInfores.json();
 
-  const recordSet = cInfoPayload["recordset"];
+  const recordSet = JSON.parse(JSON.stringify(cInfoPayload["recordset"]));
   var cInfos = [];
   for (var i = 0; i < recordSet.length; i++) {
-    var cInfo = JSON.parse(JSON.stringify(recordSet[i]));
-    cInfo.LastUpdateText = parseSimpleDateText(new Date(topic.LastUpdate));
-    cInfo.CreatedText = parseSimpleDateText(new Date(topic.Created));
+    const index = i;
+    var cInfo = JSON.parse(JSON.stringify(recordSet[index]));
+    cInfo.LastUpdateText = parseSimpleDateText(new Date(cInfo.LastUpdate));
+    cInfo.CreatedText = parseSimpleDateText(new Date(cInfo.Created));
     cInfos.push(cInfo);
   }
-
   return cInfos;
 }
 
@@ -843,11 +896,19 @@ class ContactInfoScreen extends React.Component {
     };
   }
 
+  componentDidMount() {
+    if (this.state.refreshing) {
+      this.setContactInfo()
+    }
+  }
+
   async setContactInfo() {
     var newCI = [];
     var doSetAsyncStorage = false;
     const userID = this.props.route.params.user.Id;
     // console.warn(userID);
+
+    console.log('uid: ' + userID);
 
     try {
       newCI = await getContactInfoOf(userID);
@@ -879,9 +940,9 @@ class ContactInfoScreen extends React.Component {
 
   infoItem(info) {
     return (
-      <View style={{flex: 1, flexDirection: 'row'}}>
-        <Text>{ info.ContactType }</Text>
-        <Text>{ info.ContactValue }</Text>
+      <View style={styles.contactRow}>
+        <Text style={styles.contactRowType}>{ info.ContactType }</Text>
+        <Text style={styles.contactRowValue}>{ info.ContactValue }</Text>
       </View>
     );
   }
@@ -894,32 +955,31 @@ class ContactInfoScreen extends React.Component {
     return(
       <View style={{justifyContent: 'flex-end', alignItems: 'center',paddingTop:25}}>
           <View style={{flexGrow: 1}}>
-              <Image style={styles.homeItemAvatar} source={{uri: user.Avatar}} />
+              <Image style={styles.contactAvatar} source={{uri: user.Avatar}} />
+              <Text style={styles.contactName}>{ user.FirstName + " " + user.LastName }</Text>
               <View style={user.homeBoxStyle}>
-                <Text style={styles.homeTag}>{ type } </Text>
+                <Text style={styles.contactTag}>{ type } </Text>
               </View>
           </View>
-          <View>
-              <Text>{ user.FirstName + " " + user.LastName }</Text>
-              { console.log(cInfo) }
+          <View style={styles.contactText}>
+              { console.log(JSON.stringify(cInfo)) }
               { cInfo.map( (info) => {
-                  return this.infoItem(info); 
+                  console.log('made it here');
+                  return this.infoItem(info);
               })}
           </View>
-          <Button onPress={ () => this.props.navigation.navigate('ProposeMeeting', { user: user, type: type })}>
-              <View style={user.homeBoxStyle}>
-                  <Text style={styles.homeTag}>Propose Meeting</Text>
-              </View>
+          <Button
+            containerStyle={user.contactButtonStyle}
+            style={styles.summaryButtonText}
+            onPress={() => this.props.navigation.navigate('ProposeMeeting', { user: user, type: type })}
+            disabled={user.contactButtonStatus}>
+            Propose Meeting
           </Button>
       </View>
     );
   }
 
   render() {
-
-    if (this.state.refreshing) {
-      this.setContactInfo()
-    }
 
     console.log("Rendering Contact Info Screen...");
 
@@ -1719,7 +1779,7 @@ class ProposeMeetingScreen extends React.Component {
               <Text>{ user.FirstName + " " + user.LastName }</Text>
               { console.log(cInfo) }
               { cInfo.map( (info) => {
-                  return this.infoItem(info); 
+                  return this.infoItem(info);
               })}
           </View>
           <Button onPress={ () => this.props.navigation.navigate('ProposeMeeting', { user: user, type: type })}>

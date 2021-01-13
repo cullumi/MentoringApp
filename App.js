@@ -2,7 +2,7 @@ import 'react-native-gesture-handler';
 import React, { useState, Component } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
-import { Animated, Linking, TouchableOpacity, AsyncStorage, StyleSheet, Text, Image, SafeAreaView, ScrollView, View, ActivityIndicator, StatusBar, Dimensions, Alert, TextInput } from 'react-native';
+import { RefreshControl, Animated, Linking, TouchableOpacity, AsyncStorage, StyleSheet, Text, Image, SafeAreaView, ScrollView, View, ActivityIndicator, StatusBar, Dimensions, Alert, TextInput } from 'react-native';
 import LinkedInModal from 'react-native-linkedin';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import IonIcon from 'react-native-vector-icons/Ionicons';
@@ -206,6 +206,12 @@ const styles = StyleSheet.create({
     textAlign:'center'
   },
 
+  helpCancelled: {
+    fontWeight: 'bold',
+    color: colors.red,
+    textAlign:'center'
+  },
+
   reminderText: {
     textAlign:'center',
     marginLeft:25,
@@ -385,7 +391,7 @@ const styles = StyleSheet.create({
 // const accountType = Storage.getItem('accountType');
 const accountID = 1;
 const accountType = 0;
-const url = "http://mshipapp.loca.lt";
+const url = "http://mshipapp2.loca.lt";
 var curUser;
 // var mentors
 // var mentees
@@ -735,6 +741,7 @@ class HomeScreen extends React.Component {
     super(props)
     this.state = {
       shouldUpdate: true,
+      refreshControl: true,
       mentors: [],
       mentees: []
     };
@@ -786,7 +793,7 @@ class HomeScreen extends React.Component {
       }
     }
 
-    this.setState({shouldUpdate: false, mentors: newMentors, mentees: newMentees});
+    this.setState({refreshControl: false, shouldUpdate: false, mentors: newMentors, mentees: newMentees});
   }
 
   unapprovedAccount() {
@@ -804,13 +811,21 @@ class HomeScreen extends React.Component {
     );
   };
 
+  onRefresh() {
+    this.setState({refreshControl:true});
+    this.setPairs();
+  }
+
   approvedHome() { // removed accountID from approvedHome() parameters
 
     console.log("MO: " + JSON.stringify(this.state.mentors));
     console.log("ME: " + JSON.stringify(this.state.mentees));
 
     return (
-      <View style={{flex: 1, flexDirection: 'column'}}>
+      <ScrollView contentContainerStyle={{flex: 1, flexDirection: 'column'}}
+            refreshControl={
+                <RefreshControl refreshing={this.state.refreshControl} onRefresh={this.onRefresh.bind(this)} />
+              }>
         <View style={styles.meetingsGroup}>
           <Text style={styles.meetingsTitle}>Mentors</Text>
         </View>
@@ -827,7 +842,7 @@ class HomeScreen extends React.Component {
             return this.pairItem(mentee, "Mentee");
           })
         }
-      </View>
+      </ScrollView>
     );
   };
 
@@ -1103,7 +1118,13 @@ async function getAppointments(type) {
           case 'Cancelled':
           meeting.meetingStatus = {
             textAlign:"right",
-            color: '#e74c3c'
+            color: colors.red
+          }
+          break;
+          case 'Missed':
+          meeting.meetingStatus = {
+            textAlign:"right",
+            color: colors.red
           }
           break;
         }
@@ -1167,6 +1188,17 @@ async function getAppointments(type) {
               meeting.buttonPress = ''; meeting.buttonDisabled = true;
               break;
             case 'Cancelled':
+              meeting.meetingButton = {
+                width: 0,
+                height: 0
+              }
+              meeting.meetingButtonText = {
+                textAlign: 'center'
+              }
+              meeting.buttonText = '';
+              meeting.buttonPress = ''; meeting.buttonDisabled = true;
+              break;
+            case 'Missed':
               meeting.meetingButton = {
                 width: 0,
                 height: 0
@@ -1276,7 +1308,8 @@ class MeetingsScreen extends React.Component {
       upcomingMeetings: [],
       pastMeetings: [],
       refreshing: false,
-      keyUpdate: 1
+      keyUpdate: 1,
+      refreshControl: true
     };
   }
 
@@ -1308,9 +1341,15 @@ class MeetingsScreen extends React.Component {
     .then((data) => {
       this.setState({
         upcomingMeetings:data,
-        refreshing: false
+        refreshing: false,
+        refreshControl:false
       })
     });
+  }
+
+  onRefresh() {
+    this.setState({refreshControl:true});
+    this.getData();
   }
 
   async acceptMeeting (id) {
@@ -1507,7 +1546,10 @@ class MeetingsScreen extends React.Component {
   render () {
     return (<View style={{flex:1}} key={this.state.refreshing}>
     { titleBar("Meetings", () => this.props.navigation.navigate('SettingsModal')) }
-    <ScrollView style={styles.scrollView}>
+    <ScrollView contentContainerStyle={styles.scrollView}
+                refreshControl={
+                    <RefreshControl refreshing={this.state.refreshControl} onRefresh={this.onRefresh.bind(this)} />
+                  }>
     { this.printUpcomingMeetings() }
     { this.printPastMeetings() }
     </ScrollView>
@@ -1653,6 +1695,57 @@ class WriteSummaryScreen extends React.Component {
     })
   }
 
+  async markMissedMeeting(id) {
+    // Mark Appointment as 'Missed'
+    const statusupdateres = await fetch(url + '/update-appointment-status', {
+      method: 'POST',
+      body: JSON.stringify({
+        Id: id,
+        Status: 'Missed'
+      }),
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+      }
+    })
+    .catch((error) => {
+      console.error(error);
+    });
+    // Delete any summary the user may have submitted accidentally...
+    const user = JSON.parse(await AsyncStorage.getItem('User'));
+    const postres = fetch (url + '/delete-summary', {
+      method: 'POST',
+      body: JSON.stringify({
+        AppointmentId: id,
+        UserId: user.id
+      }),
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+      }
+    })
+    .catch((error) => {
+      console.error(error);
+    });
+    this.handleBack();
+  }
+
+  markMissedAlert(id) {
+    Alert.alert(
+      "Mark as Missed?",
+      "If you or your mentor were unable to attend this meeting, mark it as missed.",
+      [
+        {
+          text: "Nevermind",
+          onPress: () => console.log("Cancel Pressed"),
+          style: "cancel"
+        },
+        { text: "Confirm", onPress: () => this.markMissedMeeting(id) }
+      ],
+      { cancelable: false }
+    );
+  }
+
   render () {
 
     this.getData();
@@ -1662,14 +1755,15 @@ class WriteSummaryScreen extends React.Component {
         <View style={{height:25, backgroundColor: colors.vikingBlue}}></View>
         <View style={{height:30, backgroundColor: colors.white}}></View>
         <View style={{flexDirection:'row', backgroundColor: colors.white, alignItems:'center'}}>
-          <View style={{width:5}}></View>
-          <TouchableOpacity onPress={() => this.handleBack()} activeOpacity={0.5}>
-            <Image style={{width:30, height:30}} source={require('./assets/icons8-back-50.png')} />
+          <TouchableOpacity style={{marginLeft:15,width:30}} onPress={() => this.handleBack()} activeOpacity={0.5}>
+            <IonIcon type='Ionicons' name='ios-arrow-back' size={30} color='#000000'/>
           </TouchableOpacity>
-          <View style={{width:10}}></View>
           <View style={{width:mainTitleWidth,textAlign:'center',alignItems:'center'}}>
             <Text style={{fontSize:18}}>Edit Summary</Text>
           </View>
+          <TouchableOpacity onPress={() => this.markMissedAlert(this.state.normalId)} activeOpacity={0.5}>
+              <IonIcon name="ios-trash" size={30} color={colors.red} />
+          </TouchableOpacity>
         </View>
         <View style={{height:30, backgroundColor: colors.white}}></View>
       </View>
@@ -1854,6 +1948,7 @@ class TopicsScreen extends React.Component {
       shouldUpdate: true,
       topics: [],
       currentTopic: null,
+      refreshControl: true
     };
   }
 
@@ -1891,7 +1986,7 @@ class TopicsScreen extends React.Component {
       }
     }
 
-    this.setState({shouldUpdate: false, topics: newTopics, currentTopic: newCurrentTopic});
+    this.setState({refreshControl:false, shouldUpdate: false, topics: newTopics, currentTopic: newCurrentTopic});
   }
 
   topicItem(topic) {
@@ -1910,6 +2005,11 @@ class TopicsScreen extends React.Component {
     );
   }
 
+  onRefresh() {
+    this.setState({refreshControl:true});
+    this.setTopics();
+  }
+
   render () {
 
     if (this.state.shouldUpdate) {
@@ -1919,20 +2019,25 @@ class TopicsScreen extends React.Component {
     return (
       <View style={{flex: 1, flexDirection: 'column'}}>
         { titleBar("Topics", () => this.props.navigation.navigate('SettingsModal')) }
-        <View style={styles.meetingsGroup}>
-          <Text style={styles.meetingsTitle}>Current Topic</Text>
-        </View>
-        {
-          this.state.currentTopic != null ? this.topicItem(this.state.currentTopic) : <View/>
-        }
-        <View style={styles.meetingsGroup}>
-          <Text style={styles.meetingsTitle}>All Topics</Text>
-        </View>
-        {
-          this.state.topics.map( (topic) => {
-            return this.topicItem(topic);
-          })
-        }
+        <ScrollView
+          refreshControl={
+              <RefreshControl refreshing={this.state.refreshControl} onRefresh={this.onRefresh.bind(this)} />
+            }>
+          <View style={styles.meetingsGroup}>
+            <Text style={styles.meetingsTitle}>Current Topic</Text>
+          </View>
+          {
+            this.state.currentTopic != null ? this.topicItem(this.state.currentTopic) : <View/>
+          }
+          <View style={styles.meetingsGroup}>
+            <Text style={styles.meetingsTitle}>All Topics</Text>
+          </View>
+          {
+            this.state.topics.map( (topic) => {
+              return this.topicItem(topic);
+            })
+          }
+        </ScrollView>
       </View>
     );
   }
@@ -2002,6 +2107,18 @@ class HelpScreen extends React.Component {
           <Text style={styles.helpGreen}>Completed</Text>
           {"\n"}
           After a summary is submitted, a meeting is marked as Completed. Mentees can still make summary edits if they wish, but it's not necessary.
+          {"\n"}
+          <IonIcon name="ios-arrow-down" size={30} color="#000" />
+          {"\n"}
+          <Text style={styles.helpCancelled}>Cancelled</Text>
+          {"\n"}
+          Both the mentor and mentee have the option to cancel a meeting before it happens.
+          {"\n"}
+          <IonIcon name="ios-arrow-down" size={30} color="#000" />
+          {"\n"}
+          <Text style={styles.helpCancelled}>Missed</Text>
+          {"\n"}
+          A meeting can be marked as missed during a summary debrief after the meeting time has passed.
           {"\n"}{"\n"}
         </Text>
         <Text style={styles.helpTitle}>Topic</Text>

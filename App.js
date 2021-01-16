@@ -2,7 +2,7 @@ import 'react-native-gesture-handler';
 import React, { useState, Component } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
-import { RefreshControl, Animated, Linking, TouchableOpacity, AsyncStorage, StyleSheet, Text, Image, SafeAreaView, ScrollView, View, ActivityIndicator, StatusBar, Dimensions, Alert, TextInput } from 'react-native';
+import { Switch, RefreshControl, Animated, Linking, TouchableOpacity, AsyncStorage, StyleSheet, Text, Image, SafeAreaView, ScrollView, View, ActivityIndicator, StatusBar, Dimensions, Alert, TextInput } from 'react-native';
 import LinkedInModal from 'react-native-linkedin';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import IonIcon from 'react-native-vector-icons/Ionicons';
@@ -53,6 +53,12 @@ const styles = StyleSheet.create({
 
   basePrivacyText: {
     fontSize: 12,
+    marginTop:10,
+    textAlign:"center"
+  },
+
+  headerPrivacyText: {
+    fontSize: 16,
     textAlign:"center"
   },
 
@@ -380,6 +386,26 @@ const styles = StyleSheet.create({
   hiddenButton: {
     width:0,
     height:0
+  },
+
+  logoutButton: {
+    padding:12,
+    height:45,
+    width:"45%",
+    overflow:'hidden',
+    borderRadius:4,
+    backgroundColor: colors.red,
+    marginBottom:30
+  },
+
+  updatePrivacyButton: {
+    padding:12,
+    height:45,
+    width:"45%",
+    overflow:'hidden',
+    borderRadius:4,
+    backgroundColor: colors.vikingBlue,
+    marginBottom:30
   }
 
 });
@@ -2437,12 +2463,17 @@ class SettingsScreen extends React.Component {
           <Image style={styles.settingsAvatar} source={{uri: this.state.user.avatar}} />
           <Text style={styles.settingsName}>{this.state.user.firstName} {this.state.user.lastName}</Text>
           <Button
-            containerStyle={{padding:12, height:45, width:"45%", overflow:'hidden', borderRadius:4, backgroundColor: colors.red}}
+            containerStyle={styles.logoutButton}
             style={{fontSize: 16, color: 'white'}}
             onPress={() => this.logout()}>
             Log Out
           </Button>
-          <View style={{height:30}} />
+          <Button
+            containerStyle={styles.updatePrivacyButton}
+            style={styles.summaryButtonText}
+            onPress={() => this.props.navigation.navigate('Privacy')}>
+            Update Privacy
+          </Button>
           <Text>
             <Text style={styles.basePrivacyText}>MentoringApp v1.0</Text>
           </Text>

@@ -2,14 +2,13 @@ import 'react-native-gesture-handler';
 import React, { useState, Component } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
-import { Switch, RefreshControl, Animated, Linking, TouchableOpacity, AsyncStorage, StyleSheet, Text, Image, SafeAreaView, ScrollView, View, ActivityIndicator, StatusBar, Dimensions, Alert, TextInput } from 'react-native';
+import { TouchableHighlight, Switch, RefreshControl, Animated, Linking, TouchableOpacity, AsyncStorage, StyleSheet, Text, Image, SafeAreaView, ScrollView, View, ActivityIndicator, StatusBar, Dimensions, Alert, TextInput } from 'react-native';
 import LinkedInModal from 'react-native-linkedin';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import IonIcon from 'react-native-vector-icons/Ionicons';
 import { color, debug } from 'react-native-reanimated';
 import { Colors } from 'react-native/Libraries/NewAppScreen';
 import Button from 'react-native-button';
-import Tooltip from 'react-native-walkthrough-tooltip';
 import { SystemMessage } from 'react-native-gifted-chat';
 
 // Needs to be implemented:
@@ -689,7 +688,6 @@ const titleBar = (title, navFunction) => {
       <View style={{height:25, backgroundColor: colors.vikingBlue}}></View>
       <View style={{height:30, backgroundColor: colors.white}}></View>
       <View style={{flexDirection:'row-reverse', backgroundColor: colors.white, alignItems:'center'}}>
-        <View style={{width:15}}></View>
         { settingsModal(navFunction) }
         <View style={{width:mainTitleWidth,textAlign:'center',alignItems:'center'}}>
           <Text style={{fontSize:22,textAlign:'center'}}>{title}</Text>
@@ -702,7 +700,7 @@ const titleBar = (title, navFunction) => {
 
 const settingsModal = (navFunction) => {
   return (
-    <TouchableOpacity onPress={navFunction} activeOpacity={0.5}>
+    <TouchableOpacity style={{width:30,marginRight:15}} onPress={navFunction} activeOpacity={0.5}>
         <IonIcon name="ios-settings" size={30} color={colors.vikingBlue} />
     </TouchableOpacity>
   );
@@ -716,7 +714,7 @@ const backTitleBar = (title, navFunction, navigation) => {
       <View style={{flexDirection:'row', backgroundColor: colors.white, alignItems:'center'}}>
         <View style={{width:10}}></View>
         <TouchableOpacity onPress={() => navigation.goBack()} activeOpacity={0.5}>
-          <Image style={{width:30, height:30}} source={require('./assets/icons8-back-50.png')} />
+          <IonIcon type='Ionicons' name='ios-arrow-back' size={30} color={colors.vikingBlue} />
         </TouchableOpacity>
         <View style={{width:10}}></View>
         <View style={{width:mainTitleWidth,textAlign:'center',alignItems:'center'}}>
@@ -731,8 +729,8 @@ const backTitleBar = (title, navFunction, navigation) => {
 
 const helpModal = (navigation) => {
   return (
-    <TouchableOpacity onPress={() => navigation.navigate('HelpModal')} activeOpacity={0.5}>
-      <Image style={{width:30, height:30}} source={require('./assets/help.png')} />
+    <TouchableOpacity style={{width:30,justifyContent:'center'}} onPress={() => navigation.navigate('HelpModal')} activeOpacity={0.5}>
+      <IonIcon name="ios-help-circle" size={30} color={colors.vikingBlue} />
     </TouchableOpacity>
   );
 }
@@ -743,11 +741,9 @@ const backTitleBarHelp = (title, navFunction, navigation) => {
       <View style={{height:25, backgroundColor: colors.vikingBlue}}></View>
       <View style={{height:30, backgroundColor: colors.white}}></View>
       <View style={{flexDirection:'row', backgroundColor: colors.white, alignItems:'center'}}>
-        <View style={{width:10}}></View>
-        <TouchableOpacity onPress={() => navigation.goBack()} activeOpacity={0.5}>
-          <Image style={{width:30, height:30}} source={require('./assets/icons8-back-50.png')} />
+        <TouchableOpacity style={{marginLeft:15,justifyContent:'center',width:30}} onPress={() => navigation.goBack()} activeOpacity={0.5}>
+          <IonIcon type='Ionicons' name='ios-arrow-back' size={30} color={colors.vikingBlue} />
         </TouchableOpacity>
-        <View style={{width:10}}></View>
         <View style={{width:mainTitleWidth,textAlign:'center',alignItems:'center'}}>
           <Text style={{fontSize:22,textAlign:'center'}}>{title}</Text>
         </View>
@@ -888,7 +884,7 @@ class HomeScreen extends React.Component {
             <Text style={styles.homeItemEmail}>{otherUser.Email}</Text>
           </View>
           <View style={styles.homeItemForward}>
-            <IonIcon type='Ionicons' name='ios-arrow-forward' size={30} color='#000000' onPress={() =>
+            <IonIcon type='Ionicons' name='ios-arrow-forward' size={30} color={colors.vikingBlue} onPress={() =>
               this.props.navigation.navigate('ContactInfo', { user: otherUser, type: otherType })} />
           </View>
         </View>
@@ -1508,18 +1504,6 @@ class MeetingsScreen extends React.Component {
       return (<View>
         <View style={styles.meetingsGroup}>
           <Text style={styles.meetingsTitle}>Upcoming</Text>
-          <Tooltip animated={true}
-          arrowSize={{width: 16, height: 8}}
-          backgroundColor="rgba(0,0,0,0)"
-          isVisible={this.state.toolTipVisible}
-          placement="left"
-          onClose={() => this.setState({toolTipVisible:false})}
-          content={<Text>Mentees are responsible for proposing meetings. Schedule meetings by tapping on a specific Mentor on the Home tab!</Text>}>
-            <TouchableOpacity
-            onPress={() => this.setState({toolTipVisible:true})}>
-              <IonIcon style={{paddingRight:15,paddingTop:6}} name="ios-help-circle-outline" size="30" color={colors.gray} />
-            </TouchableOpacity>
-          </Tooltip>
         </View>
         { this.state.upcomingMeetings.map((m) => {
           return (<View style={styles.meeting}>
@@ -1550,18 +1534,6 @@ class MeetingsScreen extends React.Component {
       return (<View>
         <View style={styles.meetingsGroup}>
           <Text style={styles.meetingsTitle}>Upcoming</Text>
-          <Tooltip animated={true}
-          arrowSize={{width: 16, height: 8}}
-          backgroundColor="rgba(0,0,0,0)"
-          isVisible={this.state.toolTipVisible}
-          placement="left"
-          onClose={() => this.setState({toolTipVisible:false})}
-          content={<Text>Mentees can propose meetings by tapping on a specific mentor on the Home tab!</Text>}>
-            <TouchableOpacity
-            onPress={() => this.setState({toolTipVisible:true})}>
-              <IonIcon style={{paddingRight:15,paddingTop:6}} name="ios-help-circle-outline" size={30} color={colors.gray} />
-            </TouchableOpacity>
-          </Tooltip>
         </View>
         <Text style={styles.meetingsPrimaryNone}>No scheduled meetings!</Text>
       </View>);
@@ -1782,7 +1754,7 @@ class WriteSummaryScreen extends React.Component {
         <View style={{height:30, backgroundColor: colors.white}}></View>
         <View style={{flexDirection:'row', backgroundColor: colors.white, alignItems:'center'}}>
           <TouchableOpacity style={{marginLeft:15,width:30}} onPress={() => this.handleBack()} activeOpacity={0.5}>
-            <IonIcon type='Ionicons' name='ios-arrow-back' size={30} color='#000000'/>
+            <IonIcon type='Ionicons' name='ios-arrow-back' size={30} color={colors.vikingBlue} />
           </TouchableOpacity>
           <View style={{width:mainTitleWidth,textAlign:'center',alignItems:'center'}}>
             <Text style={{fontSize:18}}>Edit Summary</Text>
@@ -2084,11 +2056,9 @@ class HelpScreen extends React.Component {
         <View style={{height:25, backgroundColor: colors.vikingBlue}}></View>
         <View style={{height:30, backgroundColor: colors.white}}></View>
         <View style={{flexDirection:'row', backgroundColor: colors.white, alignItems:'center'}}>
-          <View style={{width:5}}></View>
-          <TouchableOpacity onPress={() => this.props.navigation.navigate('SettingsModal')} activeOpacity={0.5}>
-            <Image style={{width:30, height:30}} source={require('./assets/icons8-back-50.png')} />
+          <TouchableOpacity style={{marginLeft:15,width:30}} onPress={() => this.props.navigation.navigate('SettingsModal')} activeOpacity={0.5}>
+            <IonIcon type='Ionicons' name='ios-arrow-back' size={30} color={colors.vikingBlue} />
           </TouchableOpacity>
-          <View style={{width:10}}></View>
           <View style={{width:mainTitleWidth,textAlign:'center',alignItems:'center'}}>
             <Text style={{fontSize:22}}>Help</Text>
           </View>

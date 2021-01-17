@@ -2,7 +2,7 @@ import 'react-native-gesture-handler';
 import React, { useState, Component } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
-import { TouchableHighlight, Switch, RefreshControl, Animated, Linking, TouchableOpacity, AsyncStorage, StyleSheet, Text, Image, SafeAreaView, ScrollView, View, ActivityIndicator, StatusBar, Dimensions, Alert, TextInput } from 'react-native';
+import { Modal, TouchableHighlight, Switch, RefreshControl, Animated, Linking, TouchableOpacity, AsyncStorage, StyleSheet, Text, Image, SafeAreaView, ScrollView, View, ActivityIndicator, StatusBar, Dimensions, Alert, TextInput } from 'react-native';
 import LinkedInModal from 'react-native-linkedin';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import IonIcon from 'react-native-vector-icons/Ionicons';
@@ -405,6 +405,30 @@ const styles = StyleSheet.create({
     borderRadius:4,
     backgroundColor: colors.vikingBlue,
     marginBottom:30
+  },
+
+  meetingPromptModalMissed: {
+    padding:12,
+    height:45,
+    width:"45%",
+    overflow:'hidden',
+    borderRadius:4,
+    backgroundColor: colors.red,
+    marginBottom:25
+  },
+
+  meetingPromptModalConfirm: {
+    padding:12,
+    height:45,
+    width:"45%",
+    overflow:'hidden',
+    borderRadius:4,
+    backgroundColor: colors.vikingBlue,
+    marginBottom:25
+  },
+
+  meetingPromptModalContainer: {
+    textAlign:'center'
   }
 
 });
@@ -754,7 +778,78 @@ const backTitleBarHelp = (title, navFunction, navigation) => {
   );
 }
 
+async function checkMeetingsHome() {
 
+  console.log("Checking Upcoming Appointments For Home...")
+
+  var meetings = [];
+  var pairs = [];
+  var user = JSON.parse(await AsyncStorage.getItem('User'));
+
+  const appres = await fetch(url + '/pair/' + user.id, {
+    method: 'GET'
+  });
+  const appPayload = await appres.json();
+
+  pairs = appPayload['recordset'];
+
+  // Get appointments for each pair the user is a part of.
+  for (var i = 0; i < pairs.length; i++) {
+    const getres = await fetch(url + '/appointment/upcoming/' + pairs[i].Id, {
+      method: 'GET'
+    });
+    const getPayload = await getres.json();
+
+    if (getPayload.rowsAffected !== 0) {
+      // Add each appointment to the meetings array with other necessary data.
+      for (var j = 0; j < getPayload.rowsAffected; j++) {
+        var meeting = JSON.parse(JSON.stringify(getPayload['recordset'][j]));
+        let date = new Date(meeting.ScheduledAt);
+        let cur = new Date();
+        meeting.dateText = parseDateText(date);
+
+        // Check if we should process this meeting (user should be Mentee, meeting should be newly Done)...
+        if (pairs[i].MentorId !== user.id && type === 'past' && cur > date && meeting.Status === 'Scheduled') {
+          const statusupdateres = await fetch(url + '/update-appointment-status', {
+            method: 'POST',
+            body: JSON.stringify({
+              Id: meeting.Id,
+              Status: 'Done'
+            }),
+            headers: {
+              'Accept': 'application/json',
+              'Content-Type': 'application/json',
+            }
+          }).catch((error) => {
+            console.error(error);
+          });
+          meeting.Status = 'Done';
+
+          // Get mentor/mentee avatar, and mark whether this user is the mentor/mentee, and provide title/prompt text.
+          meeting.titleText = "Mentor Meeting";
+          const avres = await fetch(url + "/user/id/" + pairs[i].MentorId, {
+            method: 'GET'
+          });
+          const avPayload = await avres.json();
+          meeting.Avatar = avPayload['recordset'][0].Avatar;
+          meeting.MentorFirstName = avPayload['recordset'][0].FirstName;
+
+          // Get associated topic information and store it.
+          var topic = [];
+
+          meetings.push(meeting);
+
+        }
+
+      }
+
+    }
+
+  }
+
+  return meetings;
+
+}
 
 // HOME SCREEN
 
@@ -765,7 +860,10 @@ class HomeScreen extends React.Component {
       shouldUpdate: true,
       refreshControl: true,
       mentors: [],
-      mentees: []
+      mentees: [],
+      meetingPromptModalVisible: false,
+      writeSummaryModalVisible: false,
+      curSummary: ''
     };
   }
 
@@ -838,6 +936,145 @@ class HomeScreen extends React.Component {
     this.setPairs();
   }
 
+  async submitModalSummary(id) {
+    const user = JSON.parse(await AsyncStorage.getItem('User'));
+    // post insert
+    const postres = fetch (url + '/create-summary', {
+      method: 'POST',
+      body: JSON.stringify({
+        AppointmentId: id,
+        SummaryText: this.state.curSummary,
+        UserId: user.id
+      }),
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+      }
+    })
+    .catch((error) => {
+      console.error(error);
+    });
+    // update appointment status
+    const statusupdateres = await fetch(url + '/update-appointment-status', {
+      method: 'POST',
+      body: JSON.stringify({
+        Id: id,
+        Status: 'Completed'
+      }),
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+      }
+    })
+    .catch((error) => {
+      console.error(error);
+    });
+    // Refresh meetings state
+    var meetings = checkMeetingsHome();
+    this.setState({meetings:meetings,curSummary:''});
+  }
+
+  writeSummaryModal() {
+
+    var meeting = this.state.meetings[0];
+
+    return (<View>
+        <Modal
+          animationType="slide"
+          transparent={true}
+          visible={this.state.writeSummaryModalVisible}
+          onRequestClose={() => {
+            this.submitModalSummary(meeting.Id)
+          }}>
+            <View style={styles.meetingPromptModalContainer}>
+            <Text style={styles.reminderText}>Review this meeting's topic then scroll down:</Text>
+            <View style={styles.topicContainer}>
+              <View style={styles.topicHeader}>
+                <Text style={styles.topicTitleText}>{meeting.topic.Title}</Text>
+                <Text style={styles.topicHeaderDateText}>{meeting.topic.createdText}</Text>
+              </View>
+              <View style={styles.topicInfo}>
+                <Text style={styles.topicDateText}>Due: {meeting.topic.dueDateText}</Text>
+                <Text>{meeting.topic.Description}</Text>
+              </View>
+            </View>
+            <Text>Reflect on your conversation with { meeting.MentorFirstName }:</Text>
+            <View style={styles.summaryInputBox}>
+            <TextInput
+            multiline
+            numberOfLines={6}
+            style={styles.summaryInput}
+            onChangeText={text => this.saveSummary(text)}
+            value={this.state.curSummary} />
+            </View>
+            <Button
+              containerStyle={styles.meetingPromptModalConfirm}
+              style={styles.summaryButtonText}
+              onPress={() => this.setState({writeSummaryModalVisible:false})}>
+              Submit Summary
+            </Button>
+          </View>
+        </Modal>
+      </View>);
+  }
+
+  async processMeeting(ret, meeting) {
+
+    if (ret == 'missed') {
+      // Update meeting in DB
+      const statusupdateres = await fetch(url + '/update-appointment-status', {
+        method: 'POST',
+        body: JSON.stringify({
+          Id: meeting.Id,
+          Status: 'Missed'
+        }),
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        }
+      }).catch((error) => {
+        console.error(error);
+      });
+      // Refresh meetings state
+      var meetings = checkMeetingsHome();
+      this.setState({meetings:meetings});
+    } else {
+      this.setState({writeSummaryModalVisible:true});
+    }
+  }
+
+  meetingPromptModal() {
+
+    var meeting = this.state.meetings[0];
+
+    return (<View>
+        <Modal
+          animationType="slide"
+          transparent={true}
+          visible={this.state.meetingPromptModalVisible}
+          onRequestClose={() => {
+            this.processMeeting(this.state.meetingPromptModalReturn, meeting)
+          }}>
+          <View style={styles.meetingPromptModalContainer}>
+            <Text>According to your records, a meeting recently happened!</Text>
+            <Text>Did you have a meeting with { meeting.MentorFirstName }?</Text>
+            <Button
+              containerStyle={styles.meetingPromptModalConfirm}
+              style={styles.summaryButtonText}
+              onPress={() => this.setState({meetingPromptModalVisible:false,meetingPromptModalReturn:'confirmed'})}>
+              Yes, We Met
+            </Button>
+            <Button
+              containerStyle={styles.meetingPromptModalMissed}
+              style={styles.summaryButtonText}
+              onPress={() => this.setState({meetingPromptModalVisible:false,meetingPromptModalReturn:'missed'})}>
+              Meeting Was Missed
+            </Button>
+          </View>
+        </Modal>
+      </View>);
+  }
+
   approvedHome() { // removed accountID from approvedHome() parameters
 
     console.log("MO: " + JSON.stringify(this.state.mentors));
@@ -893,10 +1130,16 @@ class HomeScreen extends React.Component {
   };
 
   render() {
+    var meetings = checkMeetingsHome();
+    if (meetings && meetings.length > 0) {
+      this.setState({meetings:meetings,meetingPromptModalVisible:true});
+    }
     return (
     <View style={{flex: 1, flexDirection: 'column'}}>
       { titleBar("Home", () => this.props.navigation.navigate('SettingsModal')) }
       { accountType == 1 ? this.unapprovedAccount() : this.approvedHome() }
+      { this.meetingPromptModal.bind(this) }
+      { this.writeSummaryModal.bind(this) }
     </View>
     );
   }

@@ -27,6 +27,7 @@ const mainWidth = windowWidth - 60;
 const mainConversationWidth = windowWidth - 130;
 const mainTitleWidth = windowWidth - 90;
 const homeItemWidth = windowWidth - 175;
+const contactRowWidth = windowWidth - 15;
 
 const colors = {
   vikingBlue: '#003F87',
@@ -154,6 +155,7 @@ const styles = StyleSheet.create({
 
   summaryButton: {
     padding: 15,
+    borderRadius:4,
     backgroundColor: colors.vikingBlue,
     alignItems:'center',
     marginLeft:15,
@@ -347,10 +349,19 @@ const styles = StyleSheet.create({
     fontSize: 16
   },
 
+  contactContainer: {
+    backgroundColor:'#fff',
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+    paddingTop:25
+  },
+
   contactText: {
-    textAlign:'center',
-    marginTop:15,
-    marginBottom:25
+    marginTop:20,
+    marginBottom:20,
+    paddingTop:10,
+    paddingBottom:10,
+    backgroundColor:colors.lightGrey
   },
 
   contactName: {
@@ -360,25 +371,30 @@ const styles = StyleSheet.create({
   },
 
   contactRow: {
-    backgroundColor:'#fff',
-    padding:5,
     flexDirection:'row',
-    marginLeft:10,
-    marginRight:10
+    width:windowWidth,
+    marginTop:10,
+    marginBottom:10
+  },
+
+  contactIconContainer: {
+    width:30,
+    marginLeft:25,
+    marginRight:10,
+    alignItems:'center',
+    justifyContent:'center'
+  },
+
+  contactRowText: {
+    flexDirection:'column'
   },
 
   contactRowType: {
-    fontWeight:'bold',
-    fontSize:16,
-    textAlign:'left',
-    width:'33%'
+    fontSize:16
   },
 
   contactRowValue: {
-    fontSize:16,
-    textAlign:'right',
-    alignSelf:'stretch',
-    width:'66%'
+    fontSize:20
   },
 
   hiddenButton: {
@@ -825,6 +841,24 @@ const backTitleBarHelp = (title, navFunction, navigation) => {
   );
 }
 
+const backTitleBarContact = (title, navigation) => {
+  return (
+    <View key={title}>
+      <View style={{height:25, backgroundColor: colors.vikingBlue}}></View>
+      <View style={{height:30, backgroundColor: colors.white}}></View>
+      <View style={{flexDirection:'row', backgroundColor: colors.white, alignItems:'center'}}>
+        <TouchableOpacity style={{marginLeft:15,justifyContent:'center',width:30}} onPress={() => navigation.goBack()} activeOpacity={0.5}>
+          <IonIcon type='Ionicons' name='ios-arrow-back' size={30} color={colors.vikingBlue} />
+        </TouchableOpacity>
+        <View style={{width:mainTitleWidth,textAlign:'center',alignItems:'center'}}>
+          <Text style={{fontSize:22,textAlign:'center'}}>{title}</Text>
+        </View>
+      </View>
+      <View style={{height:30, backgroundColor: colors.white}}></View>
+    </View>
+  );
+}
+
 async function checkMeetingsHome() {
 
   console.log("Checking Upcoming Appointments For Home...")
@@ -1126,7 +1160,8 @@ class HomeScreen extends React.Component {
 
     return (
       <View>
-        <View key={otherUser.Id.toString()} style={styles.homeItem} >
+        <TouchableOpacity onPress={() =>
+          this.props.navigation.navigate('ContactInfo', { user: otherUser, type: otherType })} key={otherUser.Id.toString()} style={styles.homeItem} >
           <View style={styles.homeAvatarColumn}>
             <Image style={styles.homeItemAvatar} source={{uri: otherUser.Avatar}} />
             <View style={otherUser.homeBoxStyle}>
@@ -1138,10 +1173,9 @@ class HomeScreen extends React.Component {
             <Text style={styles.homeItemEmail}>{otherUser.Email}</Text>
           </View>
           <View style={styles.homeItemForward}>
-            <IonIcon type='Ionicons' name='ios-arrow-forward' size={30} color={colors.vikingBlue} onPress={() =>
-              this.props.navigation.navigate('ContactInfo', { user: otherUser, type: otherType })} />
+            <IonIcon type='Ionicons' name='ios-arrow-forward' size={30} color={colors.vikingBlue}  />
           </View>
-        </View>
+        </TouchableOpacity>
       </View>
     );
   };
@@ -1286,16 +1320,32 @@ class ContactInfoScreen extends React.Component {
       }
     }
 
+    newCI.map( (info) => {
+        switch(info.ContactType) {
+          case 'Email':
+          info.ContactIcon = 'ios-mail';
+          break;
+          case 'Phone':
+          info.ContactIcon = 'ios-phone-portrait';
+          break;
+        }
+    })
+
     this.setState({refreshing: false, contactInfo: newCI});
   }
 
   infoItem(info) {
-    return (
-      <View style={styles.contactRow}>
-        <Text style={styles.contactRowType}>{ info.ContactType }</Text>
-        <Text style={styles.contactRowValue}>{ info.ContactValue }</Text>
-      </View>
-    );
+    return (<View>
+      <TouchableOpacity style={styles.contactRow}>
+        <View style={styles.contactIconContainer}>
+          <IonIcon type='Ionicons' name={info.ContactIcon} size={30} color={colors.vikingBlue} />
+        </View>
+        <View style={styles.contactRowText}>
+          <Text style={styles.contactRowType}>{ info.ContactType }</Text>
+          <Text style={styles.contactRowValue}>{ info.ContactValue }</Text>
+        </View>
+      </TouchableOpacity>
+    </View>);
   }
 
   displayCI(cInfo) {
@@ -1304,7 +1354,7 @@ class ContactInfoScreen extends React.Component {
     const type = this.props.route.params.type;
 
     return(
-      <View style={{justifyContent: 'flex-end', alignItems: 'center',paddingTop:25}}>
+      <View style={styles.contactContainer}>
           <View style={{flexGrow: 1}}>
               <Image style={styles.contactAvatar} source={{uri: user.Avatar}} />
               <Text style={styles.contactName}>{ user.FirstName + " " + user.LastName }</Text>
@@ -1334,8 +1384,8 @@ class ContactInfoScreen extends React.Component {
     console.log("Rendering Contact Info Screen...");
 
     return (
-      <View style={{flex: 1, flexDirection: 'column'}}>
-        { backTitleBar("Contact Info", () => this.props.navigation.navigate('SettingsModal'), this.props.navigation) }
+      <View style={{flex: 1, flexDirection: 'column', backgroundColor:'#fff'}}>
+        { backTitleBarContact("Contact Info", this.props.navigation) }
         { this.displayCI(this.state.contactInfo) }
       </View>
     );
@@ -1876,7 +1926,7 @@ async function retTopic(topicId) {
   const topicPayload = await topicRes.json();
 
   var top = JSON.parse(JSON.stringify(topicPayload["recordset"][0]));
-  top ['dueDateText'] = parseDateText(new Date(top["DueDate"]));
+  top['dueDateText'] = parseDateText(new Date(top["DueDate"]));
   top['createdText'] = parseSimpleDateText(new Date(top["Created"]));
 
   return top;

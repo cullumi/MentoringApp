@@ -22,6 +22,7 @@ export default class WebView extends React.Component<WebViewSharedProps, State> 
     reload: () => void;
     injectJavaScript: (data: string) => void;
     postMessage: (data: string) => void;
+    getInjectableJSMessage: (message: string) => string;
     /**
      * We return an event with a bunch of fields including:
      *  url, title, loading, canGoBack, canGoForward

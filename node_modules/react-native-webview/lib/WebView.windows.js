@@ -78,7 +78,11 @@ var WebView = /** @class */ (function (_super) {
             UIManager.dispatchViewManagerCommand(_this.getWebViewHandle(), UIManager.getViewManagerConfig('RCTWebView').Commands.injectJavaScript, [data]);
         };
         _this.postMessage = function (data) {
-            UIManager.dispatchViewManagerCommand(_this.getWebViewHandle(), UIManager.getViewManagerConfig('RCTWebView').Commands.postMessage, [String(data)]);
+            var message = _this.getInjectableJSMessage(data);
+            UIManager.dispatchViewManagerCommand(_this.getWebViewHandle(), UIManager.getViewManagerConfig('RCTWebView').Commands.injectJavaScript, [message]);
+        };
+        _this.getInjectableJSMessage = function (message) {
+            return "(function() {window.dispatchEvent(new MessageEvent('message', {data: " + JSON.stringify(message) + "}));})();";
         };
         /**
          * We return an event with a bunch of fields including:

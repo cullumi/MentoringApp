@@ -10,6 +10,7 @@ import { color, debug } from 'react-native-reanimated';
 import { Colors } from 'react-native/Libraries/NewAppScreen';
 import Button from 'react-native-button';
 import { SystemMessage } from 'react-native-gifted-chat';
+import DateTimePicker from '@react-native-community/datetimepicker';
 
 // navigation controllers
 const Stack = createStackNavigator();
@@ -506,9 +507,7 @@ const styles = StyleSheet.create({
 
   dateTimeBox: {
     width:pickerWidth,
-    height:100,
-    justifyContent:'center',
-    alignItems:'center'
+    height:100
   }
 
 });
@@ -2192,20 +2191,34 @@ class ProposeMeetingScreen extends React.Component {
     super(props)
     this.state = {
       refreshing : true,
-      mentor: {}
+      mentor: {},
+      mode: 'date',
+      date: '10/10/2021',
+      time: '',
+      titleDate:''
     };
   }
 
-  /*componentDidMount() {
+  componentDidMount() {
     const mentor = this.props.route.params.user;
-    this.setState({mentor:mentor});
+    const cur = new Date();
+    this.setState({mentor:mentor,date:cur});
+    console.log(JSON.stringify(this.state));
   }
 
-  async savePropose() {
-    console.log(this.state.date);
+  onChange = (event, date) => {
+    if (this.state.mode == 'date') {
+      this.setState({date:date,mode:'time',titleDate:date});
+    } else {
+      const time = ' ' + date;
+      const title = this.state.date + time;
+      this.setState({time:time,titleDate:title});
+    }
   }
 
-  setDate = date => this.setState({ date:date });
+  async savePropose(mode) {
+    console.log("Datetime: " + this.state.titleDate);
+  }
 
   displayPropose() {
 
@@ -2215,10 +2228,13 @@ class ProposeMeetingScreen extends React.Component {
         </Text>
         <View style={styles.dateTimeWrapper}>
           <View style={styles.dateTimeBox}>
-            <DatePicker style={styles.dateTimeBox}
-              date={this.state.date}
-              mode='datetime'
-              onDateChange={this.setDate}
+            <DateTimePicker style={styles.dateTimeBox}
+              testID="dateTimePicker"
+              value={this.state.date}
+              mode={this.state.mode}
+              is24Hour={true}
+              display="inline"
+              onChange={this.onChange}
             />
           </View>
         </View>
@@ -2228,11 +2244,11 @@ class ProposeMeetingScreen extends React.Component {
         <Button
           containerStyle={this.state.mentor.contactButtonStyle}
           style={styles.summaryButtonText}
-          onPress={() => this.savePropose()}>
-          Choose your meeting time:
+          onPress={() => this.savePropose(this.state.mode)}>
+          Choose {this.state.mode.charAt(0).toUpperCase() + this.state.mode.slice(1)}
         </Button>
     </View>);
-  } */
+  }
 
   render() {
 
@@ -2241,7 +2257,7 @@ class ProposeMeetingScreen extends React.Component {
     return (
       <View style={{flex: 1, flexDirection: 'column'}}>
         { backTitleBarContact("Propose Meeting", this.props.navigation) }
-        //{ this.displayPropose() }
+        { this.displayPropose(this.state.contactInfo) }
       </View>
     );
   }

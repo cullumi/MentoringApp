@@ -10,13 +10,16 @@ import { color, debug } from 'react-native-reanimated';
 import { Colors } from 'react-native/Libraries/NewAppScreen';
 import Button from 'react-native-button';
 import { SystemMessage } from 'react-native-gifted-chat';
-import DateTimePicker from '@react-native-community/datetimepicker';
+
+// Needs to be implemented:
+// import Storage from './localstorage';
 
 // navigation controllers
 const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
 
 // measurements and styles
+
 const windowWidth = Dimensions.get('window').width;
 const windowHeight = Dimensions.get('window').height;
 const windowHeight6 = windowHeight / 6;
@@ -25,7 +28,6 @@ const mainConversationWidth = windowWidth - 130;
 const mainTitleWidth = windowWidth - 90;
 const homeItemWidth = windowWidth - 175;
 const contactRowWidth = windowWidth - 15;
-const pickerWidth = windowWidth - 200;
 
 const colors = {
   vikingBlue: '#003F87',
@@ -492,24 +494,6 @@ const styles = StyleSheet.create({
     backgroundColor:colors.lightGrey
   },
 
-  dateTimeWrapper: {
-    marginTop:20,
-    marginBottom:20,
-    paddingTop:10,
-    paddingBottom:10,
-    width:'100%',
-    justifyContent:'center',
-    alignItems:'center',
-    backgroundColor:colors.lightGrey,
-    height:100,
-    textAlign:'center'
-  },
-
-  dateTimeBox: {
-    width:pickerWidth,
-    height:100
-  }
-
 });
 
 // Get necessary data for HomeScreen.
@@ -519,7 +503,7 @@ const styles = StyleSheet.create({
 // const accountType = Storage.getItem('accountType');
 const accountID = 1;
 const accountType = 0;
-const url = "http://mentorship.cs.wwu.edu";
+const url = "http://mshipapp2.loca.lt";
 var curUser;
 // var mentors
 // var mentees
@@ -1387,7 +1371,7 @@ class ContactInfoScreen extends React.Component {
           <Button
             containerStyle={user.contactButtonStyle}
             style={styles.summaryButtonText}
-            onPress={() => this.props.navigation.navigate('ProposeMeeting', { user: user })}
+            onPress={() => this.props.navigation.navigate('ProposeMeeting', { user: user, type: type })}
             disabled={user.contactButtonStatus}>
             Propose Meeting
           </Button>
@@ -2191,73 +2175,94 @@ class ProposeMeetingScreen extends React.Component {
     super(props)
     this.state = {
       refreshing : true,
-      mentor: {},
-      mode: 'date',
-      date: '10/10/2021',
-      time: '',
-      titleDate:''
+      contactInfo : []
     };
   }
 
-  componentDidMount() {
-    const mentor = this.props.route.params.user;
-    const cur = new Date();
-    this.setState({mentor:mentor,date:cur});
-    console.log(JSON.stringify(this.state));
-  }
+  async setContactInfo() {
+    var newCI = [];
+    var doSetAsyncStorage = false;
+    const userID = this.props.route.params.user.Id;
+    // console.warn(userID);
 
-  onChange = (event, date) => {
-    if (this.state.mode == 'date') {
-      this.setState({date:date,mode:'time',titleDate:date});
-    } else {
-      const time = ' ' + date;
-      const title = this.state.date + time;
-      this.setState({time:time,titleDate:title});
+    try {
+      newCI = await getContactInfoOf(userID);
+      doSetAsyncStorage = true;
+
+    } catch (error) {
+      console.log(error);
+      try {
+        var tempCI = JSON.parse(await AsyncStorage.getItem('ContactInfo/' + userID));
+        if (tempCI != null && Array.isArray(tempCI)) {
+          newCI = tempCI;
+        }
+      } catch (error) {
+        console.log(error);
+      }
     }
+
+    // Save mentor/mentee info from the database into local storage, for when you're offline.
+    if (doSetAsyncStorage) {
+      try {
+        await AsyncStorage.setItem('ContactInfo/' + userID, JSON.stringify(newCI));
+      } catch (error) {
+        console.log(error);
+      }
+    }
+
+    this.setState({refreshing: false, contactInfo: newCI});
   }
 
-  async savePropose(mode) {
-    console.log("Datetime: " + this.state.titleDate);
+  infoItem(info) {
+    return (
+      <View style={{flex: 1, flexDirection: 'row'}}>
+        <Text>{ info.ContactType }</Text>
+        <Text>{ info.ContactValue }</Text>
+      </View>
+    );
   }
 
-  displayPropose() {
+  displayCI(cInfo) {
 
-    return (<View style={styles.contactContainer}>
-        <Text style={styles.contactName}>
-          Select your meeting {this.state.mode}:
-        </Text>
-        <View style={styles.dateTimeWrapper}>
-          <View style={styles.dateTimeBox}>
-            <DateTimePicker style={styles.dateTimeBox}
-              testID="dateTimePicker"
-              value={this.state.date}
-              mode={this.state.mode}
-              is24Hour={true}
-              display="inline"
-              onChange={this.onChange}
-            />
+    const user = this.props.route.params.user;
+    const type = this.props.route.params.type;
+
+    return(
+      <View style={{justifyContent: 'flex-end', alignItems: 'center',paddingTop:25}}>
+          <View style={{flexGrow: 1}}>
+              <Image style={styles.homeItemAvatar} source={{uri: user.Avatar}} />
+              <View style={user.homeBoxStyle}>
+                <Text style={styles.homeTag}>{ type } </Text>
+              </View>
           </View>
-        </View>
-        <Text style={{paddingTop:10,textAlign:'center'}}>
-        {this.state.titleDate}
-        </Text>
-        <Button
-          containerStyle={this.state.mentor.contactButtonStyle}
-          style={styles.summaryButtonText}
-          onPress={() => this.savePropose(this.state.mode)}>
-          Choose {this.state.mode.charAt(0).toUpperCase() + this.state.mode.slice(1)}
-        </Button>
-    </View>);
+          <View>
+              <Text>{ user.FirstName + " " + user.LastName }</Text>
+              { console.log(cInfo) }
+              { cInfo.map( (info) => {
+                  return this.infoItem(info);
+              })}
+          </View>
+          <Button onPress={ () => this.props.navigation.navigate('ProposeMeeting', { user: user, type: type })}>
+              <View style={user.homeBoxStyle}>
+                  <Text style={styles.homeTag}>Propose Meeting</Text>
+              </View>
+          </Button>
+      </View>
+    );
   }
 
   render() {
+
+    if (this.state.refreshing) {
+      this.setContactInfo()
+    }
 
     console.log("Rendering Propose Meeting Screen...");
 
     return (
       <View style={{flex: 1, flexDirection: 'column'}}>
-        { backTitleBarContact("Propose Meeting", this.props.navigation) }
-        { this.displayPropose(this.state.contactInfo) }
+        { backTitleBar("Propose Meeting", () => this.props.navigation.navigate('SettingsModal'), this.props.navigation) }
+        { this.displayCI(this.state.contactInfo) }
       </View>
     );
   }

@@ -3,7 +3,9 @@
 
 
 import {AsyncStorage} from 'react-native';
-import {accountID, accountType, url} from './globals.js';
+import {cur, accountID, accountType, url} from './globals.js';
+import {parseDateText, parseSimpleDateText} from './Helpers.js';
+import {styles, colors} from './Styles.js';
 
 // API GET and POST Methods
 
@@ -29,7 +31,6 @@ export async function getMenteesOf (userID) {
   
 // Gets all pairs containing the given user as a mentee, then gets a list of mentors from those pairs.
 export async function getMentorsOf (userID) {
-  
     console.log("Getting Mentors...");
   
     const pairs = await getPairsOf('mentee', userID);
@@ -68,8 +69,10 @@ export async function getPairsOf(type, userID) {
 // Gets the Current User via the ensureUserExists method and the createLocalUser method.
 // Should Phase Out the CreateLocalUser method in favor of a simple .json() call on the payload.
 export async function getCurrentUser () {
-    const userPayload = await ensureUserExists();
-    return createLocalUser(userPayload);
+  const userPayload = await ensureUserExists();
+  console.log("URL: " + url);
+  console.log(userPayload);
+  return createLocalUser(userPayload);
 }
   
 // Gets a user based on a certain user id.
@@ -270,7 +273,6 @@ export async function getCurrentTopic() {
 // Returns a list of all topics from the database
 // NOTE: excludes the current topic?  The API could use a more descriptive rename if this is the case.
 export async function getAllTopics() {
-  
     const topicsres = await fetch(url + '/all-topics', {
       method: 'GET'
     });
@@ -298,7 +300,8 @@ export async function checkMeetingsHome() {
   
     var meetings = [];
     var pairs = [];
-    var user = JSON.parse(await AsyncStorage.getItem('User'));
+    var user = getCurrentUser();
+    // var user = JSON.parse(await AsyncStorage.getItem('User'));
   
     const appres = await fetch(url + '/pair/' + user.id, {
       method: 'GET'

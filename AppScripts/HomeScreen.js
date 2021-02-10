@@ -4,9 +4,9 @@
 import React from 'react';
 import {AsyncStorage, View, Text, Button, ScrollView, RefreshControl, TouchableOpacity, Image, Modal, TextInput} from 'react-native';
 import IonIcon from 'react-native-vector-icons/Ionicons';
-import {TitleBar, settingsModal} from './ScreenComponents.js';
+import {TitleBar} from './ScreenComponents.js';
 import {styles, colors} from './Styles.js';
-import {getCurrentUser, checkMeetingsHome, updateAppointmentStatus, createSummary} from './API.js';
+import {getMentorsOf, getMenteesOf, getCurrentUser, checkMeetingsHome, updateAppointmentStatus, createSummary} from './API.js';
 
 // HOME SCREEN
 export default class HomeScreen extends React.Component {
@@ -201,7 +201,10 @@ export default class HomeScreen extends React.Component {
 
       return (
       <View style={{flex: 1, flexDirection: 'column'}}>
-        <TitleBar title="Home" navFunction={() => this.props.navigation.navigate('SettingsModal')}/>
+        <TitleBar 
+            title="Home" 
+            navFunction={() => this.props.navigation.navigate('SettingsModal')}
+            navigation={this.props.navigation}/>
         { this.props.route.params.accountType == 1 ? this.unapprovedAccount() : this.approvedHome() }
         <Modal
           animationType="slide"

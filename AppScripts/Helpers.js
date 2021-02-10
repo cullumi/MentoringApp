@@ -1,7 +1,8 @@
 
 
 
-function parseDateText(date) {
+
+export function parseDateText(date) {
 
     var months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
     var hours = date.getHours();
@@ -18,7 +19,7 @@ function parseDateText(date) {
     return dateText;
 }
   
-  function parseSimpleDateText(date) {
+export function parseSimpleDateText(date) {
   
     var months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
     var hours = date.getHours();
@@ -30,4 +31,4 @@ function parseDateText(date) {
     const dateText = months[date.getMonth()] +
                           " " + date.getDate();
     return dateText;
-}
+} 

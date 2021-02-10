@@ -3,9 +3,10 @@
 
 
 import React from 'react';
-import {View, Text, Button, Image} from 'react-native';
+import {View, Text, Button, Image, AsyncStorage} from 'react-native';
 import {BackTitleBar, SettingsModal} from './ScreenComponents.js';
 import {styles, colors} from './Styles.js';
+import {getContactInfoOf} from './API.js';
 
 export default class ProposeMeetingScreen extends React.Component {
     constructor(props) {
@@ -79,7 +80,9 @@ export default class ProposeMeetingScreen extends React.Component {
                     return this.infoItem(info);
                 })}
             </View>
-            <Button title="Propose Meeting" onPress={ () => this.props.navigation.navigate('ProposeMeeting', { user: user, type: type })}>
+            <Button 
+                title="Propose Meeting" 
+                onPress={ () => this.props.navigation.navigate('ProposeMeeting', { user: user, type: type })}>
                 <View style={user.homeBoxStyle}>
                     <Text style={styles.homeTag}>Propose Meeting</Text>
                 </View>

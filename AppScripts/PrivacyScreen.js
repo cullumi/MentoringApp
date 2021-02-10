@@ -1,6 +1,11 @@
 
 
+
+
 import React from 'react';
+import {View, Text, Button, Image, ScrollView, SafeAreaView} from 'react-native';
+import {styles, colors} from './Styles.js';
+import {updatePrivacy} from './API.js';
 
 // PrivacyScreen class
 export default class PrivacyScreen extends React.Component {
@@ -96,18 +101,16 @@ export default class PrivacyScreen extends React.Component {
           <View style={{height:25}} />
           <View style={{flexDirection:"row", alignItems:"center", justifyContent:"center"}}>
             <Button
+              title="Disagree"
               containerStyle={{padding:12, height:45, width:"45%", overflow:'hidden', borderRadius:4, backgroundColor: '#95a5a6'}}
               style={{fontSize: 16, color: 'white'}}
-              onPress={() => this.denyAgreement()}>
-              Disagree
-            </Button>
+              onPress={() => this.denyAgreement()} />
             <View style={{width:10}} />
             <Button
+              title="Agree"
               containerStyle={{padding:12, height:45, width:"45%", overflow:'hidden', borderRadius:4, backgroundColor: '#003F87'}}
               style={{fontSize: 16, color: 'white'}}
-              onPress={() => this.acceptAgreement()}>
-              Agree
-            </Button>
+              onPress={() => this.acceptAgreement()} />
           </View>
           <View style={{height:25}} />
         </ScrollView>

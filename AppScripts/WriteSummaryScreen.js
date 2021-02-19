@@ -3,10 +3,12 @@
 
 
 import React from 'react';
-import {View, Text, Button, ScrollView, TouchableOpacity, TextInput, Animated} from 'react-native';
+import {Alert, AsyncStorage, View, Text, ScrollView, TouchableOpacity, TextInput, Animated} from 'react-native';
 import IonIcon from 'react-native-vector-icons/Ionicons';
-import {styles, colors} from './Styles.js';
-import {} from './API.js';
+import {mainTitleWidth, styles, colors} from './Styles.js';
+import {retTopic} from './API.js';
+import Button from 'react-native-button';
+import {cur, accountID, accountType, url} from './globals.js';
 
 export default class WriteSummaryScreen extends React.Component {
     constructor(props) {
@@ -21,12 +23,12 @@ export default class WriteSummaryScreen extends React.Component {
         topic: []
       }
     }
-  
+
     handleBack() {
       this.props.route.params.onGoBack();
       this.props.navigation.goBack();
      }
-  
+
     componentDidMount() {
       const id = this.props.route.params.id;
       const topicId = this.props.route.params.topicId;
@@ -36,7 +38,7 @@ export default class WriteSummaryScreen extends React.Component {
       this.setState({storageId:storageId,normalId:id,topicId:topicId,type:type,summaryTitle:summaryTitle});
       AsyncStorage.getItem(storageId).then((value) => this.setSkipValue(value, id, type));
     }
-  
+
     getData() {
       retTopic(this.state.topicId)
       .then((data) => {
@@ -45,7 +47,7 @@ export default class WriteSummaryScreen extends React.Component {
         })
       });
     }
-  
+
     async setSkipValue (value, id, type) {
       if (value !== null) {
         this.setState({ 'curSummary': value });
@@ -62,12 +64,12 @@ export default class WriteSummaryScreen extends React.Component {
         }
       }
     }
-  
+
     async saveSummary (text) {
       this.setState({'curSummary': text});
       await AsyncStorage.setItem(this.state.storageId, text);
     }
-  
+
     async handleSubmit() {
       const user = JSON.parse(await AsyncStorage.getItem('User'));
       if (this.state.type === 'submit') {
@@ -102,6 +104,7 @@ export default class WriteSummaryScreen extends React.Component {
           console.error(error);
         });
       } else {
+        console.log(this.state.normalId + " " + this.state.curSummary + " " + user.id);
         // post update
         const postres = fetch (url + '/update-summary', {
           method: 'POST',
@@ -121,7 +124,7 @@ export default class WriteSummaryScreen extends React.Component {
       }
       this.fadeOut();
     }
-  
+
     fadeOut() {
       this.setState({ fadeOut: new Animated.Value(1), type:'edit' },
       () => {
@@ -135,7 +138,7 @@ export default class WriteSummaryScreen extends React.Component {
         ).start();
       })
     }
-  
+
     async markMissedMeeting(id) {
       // Mark Appointment as 'Missed'
       const statusupdateres = await fetch(url + '/update-appointment-status', {
@@ -170,7 +173,7 @@ export default class WriteSummaryScreen extends React.Component {
       });
       this.handleBack();
     }
-  
+
     markMissedAlert(id) {
       Alert.alert(
         "Mark as Missed?",
@@ -186,11 +189,11 @@ export default class WriteSummaryScreen extends React.Component {
         { cancelable: false }
       );
     }
-  
+
     render () {
-  
+
       this.getData();
-  
+
       return <View style={{flex:1}}>
         <View>
           <View style={{height:25, backgroundColor: colors.vikingBlue}}></View>

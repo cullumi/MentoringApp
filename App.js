@@ -1,3 +1,5 @@
+
+
 import 'react-native-gesture-handler';
 import React, { useState, Component } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
@@ -6,10 +8,10 @@ import { Modal, TouchableHighlight, Switch, RefreshControl, Animated, Linking, T
 import LinkedInModal from 'react-native-linkedin';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import IonIcon from 'react-native-vector-icons/Ionicons';
-import { color, debug } from 'react-native-reanimated';
-import { Colors } from 'react-native/Libraries/NewAppScreen';
-import Button from 'react-native-button';
-import { SystemMessage } from 'react-native-gifted-chat';
+// import { color, debug } from 'react-native-reanimated';
+// import { Colors } from 'react-native/Libraries/NewAppScreen';
+// import Button from 'react-native-button';
+// import { SystemMessage } from 'react-native-gifted-chat';
 
 
 

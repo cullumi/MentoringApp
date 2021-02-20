@@ -69,7 +69,11 @@ export async function getPairsOf(type, userID) {
       method: 'GET'
     });
 
+    console.log("getPairsOf res: ", pairsres);
+
     const pairsPayload = await pairsres.json();
+
+    console.log("getPairsOf pyld: ", pairsPayload);
 
     const recordSet = pairsPayload["recordset"];
     var pairs = [];
@@ -83,10 +87,10 @@ export async function getPairsOf(type, userID) {
 
 // Gets the Current User via the ensureUserExists method and the createLocalUser method.
 // Should Phase Out the CreateLocalUser method in favor of a simple .json() call on the payload.
-export async function getCurrentUser () {
-  const userPayload = await ensureUserExists();
-  console.log("URL: " + url);
-  console.log(userPayload);
+export async function getCurrentUser (source="unknown") {
+  const userPayload = await ensureUserExists(source);
+  console.log(source, "getCurrentUser URL: ", url);
+  console.log(source, "getCurrentUser ", userPayload);
   return createLocalUser(userPayload);
 }
 
@@ -117,7 +121,7 @@ export function createLocalUser(userPayload) {
 
 // Finds the current user if it can, creates a new user and adds it to the database if needed.
 // All in all, Effectively accounts for when the user was created offline, or for when the API is offline.
-export async function ensureUserExists () {
+export async function ensureUserExists (source="unknown") {
 
     const email = await AsyncStorage.getItem("Email");
     const first = await AsyncStorage.getItem('FirstName');
@@ -125,6 +129,8 @@ export async function ensureUserExists () {
     const pic = await AsyncStorage.getItem('Avatar');
 
     let userPayload = await getUserPayloadByEmail(email);
+
+    console.log(source, "ensureUserExists pyld: ", userPayload);
 
     // check if this user needs to be added to DB.
     while (userPayload.rowsAffected == 0) {

@@ -158,25 +158,25 @@ export default class HomeScreen extends React.Component {
             <Text style={styles.meetingsTitle}>Mentors</Text>
           </View>
           {
-            this.state.mentors.map( (mentor) => {
-              return this.pairItem(mentor, "Mentor");
+            this.state.mentors.map( (mentor, i) => {
+              return this.pairItem(mentor, "Mentor", i);
             })
           }
           <View style={styles.meetingsGroup}>
             <Text style={styles.meetingsTitle}>Mentees</Text>
           </View>
           {
-            this.state.mentees.map( (mentee) => {
-              return this.pairItem(mentee, "Mentee");
+            this.state.mentees.map( (mentee, i) => {
+              return this.pairItem(mentee, "Mentee", i);
             })
           }
         </ScrollView>
       );
     };
 
-    pairItem(otherUser, otherType) {
+    pairItem(otherUser, otherType, i=0) {
       return (
-        <View>
+        <View key={i}>
           <TouchableOpacity onPress={() =>
             this.props.navigation.navigate('ContactInfo', { user: otherUser, type: otherType })} key={otherUser.Id.toString()} style={styles.homeItem} >
             <View style={styles.homeAvatarColumn}>

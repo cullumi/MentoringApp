@@ -151,14 +151,14 @@ export default class MeetingsScreen extends React.Component {
     }
 
     printPastMeetings = () => {
-      console.log("P: " + JSON.stringify(this.state.pastMeetings));
+      console.log("Past Meetings: " + JSON.stringify(this.state.pastMeetings));
       if (this.state.pastMeetings[0] !== undefined) {
         return (<View>
           <View style={styles.meetingsGroup}>
             <Text style={styles.meetingsTitle}>Past</Text>
           </View>
-          { this.state.pastMeetings.map((m) => {
-            return (<View style={styles.meeting}>
+          { this.state.pastMeetings.map((m, i) => {
+            return (<View key={i} style={styles.meeting}>
               <View style={styles.meetingInfo}>
                 <View style={styles.meetingMainRow}>
                   <Image style={styles.meetingAvatar} source={{uri: m.Avatar}} />
@@ -188,14 +188,14 @@ export default class MeetingsScreen extends React.Component {
     }
 
     printUpcomingMeetings = () => {
-      console.log("U: " + JSON.stringify(this.state.upcomingMeetings));
+      console.log("Upcoming Meetings: " + JSON.stringify(this.state.upcomingMeetings));
       if (this.state.upcomingMeetings[0] !== undefined) {
         return (<View>
           <View style={styles.meetingsGroup}>
             <Text style={styles.meetingsTitle}>Upcoming</Text>
           </View>
-          { this.state.upcomingMeetings.map((m) => {
-            return (<View style={styles.meeting}>
+          { this.state.upcomingMeetings.map((m, i) => {
+            return (<View key={i} style={styles.meeting}>
               <View style={styles.meetingInfo}>
                 <View style={styles.meetingMainRow}>
                   <Image style={styles.meetingAvatar} source={m.Avatar} />

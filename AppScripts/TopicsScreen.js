@@ -4,7 +4,7 @@
 
 
 import React from 'react';
-import {View, Text, ScrollView, RefreshControl} from 'react-native';
+import {View, Text, ScrollView, RefreshControl, AsyncStorage} from 'react-native';
 import {TitleBar} from './ScreenComponents.js';
 import {styles, colors} from './Styles.js';
 import {getAllTopics, getCurrentTopic} from './API.js';
@@ -59,10 +59,10 @@ export default class TopicsScreen extends React.Component {
       this.setState({refreshControl:false, shouldUpdate: false, topics: newTopics, currentTopic: newCurrentTopic});
     }
   
-    topicItem(topic) {
+    topicItem(topic, i=0) {
   
       return (
-        <View style={styles.topicContainer}>
+        <View key={i} style={styles.topicContainer}>
           <View style={styles.topicHeader}>
             <Text style={styles.topicTitleText}>{topic.Title}</Text>
             <Text style={styles.topicHeaderDateText}>{topic.CreatedText}</Text>
@@ -106,8 +106,8 @@ export default class TopicsScreen extends React.Component {
               <Text style={styles.meetingsTitle}>All Topics</Text>
             </View>
             {
-              this.state.topics.map( (topic) => {
-                return this.topicItem(topic);
+              this.state.topics.map( (topic, i) => {
+                return this.topicItem(topic, i);
               })
             }
           </ScrollView>

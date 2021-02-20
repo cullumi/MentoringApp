@@ -177,6 +177,41 @@ export async function postNewUser(email, first, last, pic) {
     });
 }
 
+export async function createMeeting(mentorId, menteeId, scheduledAt) {
+
+  // Get current topicId.
+  const topicres = await fetch(url + '/current-topic', {
+    method: 'GET'
+  });
+  const payload = await topicres.json();
+  const topicValue = JSON.parse(JSON.stringify(payload));
+
+  // Get pairId
+  const pairres = await fetch(url + '/pair/both/' + mentorId + "/" + menteeId, {
+    method: 'GET'
+  });
+  const ppayload = await pairres.json();
+  const pairValue = JSON.parse(JSON.stringify(ppayload));
+
+  // Create appointment.
+  const post = fetch(url + '/create-appointment', {
+    method: 'POST',
+    body: JSON.stringify({
+      PairId: pairValue["recordset"][0].Id,
+      ScheduledAt: scheduledAt,
+      TopicId: topicValue["recordset"][0].Id
+    }),
+    headers: {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json',
+    }
+  })
+  .catch((error) => {
+    console.error(error);
+  });
+
+}
+
 // Updates appointment status
 export async function updateAppointmentStatus(id, status) {
   const statusupdateres = await fetch(url + '/update-appointment-status', {

@@ -30,8 +30,8 @@ export default class HomeScreen extends React.Component {
                     "Description":""
                   }}
       };
-    }  
-  
+    }
+
     async componentDidMount() {
       if (this.state.shouldUpdate) {
         this.setPairs();
@@ -46,26 +46,26 @@ export default class HomeScreen extends React.Component {
         }
       }
     }
-  
+
     async setPairs() {
-  
+
       var newMentors = [];
       var newMentees = [];
       var doSetAsyncStorage = false;
-  
+
       try {
-  
+
         const curUser = await getCurrentUser();
         newMentors = await getMentorsOf(curUser.id);
         newMentees = await getMenteesOf(curUser.id);
         doSetAsyncStorage = true;
-  
+
       } catch (error) {
         console.log(error);
         try {
           var tempMentors = JSON.parse(await AsyncStorage.getItem('Mentors'));
           var tempMentees = JSON.parse(await AsyncStorage.getItem('Mentees'));
-  
+
           if (tempMentors != null && Array.isArray(tempMentors)) {
             newMentors = tempMentors;
           }
@@ -76,7 +76,7 @@ export default class HomeScreen extends React.Component {
           console.log(error);
         }
       }
-  
+
       // Save mentor/mentee info from the database into local storage, for when you're offline.
       if (doSetAsyncStorage) {
         try {
@@ -86,10 +86,10 @@ export default class HomeScreen extends React.Component {
           console.log(error);
         }
       }
-  
+
       this.setState({refreshControl: false, shouldUpdate: false, mentors: newMentors, mentees: newMentees});
     }
-  
+
     unapprovedAccount() {
       return (
       <View style={{height:50, width:windowWidth}} />,
@@ -104,12 +104,12 @@ export default class HomeScreen extends React.Component {
       </View>
       );
     };
-  
+
     onRefresh() {
       this.setState({refreshControl:true});
       this.setPairs();
     }
-  
+
     async submitModalSummary(id) {
       const user = JSON.parse(await AsyncStorage.getItem('User'));
       // post insert
@@ -135,7 +135,7 @@ export default class HomeScreen extends React.Component {
         this.setState({curSummary:curSummary,writeSummaryModalVisible:false});
       }
     }
-  
+
     async processMeeting(ret, meeting) {
       if (ret == 'missed') {
         // Update meeting in DB
@@ -146,7 +146,7 @@ export default class HomeScreen extends React.Component {
         this.setState({writeSummaryModalVisible:true,meetingPromptModalVisible:false});
       }
     }
-  
+
     approvedHome() { // removed accountID from approvedHome() parameters
       return (
         <ScrollView contentContainerStyle={{flex: 1, flexDirection: 'column'}}
@@ -172,7 +172,7 @@ export default class HomeScreen extends React.Component {
         </ScrollView>
       );
     };
-  
+
     pairItem(otherUser, otherType) {
       return (
         <View>
@@ -195,14 +195,14 @@ export default class HomeScreen extends React.Component {
         </View>
       );
     };
-  
+
     render() {
       var meeting = this.state.meeting;
 
       return (
       <View style={{flex: 1, flexDirection: 'column'}}>
-        <TitleBar 
-            title="Home" 
+        <TitleBar
+            title="Home"
             navFunction={() => this.props.navigation.navigate('SettingsModal')}
             navigation={this.props.navigation}/>
         { this.props.route.params.accountType == 1 ? this.unapprovedAccount() : this.approvedHome() }
@@ -266,5 +266,5 @@ export default class HomeScreen extends React.Component {
       </View>
       );
     }
-  
+
 }

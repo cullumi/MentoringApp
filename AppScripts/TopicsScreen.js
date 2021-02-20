@@ -4,7 +4,7 @@
 
 
 import React from 'react';
-import {View, Text, Button, Image, ScrollView, RefreshControl} from 'react-native';
+import {View, Text, ScrollView, RefreshControl} from 'react-native';
 import {TitleBar} from './ScreenComponents.js';
 import {styles, colors} from './Styles.js';
 import {getAllTopics, getCurrentTopic} from './API.js';

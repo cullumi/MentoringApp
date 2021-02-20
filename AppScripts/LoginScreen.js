@@ -3,7 +3,8 @@
 
 
 import React from 'react';
-import {AsyncStorage, View, Button, Image} from 'react-native';
+import {AsyncStorage, View, Image} from 'react-native';
+import Button from 'react-native-button';
 import LinkedInModal from 'react-native-linkedin';
 import {styles, colors} from './Styles.js';
 import {getCurrentUser} from './API.js';
@@ -28,10 +29,10 @@ export default class LoginScreen extends React.Component {
       const renderButton = () => {
         return (
           <Button
-            title="Sign in with LinkedIn"
             containerStyle={{padding:12, height:45, width:"45%", overflow:'hidden', borderRadius:4, backgroundColor: '#003F87'}}
             style={{fontSize: 16, color: 'white'}}
             onPress={() => this.modal.open()}>
+              Sign in with LinkedIn
           </Button>
         );
       };

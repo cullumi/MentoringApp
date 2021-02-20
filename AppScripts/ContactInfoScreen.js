@@ -3,7 +3,8 @@
 
 
 import React from 'react';
-import {View, TouchableOpacity, Text, Button, Image, AsyncStorage} from 'react-native';
+import {View, TouchableOpacity, Text, Image, AsyncStorage} from 'react-native';
+import Button from 'react-native-button';
 import IonIcon from 'react-native-vector-icons/Ionicons';
 import {BackTitleBarContact} from './ScreenComponents.js';
 import {styles, colors} from './Styles.js';
@@ -109,11 +110,12 @@ export default class ContactInfoScreen extends React.Component {
                 })}
             </View>
             <Button
-              title="Propose Meeting"
               containerStyle={user.contactButtonStyle}
               style={styles.summaryButtonText}
               onPress={() => this.props.navigation.navigate('ProposeMeeting', { user: user, type: type })}
-              disabled={user.contactButtonStatus}/>
+              disabled={user.contactButtonStatus}>
+                Propose Meeting
+            </Button>
         </View>
       );
     }

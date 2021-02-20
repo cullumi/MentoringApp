@@ -4,13 +4,12 @@ import 'react-native-gesture-handler';
 import React, { useState, Component } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
-import { Modal, TouchableHighlight, Switch, RefreshControl, Animated, Linking, TouchableOpacity, AsyncStorage, StyleSheet, Text, Image, SafeAreaView, ScrollView, View, ActivityIndicator, StatusBar, Dimensions, Alert, TextInput, LogBox } from 'react-native';
-import LinkedInModal from 'react-native-linkedin';
+import {AsyncStorage} from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import IonIcon from 'react-native-vector-icons/Ionicons';
 import { color, debug } from 'react-native-reanimated';
 // import { Colors } from 'react-native/Libraries/NewAppScreen';
-import Button from 'react-native-button';
+// import Button from 'react-native-button';
 // import { SystemMessage } from 'react-native-gifted-chat';
 
 

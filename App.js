@@ -4,7 +4,7 @@ import 'react-native-gesture-handler';
 import React, { useState, Component } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
-import {AsyncStorage} from 'react-native';
+import {AsyncStorage, PushNotificationIOS} from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import IonIcon from 'react-native-vector-icons/Ionicons';
 import { color, debug } from 'react-native-reanimated';
@@ -61,6 +61,7 @@ import LoginScreen from './AppScripts/LoginScreen.js';
 import PrivacyScreen from './AppScripts/PrivacyScreen.js';
 // // 15. SettingsScreen class now in the SettingsScreen.js file.
 import SettingsScreen from './AppScripts/SettingsScreen.js';
+import { registerForPushNotifications } from './AppScripts/PushNotifs.js';
 
 // Needs to be implemented:
 // import Storage from './localstorage';
@@ -92,6 +93,13 @@ const Tab = createBottomTabNavigator();
 //        + Commonly Used UI Structures
 //        + Common Parsing or Calculations (Such as with Dates)
 
+PushNotificationIOS.setNotificationHandler({
+  handleNotification: async () => ({
+    shouldShowAlert: true,
+    shouldPlaySound: false,
+    shouldSetBadge: false,
+  }),
+});
 
 // HOME STACK
 function HomeStack() {
@@ -134,6 +142,10 @@ function emergencyLogout() {
 // APP CONTAINER
 // Main class for app. Responsible for rendering app container.
 export default class AppContainer extends React.Component {
+
+  componentDidMount() {
+    registerForPushNotifications();
+  }
 
   // Main rendering function. Always begins on the SplashScreen.
   // Note: The Login and Privacy screens have been added to the Stack Navigator.

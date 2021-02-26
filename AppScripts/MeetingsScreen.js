@@ -3,10 +3,12 @@
 
 
 import React from 'react';
-import {View, Text, Button, Image, ScrollView, RefreshControl} from 'react-native';
+import {View, Text, Image, ScrollView, RefreshControl, Alert} from 'react-native';
 import {TitleBar} from './ScreenComponents.js';
 import {styles, colors} from './Styles.js';
 import {getAppointments} from './API.js';
+import {url} from './globals';
+import Button from 'react-native-button';
 
 // MEETING SCREENS
 export default class MeetingsScreen extends React.Component {
@@ -21,11 +23,11 @@ export default class MeetingsScreen extends React.Component {
         refreshControl: true
       };
     }
-  
+
     componentDidMount() {
       this.getData();
     };
-  
+
     componentDidUpdate() {
       if (this.state.refreshing == true) {
         getAppointments('upcoming')
@@ -37,7 +39,7 @@ export default class MeetingsScreen extends React.Component {
         });
       }
     };
-  
+
     getData() {
       getAppointments('past')
       .then((data) => {
@@ -55,12 +57,12 @@ export default class MeetingsScreen extends React.Component {
         })
       });
     }
-  
+
     onRefresh() {
       this.setState({refreshControl:true});
       this.getData();
     }
-  
+
     async acceptMeeting (id) {
       const statusupdateres = await fetch(url + '/update-appointment-status', {
         method: 'POST',
@@ -78,7 +80,7 @@ export default class MeetingsScreen extends React.Component {
       });
       this.setState({refreshing: true});
     }
-  
+
     acceptMeetingAlert = (id) => {
       // Check if the user is sure they want to accept this meeting time.
       Alert.alert(
@@ -95,7 +97,7 @@ export default class MeetingsScreen extends React.Component {
         { cancelable: false }
       );
     }
-  
+
     async cancelMeeting (id) {
       const statusupdateres = await fetch(url + '/update-appointment-status', {
         method: 'POST',
@@ -111,7 +113,7 @@ export default class MeetingsScreen extends React.Component {
         console.error(error);
       });
     }
-  
+
     cancelMeetingAlert = (id) => {
       // Check if the user is sure they want to cancel this meeting.
       Alert.alert(
@@ -128,7 +130,7 @@ export default class MeetingsScreen extends React.Component {
         { cancelable: false }
       );
     }
-  
+
     handlePress = (type, id, topicId, str) => {
       switch(type) {
         case 'accept':
@@ -147,16 +149,16 @@ export default class MeetingsScreen extends React.Component {
         break;
       }
     }
-  
+
     printPastMeetings = () => {
-      console.log("P: " + JSON.stringify(this.state.pastMeetings));
+      console.log("Past Meetings: " + JSON.stringify(this.state.pastMeetings));
       if (this.state.pastMeetings[0] !== undefined) {
         return (<View>
           <View style={styles.meetingsGroup}>
             <Text style={styles.meetingsTitle}>Past</Text>
           </View>
-          { this.state.pastMeetings.map((m) => {
-            return (<View style={styles.meeting}>
+          { this.state.pastMeetings.map((m, i) => {
+            return (<View key={i} style={styles.meeting}>
               <View style={styles.meetingInfo}>
                 <View style={styles.meetingMainRow}>
                   <Image style={styles.meetingAvatar} source={{uri: m.Avatar}} />
@@ -170,11 +172,12 @@ export default class MeetingsScreen extends React.Component {
                 </View>
               </View>
               <Button
-                title={m.buttonText}
                 containerStyle={m.meetingButton}
                 style={m.meetingButtonText}
                 onPress={() => this.handlePress(m.buttonPress, m.Id, m.TopicId, m.summaryTitle)}
-                disabled={m.buttonDisabled} />
+                disabled={m.buttonDisabled}>
+                {m.buttonText}
+                </Button>
             </View>);
           })}
         </View>);
@@ -183,16 +186,16 @@ export default class MeetingsScreen extends React.Component {
         </View>);
       }
     }
-  
+
     printUpcomingMeetings = () => {
-      console.log("U: " + JSON.stringify(this.state.upcomingMeetings));
+      console.log("Upcoming Meetings: " + JSON.stringify(this.state.upcomingMeetings));
       if (this.state.upcomingMeetings[0] !== undefined) {
         return (<View>
           <View style={styles.meetingsGroup}>
             <Text style={styles.meetingsTitle}>Upcoming</Text>
           </View>
-          { this.state.upcomingMeetings.map((m) => {
-            return (<View style={styles.meeting}>
+          { this.state.upcomingMeetings.map((m, i) => {
+            return (<View key={i} style={styles.meeting}>
               <View style={styles.meetingInfo}>
                 <View style={styles.meetingMainRow}>
                   <Image style={styles.meetingAvatar} source={m.Avatar} />
@@ -203,15 +206,16 @@ export default class MeetingsScreen extends React.Component {
                   <View style={{flex: 1}}>
                     <Text style={m.meetingStatus}>{m.Status}</Text>
                   </View>
-  
+
                 </View>
               </View>
               <Button
-                title={m.buttonText}
                 containerStyle={m.meetingButton}
                 style={m.meetingButtonText}
                 onPress={() => this.handlePress(m.buttonPress, m.Id)}
-                disabled={m.buttonDisabled} />
+                disabled={m.buttonDisabled}>
+                {m.buttonText}
+                </Button>
             </View>);
           })}
         </View>);
@@ -223,13 +227,13 @@ export default class MeetingsScreen extends React.Component {
           <Text style={styles.meetingsPrimaryNone}>No scheduled meetings!</Text>
         </View>);
       }
-  
+
     }
-  
+
     render () {
       return (<View style={{flex:1}} key={this.state.refreshing}>
-      <TitleBar 
-          title="Meetings" 
+      <TitleBar
+          title="Meetings"
           navFunction={() => this.props.navigation.navigate('SettingsModal')}
           navigation={this.props.navigation} />
       <ScrollView contentContainerStyle={styles.scrollView}

@@ -3,11 +3,13 @@
 
 
 import React from 'react';
-import {View, TouchableOpacity, Text, Button, Image, AsyncStorage} from 'react-native';
+import {Alert, View, TouchableOpacity, Text, Image, AsyncStorage} from 'react-native';
+import Button from 'react-native-button';
 import IonIcon from 'react-native-vector-icons/Ionicons';
 import {BackTitleBarContact} from './ScreenComponents.js';
 import {styles, colors} from './Styles.js';
-import {getContactInfoOf} from './API.js';
+import {getCurrentUser, getContactInfoOf, createMeeting} from './API.js';
+import DateTimePickerModal from "react-native-modal-datetime-picker";
 
 export default class ContactInfoScreen extends React.Component {
     constructor(props) {
@@ -17,13 +19,13 @@ export default class ContactInfoScreen extends React.Component {
         contactInfo : []
       };
     }
-  
+
     componentDidMount() {
       if (this.state.refreshing) {
         this.setContactInfo()
       }
     }
-  
+
     async setContactInfo() {
 
       console.log("setting contact info...");
@@ -32,13 +34,13 @@ export default class ContactInfoScreen extends React.Component {
       var doSetAsyncStorage = false;
       const userID = this.props.route.params.user.Id;
       // console.warn(userID);
-  
+
       console.log('uid: ' + userID);
-  
+
       try {
         newCI = await getContactInfoOf(userID);
         doSetAsyncStorage = true;
-  
+
       } catch (error) {
         console.log(error);
         try {
@@ -50,7 +52,7 @@ export default class ContactInfoScreen extends React.Component {
           console.log(error);
         }
       }
-  
+
       // Save mentor/mentee info from the database into local storage, for when you're offline.
       if (doSetAsyncStorage) {
         try {
@@ -59,7 +61,7 @@ export default class ContactInfoScreen extends React.Component {
           console.log(error);
         }
       }
-  
+
       newCI.map( (info) => {
           switch(info.ContactType) {
             case 'Email':
@@ -70,10 +72,26 @@ export default class ContactInfoScreen extends React.Component {
             break;
           }
       })
-  
+
       this.setState({refreshing: false, contactInfo: newCI});
     }
-  
+
+    showModal() {
+      this.setState({modalVisible:true});
+    };
+
+    hideModal() {
+      this.setState({modalVisible:false});
+    };
+
+    async handleConfirm(date) {
+      var user = JSON.parse(await AsyncStorage.getItem('User'));
+      console.log(this.props.route.params.user.Id + " " + user.id);
+      createMeeting(this.props.route.params.user.Id, user.id, date);
+      this.hideModal();
+      this.props.navigation.navigate('Meetings');
+    };
+
     infoItem(info) {
       return (<View>
         <TouchableOpacity style={styles.contactRow}>
@@ -87,12 +105,12 @@ export default class ContactInfoScreen extends React.Component {
         </TouchableOpacity>
       </View>);
     }
-  
+
     displayCI(cInfo) {
-  
+
       const user = this.props.route.params.user;
       const type = this.props.route.params.type;
-  
+
       return(
         <View style={styles.contactContainer}>
             <View style={{flexGrow: 1}}>
@@ -109,23 +127,31 @@ export default class ContactInfoScreen extends React.Component {
                 })}
             </View>
             <Button
-              title="Propose Meeting"
               containerStyle={user.contactButtonStyle}
               style={styles.summaryButtonText}
-              onPress={() => this.props.navigation.navigate('ProposeMeeting', { user: user, type: type })}
-              disabled={user.contactButtonStatus}/>
+              minimumDate={new Date(2021, 12, 12)}
+              onPress={() => this.showModal()}
+              disabled={user.contactButtonStatus}>
+                Propose Meeting
+            </Button>
         </View>
       );
     }
-  
+
     render() {
-  
+
       console.log("Rendering Contact Info Screen...");
-  
+
       return (
         <View style={{flex: 1, flexDirection: 'column', backgroundColor:'#fff'}}>
           <BackTitleBarContact title="Contact Info" navigation={this.props.navigation} />
           { this.displayCI(this.state.contactInfo) }
+          <DateTimePickerModal style={styles.dateTimeBox}
+            isVisible={this.state.modalVisible}
+            mode="datetime"
+            onConfirm={(date) => this.handleConfirm(date)}
+            onCancel={() => this.hideModal()}
+          />
         </View>
       );
     }

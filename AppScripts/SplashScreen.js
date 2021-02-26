@@ -14,14 +14,14 @@ export default class SplashScreen extends React.Component {
       super(props)
       this.state = {
         refreshing : false,
-        'value': false
+        value: null
       };
     }
   
     componentDidMount = () => AsyncStorage.getItem('Email').then((value) => this.setSkipValue(value));
   
-    async setSkipValue (value) {
-      this.setState({ 'value': value });
+    async setSkipValue (newValue) {
+      this.setState({ value: newValue });
       // console.log("Splash1: " + cur.user.name);
       // if (value !== null) {
       //   try {
@@ -36,10 +36,12 @@ export default class SplashScreen extends React.Component {
   
     render () {
 
-      if (this.state.value !== null) {
-        this.props.navigation.navigate('Main');
-      } else {
-        this.props.navigation.navigate('Login');
+      if (this.state.value != false) {
+        if (this.state.value !== null) {
+          this.props.navigation.navigate('Main');
+        } else {
+          this.props.navigation.navigate('Login');
+        }
       }
       return (
         <View style={{textAlign:'center',alignItems:'center'}}>

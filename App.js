@@ -4,11 +4,10 @@ import 'react-native-gesture-handler';
 import React, { useState, Component } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
-import { Modal, TouchableHighlight, Switch, RefreshControl, Animated, Linking, TouchableOpacity, AsyncStorage, StyleSheet, Text, Image, SafeAreaView, ScrollView, View, ActivityIndicator, StatusBar, Dimensions, Alert, TextInput, LogBox } from 'react-native';
-import LinkedInModal from 'react-native-linkedin';
+import {AsyncStorage} from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import IonIcon from 'react-native-vector-icons/Ionicons';
-// import { color, debug } from 'react-native-reanimated';
+import { color, debug } from 'react-native-reanimated';
 // import { Colors } from 'react-native/Libraries/NewAppScreen';
 // import Button from 'react-native-button';
 // import { SystemMessage } from 'react-native-gifted-chat';
@@ -73,15 +72,15 @@ const Tab = createBottomTabNavigator();
 
 
 // || CodeSplitting Plan ||
-// 
+//
 // 1) Move all non-Stack and non-Tab classes and methods into separate files. *DONE*
 //    - This file should only contain what is needed for navigation or for global access.
 // 2) Finish Refactoring all of those classes and methods using "import".  *NOT STARTED*
 // 3) Using this New Refactored code to look for code w/ low readability.
 //    - Basically, can you understand what this code is doing at a glance?
-// 
+//
 // || Things to Think About ||
-// 
+//
 // 1) We're currently writing code that could be used and maintained by the CS Department for Years to Come
 //    - As such, we should be finding every opportuntity to make that process easy and not a pain in the ass.
 // 2) It should be easy enough to not couple our Screens w/ one another, since React Navigation has us covered.

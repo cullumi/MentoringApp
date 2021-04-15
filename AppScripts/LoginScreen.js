@@ -7,7 +7,8 @@ import {AsyncStorage, View, Image} from 'react-native';
 import Button from 'react-native-button';
 import LinkedInModal from 'react-native-linkedin';
 import {styles, colors} from './Styles.js';
-import {getCurrentUser} from './API.js';
+import {getCurrentUser, postNewUser} from './API.js';
+import {registerForPushNotifications} from './PushNotifs.js';
 import {url} from './globals';
 
 // LOGIN AND PRIVACY SCREENS
@@ -115,12 +116,13 @@ export default class LoginScreen extends React.Component {
   
           postNewUser(email, first, last, pic);
           await AsyncStorage.setItem('User', JSON.stringify(curUser));
+          registerForPushNotifications();
           this.props.navigation.navigate('Privacy');
   
         } else {
   
           await AsyncStorage.setItem('User', JSON.stringify(curUser));
-  
+          registerForPushNotifications();
           this.props.navigation.navigate('Main');
   
         }

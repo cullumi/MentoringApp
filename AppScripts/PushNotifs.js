@@ -2,7 +2,8 @@
 
 import { Notifications } from 'expo';
 import * as Permissions from 'expo-permissions';
-import { registerPushToken } from './API.js';
+import { updatePushToken } from './API.js';
+import { cur } from './globals.js';
 
 Notifications.setNotificationHandler({
     handleNotification: async () => ({
@@ -10,15 +11,21 @@ Notifications.setNotificationHandler({
       shouldPlaySound: false,
       shouldSetBadge: false,
     }),
-  });
+});
 
 export async function registerForPushNotifications() {
     try {
         const permission = await Permissions.askAsync(Permissions.NOTIFICATIONS);
         if (!permission.granted) return;
-        const token = await Notifications.getExpoPushTokenAsync();
-        console.log(token);
-        registerPushToken(token);
+        const pushToken = await Notifications.getExpoPushTokenAsync();
+        console.log(pushToken);
+        cur.expoPushToken = token;
+        updatePushToken();
+        // if (cur.name == "null") {
+        //   pushToken ;
+        // }
+        // else {
+        // }
     } catch (error) {
         console.log('Error getting a Notification token', error);
     }

@@ -3,11 +3,38 @@
 
 
 import {AsyncStorage} from 'react-native';
-import {cur, accountID, accountType, url} from './globals.js';
+import {url} from './globals.js';
 import {parseDateText, parseSimpleDateText} from './Helpers.js';
 import {styles, colors} from './Styles.js';
+import * as Crypto from 'expo-crypto';
 
 // API GET and POST Methods
+
+
+// Register Push Token
+export async function updatePushToken() {
+  // var curUser = AsyncStorage.getItem()
+  var pushToken = cur.expoPushToken;
+  var token = cur.token;
+  var email = cur.email;
+  var uID = cur.id;
+  const postres = fetch(url + '/update-expo-push-token', {
+    method: 'POST',
+    body: JSON.stringify({
+      email,
+      pushToken,
+      uID,
+      token,
+    }),
+    headers: {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json',
+    }
+  })
+  .catch((error) => {
+    console.error(error);
+  });
+}
 
 // Returns a topic based on it's ID?  Could you a more cohesive name.
 export async function retTopic(topicId) {
@@ -106,10 +133,12 @@ export function createLocalUser(userPayload) {
     const recordSet = userPayload["recordset"][0];
     const user = {
       id: recordSet["Id"],
+      token: recordSet["Token"],
       email: recordSet["Email"],
       firstName: recordSet["FirstName"],
       lastName: recordSet["LastName"],
       avatar: recordSet["Avatar"],
+      expoPushToken: recordSet["ExpoPushToken"],
       created: recordSet["Created"],
       lastUpdate: recordSet["LastUpdate"],
       privacyAccepted: recordSet["PrivacyAccepted"],
@@ -164,14 +193,23 @@ export async function getUserPayloadByID(id) {
 // Creates a User via POST
 export async function postNewUser(email, first, last, pic) {
 
+    var created = new Date();
+
+    var token = await Crypto.digestStringAsynce(
+      Crypto.CryptoDigestAlgorith, SHA256,
+      email + first + last + parseDateText(created)
+    );
+
     const postres = fetch(url + '/create-user', {
       method: 'POST',
       body: JSON.stringify({
         Email: email,
+        Token: token,
         FirstName: first,
         LastName: last,
         Avatar: pic,
-        PrivacyAccepted: 0
+        PrivacyAccepted: 0,
+        PushToken: pushToken
       }),
       headers: {
         'Accept': 'application/json',

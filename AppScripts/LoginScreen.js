@@ -7,7 +7,7 @@ import {AsyncStorage, View, Image} from 'react-native';
 import Button from 'react-native-button';
 import LinkedInModal from 'react-native-linkedin';
 import {styles, colors} from './Styles.js';
-import {getCurrentUser, postNewUser} from './API.js';
+import {getCurrentUser, postNewUser, getUserPayloadByEmail} from './API.js';
 import {registerForPushNotifications} from './PushNotifs.js';
 import {url, setLocalUser} from './globals.js';
 import { setStatusBarNetworkActivityIndicatorVisible } from 'expo-status-bar';
@@ -25,9 +25,10 @@ export default class LoginScreen extends React.Component {
         refreshing : false
       };
     }
-  
+
     // Note: passing in handleLogin with "this" inside of a "big-arrow function" ensures handleLogin can make use of the LoginScreen state props.  Mind the this!
     render () {
+
       const renderButton = () => {
         return (
           <Button
@@ -38,6 +39,7 @@ export default class LoginScreen extends React.Component {
           </Button>
         );
       };
+
       return  <View style={styles.container}>
                 <Image style={{width:200, height:200}} source={require('../assets/logo.png')} />
                 <View style={{height:20}} />
@@ -61,9 +63,16 @@ export default class LoginScreen extends React.Component {
     async handleLogin(data) {
       const { access_token, authentication_code } = data;
   
+      console.log("Handling Login");
+
       if (!authentication_code) {
+
+        console.log("Fetching authentication code...");
+
         this.setState({ refreshing: true });
   
+        console.log("Getting LinkedIn profile information...");
+
         // get basic profile information
         const response = await fetch('https://api.linkedin.com/v2/me', {
           method: 'GET',
@@ -73,12 +82,16 @@ export default class LoginScreen extends React.Component {
         });
         const payload = await response.json();
   
+        console.log("Getting LinkedIn profile picutre...");
+
         // get profile picture URL
         const pictureres = await fetch('https://api.linkedin.com/v2/me?projection=(id,profilePicture(displayImage~:playableStreams))&oauth2_access_token=' + access_token, {
           method: 'GET'
         });
         const picPayload = await pictureres.json();
   
+        console.log("Getting LinkedIn email address...");
+
         // get email address
         const emailres = await fetch('https://api.linkedin.com/v2/clientAwareMemberHandles?q=members&projection=(elements*(primary,type,handle~))', {
           method: 'GET',
@@ -92,14 +105,19 @@ export default class LoginScreen extends React.Component {
         const first = payload.localizedFirstName;
         const last = payload.localizedLastName;
         const pic = picPayload.profilePicture["displayImage~"].elements[2].identifiers[0].identifier;
-  
-        // check if user exists
-        const checkres = await fetch(url + '/user/email/' + email, {
-          method: 'GET'
-        });
-        const checkPayload = await checkres.json();
-  
-        // log user in locally by moving data to AsyncStorage
+
+        console.log("Checking if user exists in database...");
+
+        // Check if user exists in database before ensuring it exists. 
+        // const checkres = await fetch(url + '/user/email/' + email, {
+        //   method: 'GET'
+        // });
+        // const checkPayload = await checkres.json();
+        const checkPayload = await getUserPayloadByEmail(email);
+
+        console.log("Constructing user details...");
+
+        // Constructing user details...
         try {
           await AsyncStorage.setItem('Email', email);
           await AsyncStorage.setItem('FirstName', first);
@@ -109,23 +127,27 @@ export default class LoginScreen extends React.Component {
           console.log(error);
         }
   
+        console.log("Ensuring user exists...");
+
+        // Getting and ensuring user exists.
         this.setState({ refreshing: false });
         let curUser = await getCurrentUser("Login");
+        console.log(curUser);
 
+        // Setting Local User and Registering for Push Notifications
+        console.log("Setting Local User...");
+        setLocalUser(curUser);
+        console.log("Registering for Push Notifications...");
+        registerForPushNotifications();
+
+        console.log("Navigating to the appropriate screen...");
         // check if this user needs to be added to DB.
         if (checkPayload.rowsAffected == 0) {
-  
-          postNewUser(email, first, last, pic);
-          setLocalUser(curUser);
-          registerForPushNotifications();
+          // postNewUser(email, first, last, pic);
           this.props.navigation.navigate('Privacy');
-  
         } else {
-          setLocalUser(curUser);
-          registerForPushNotifications();
           this.props.navigation.navigate('Main');
         }
-  
       } else {
         console.log("Authentication Code Received: " + authentication_code);
       }

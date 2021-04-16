@@ -5,7 +5,6 @@ import { AsyncStorage } from "react-native";
 // export const cur = {user:{name:"null"}};
 export const accountID = 1;
 export const accountType = 0;
-export var token;
 export const url = "https://mentorship.cs.wwu.edu"//"http://mshipapp2.loca.lt";
 
 export function globalParams() {
@@ -17,8 +16,16 @@ export function globalParams() {
     return globals;
 }
 
+export async function setToken(token){
+    await AsyncStorage.setItem('Token', token);
+}
+
+export async function getToken(){
+    return await AsyncStorage.getItem('Token');
+}
+
 export async function setLocalUser(user){
-    auth_token = user.token;
+    token = user.token;
     await AsyncStorage.setItem('User', JSON.stringify(user));
 }
 

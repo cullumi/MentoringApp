@@ -3,7 +3,7 @@
 
 
 import {AsyncStorage} from 'react-native';
-import {getLocalUser, setLocalUser, url, token} from './globals.js';
+import {getLocalUser, setLocalUser, url, getToken, setToken} from './globals.js';
 import {parseDateText, parseSimpleDateText} from './Helpers.js';
 import {styles, colors} from './Styles.js';
 import * as Crypto from 'expo-crypto';
@@ -39,7 +39,7 @@ export async function updatePushToken() {
 // Returns a topic based on it's ID?  Could you a more cohesive name.
 export async function retTopic(topicId) {
 
-    const topicRes = await fetch(url + '/topic/' + topicId + '/' + token, {
+    const topicRes = await fetch(url + '/topic/' + topicId + '/' + getToken(), {
       method: 'GET'
     });
     const topicPayload = await topicRes.json();
@@ -92,7 +92,7 @@ export async function getMentorsOf (userID) {
 
 // Gets all pairs relative to a user's Role and a user's ID.
 export async function getPairsOf(type, userID) {
-    const pairsres = await fetch(url + '/pair/' + type + '/' + userID + '/' + token, {
+    const pairsres = await fetch(url + '/pair/' + type + '/' + userID + '/' + getToken(), {
       method: 'GET'
     });
 
@@ -157,6 +157,8 @@ export async function ensureUserExists (source="unknown") {
     const last = await AsyncStorage.getItem('LastName');
     const pic = await AsyncStorage.getItem('Avatar');
 
+    console.log("Getting user payload...");
+
     let userPayload = await getUserPayloadByEmail(email);
 
     console.log(source, "ensureUserExists pyld: ", userPayload);
@@ -173,16 +175,20 @@ export async function ensureUserExists (source="unknown") {
 
 // Fetches a User Payload using a User Email.
 export async function getUserPayloadByEmail(email) {
-    const userres = await fetch(url + '/user/email/' + email + '/' + token, {
+    console.log("Getting Payload Resource...");
+    const userres = await fetch(url + '/user/email/' + email + '/' + getToken(), {
       method: 'GET'
     });
+
+    console.log("User Payload Resource Gotten: ", userres);
     const userPayload = await userres.json();
+    console.log("User Payload Parsed.");
     return userPayload;
 }
 
 // Fetches a User Payload using a User ID.
 export async function getUserPayloadByID(id) {
-    const userres = await fetch(url + '/user/id/' + id + '/' + token, {
+    const userres = await fetch(url + '/user/id/' + id + '/' + getToken(), {
       method: 'GET'
     });
     const userPayload = await userres.json();
@@ -193,6 +199,8 @@ export async function getUserPayloadByID(id) {
 // Creates a User via POST
 export async function postNewUser(email, first, last, pic) {
 
+    console.log("Posting new user");
+
     var created = new Date();
 
     var token = await Crypto.digestStringAsynce(
@@ -200,7 +208,7 @@ export async function postNewUser(email, first, last, pic) {
       email + first + last + parseDateText(created)
     );
 
-    const postres = fetch(url + '/create-user' + '/' + token, {
+    const postres = fetch(url + '/create-user', {
       method: 'POST',
       body: JSON.stringify({
         Email: email,
@@ -224,21 +232,21 @@ export async function postNewUser(email, first, last, pic) {
 export async function createMeeting(mentorId, menteeId, scheduledAt) {
 
   // Get current topicId.
-  const topicres = await fetch(url + '/current-topic' + '/' + token, {
+  const topicres = await fetch(url + '/current-topic' + '/' + getToken(), {
     method: 'GET'
   });
   const payload = await topicres.json();
   const topicValue = JSON.parse(JSON.stringify(payload));
 
   // Get pairId
-  const pairres = await fetch(url + '/pair/both/' + mentorId + "/" + menteeId + '/' + token, {
+  const pairres = await fetch(url + '/pair/both/' + mentorId + "/" + menteeId + '/' + getToken(), {
     method: 'GET'
   });
   const ppayload = await pairres.json();
   const pairValue = JSON.parse(JSON.stringify(ppayload));
 
   // Create appointment.
-  const post = fetch(url + '/create-appointment' + '/' + token, {
+  const post = fetch(url + '/create-appointment' + '/' + getToken(), {
     method: 'POST',
     body: JSON.stringify({
       PairId: pairValue["recordset"][0].Id,
@@ -258,7 +266,7 @@ export async function createMeeting(mentorId, menteeId, scheduledAt) {
 
 // Updates appointment status
 export async function updateAppointmentStatus(id, status) {
-  const statusupdateres = await fetch(url + '/update-appointment-status' + '/' + token, {
+  const statusupdateres = await fetch(url + '/update-appointment-status' + '/' + getToken(), {
     method: 'POST',
     body: JSON.stringify({
       Id: id,
@@ -276,7 +284,7 @@ export async function updateAppointmentStatus(id, status) {
 
 // Create Summary
 export async function createSummary(id, curSummary, userID) {
-  const postres = fetch (url + '/create-summary' + '/' + token, {
+  const postres = fetch (url + '/create-summary' + '/' + getToken(), {
     method: 'POST',
     body: JSON.stringify({
       AppointmentId: id,
@@ -296,7 +304,7 @@ export async function createSummary(id, curSummary, userID) {
 // Updates the privacy setting of a user, based on a given email.
 export async function updatePrivacy(email, privacyAccepted) {
 
-    const postres = fetch (url + '/update-privacy' + '/' + token, {
+    const postres = fetch (url + '/update-privacy' + '/' + getToken(), {
       method: 'POST',
       body: JSON.stringify({
         Email: email,
@@ -315,7 +323,7 @@ export async function updatePrivacy(email, privacyAccepted) {
 // Returns All of the Contact Info for a given UserID. ("cInfos" refers to various forms of contact)
 export async function getContactInfoOf(userID) {
 
-    const cInfores = await fetch(url + '/contact/' + userID + '/' + token, {
+    const cInfores = await fetch(url + '/contact/' + userID + '/' + getToken(), {
       method: 'GET'
     });
 
@@ -335,7 +343,7 @@ export async function getContactInfoOf(userID) {
 
 // Returns the current topic from the database.
 export async function getCurrentTopic() {
-    const topicres = await fetch(url + '/current-topic' + '/' + token, {
+    const topicres = await fetch(url + '/current-topic' + '/' + getToken(), {
       method: 'GET'
     });
 
@@ -352,7 +360,7 @@ export async function getCurrentTopic() {
 // Returns a list of all topics from the database
 // NOTE: excludes the current topic?  The API could use a more descriptive rename if this is the case.
 export async function getAllTopics() {
-    const topicsres = await fetch(url + '/all-topics' + '/' + token, {
+    const topicsres = await fetch(url + '/all-topics' + '/' + getToken(), {
       method: 'GET'
     });
 
@@ -382,7 +390,7 @@ export async function checkMeetingsHome() {
     var user = getCurrentUser();
     // var user = JSON.parse(await AsyncStorage.getItem('User'));
 
-    const appres = await fetch(url + '/pair/' + user.id + '/' + token, {
+    const appres = await fetch(url + '/pair/' + user.id + '/' + getToken(), {
       method: 'GET'
     });
     const appPayload = await appres.json();
@@ -392,7 +400,7 @@ export async function checkMeetingsHome() {
     for (var i = 0; i < pairs.length; i++) {
       const pairId = pairs[i].Id;
       const menteeId = pairs[i].MenteeId;
-      const getres = await fetch(url + '/appointment/past/' + pairId + '/' + token, {
+      const getres = await fetch(url + '/appointment/past/' + pairId + '/' + getToken(), {
         method: 'GET'
       });
       const getPayload = await getres.json();
@@ -407,7 +415,7 @@ export async function checkMeetingsHome() {
           // Check if we should process this meeting (user should be Mentee, meeting should be newly Done)...
           if (menteeId === user.id && cur > date && meeting.Status === 'Scheduled') {
             meeting.updated = true;
-            const statusupdateres = await fetch(url + '/update-appointment-status + '/' + token', {
+            const statusupdateres = await fetch(url + '/update-appointment-status' + '/' + getToken(), {
               method: 'POST',
               body: JSON.stringify({
                 Id: meeting.Id,
@@ -426,7 +434,7 @@ export async function checkMeetingsHome() {
 
             // Get mentor/mentee avatar, and mark whether this user is the mentor/mentee, and provide title/prompt text.
             meeting.titleText = "Mentor Meeting";
-            const avres = await fetch(url + "/user/id/" + pairs[i].MentorId + '/' + token, {
+            const avres = await fetch(url + "/user/id/" + pairs[i].MentorId + '/' + getToken(), {
               method: 'GET'
             });
             const avPayload = await avres.json();
@@ -434,7 +442,7 @@ export async function checkMeetingsHome() {
             meeting.MentorFirstName = avPayload['recordset'][0].FirstName;
 
             // Get associated topic information and store it.
-            const topicres = await fetch(url + "/topic/" + meeting.TopicId + '/' + token, {
+            const topicres = await fetch(url + "/topic/" + meeting.TopicId + '/' + getToken(), {
               method: 'GET'
             });
             const topicPayload = await topicres.json();
@@ -464,7 +472,7 @@ export async function getAppointments(type) {
     var pairs = [];
     var user = JSON.parse(await AsyncStorage.getItem('User'));
 
-    const appres = await fetch(url + '/pair/' + user.id + '/' + token, {
+    const appres = await fetch(url + '/pair/' + user.id + '/' + getToken(), {
       method: 'GET'
     });
     const appPayload = await appres.json();
@@ -473,7 +481,7 @@ export async function getAppointments(type) {
 
     // Get appointments for each pair the user is a part of.
     for (var i = 0; i < pairs.length; i++) {
-      const getres = await fetch(url + '/appointment/' + type + "/" + pairs[i].Id + '/' + token, {
+      const getres = await fetch(url + '/appointment/' + type + "/" + pairs[i].Id + '/' + getToken(), {
         method: 'GET'
       });
       const getPayload = await getres.json();
@@ -486,7 +494,7 @@ export async function getAppointments(type) {
           let cur = new Date();
           //Check if Status needs to be updated due to this meeting happening.
           if (type === 'past' && cur > date && meeting.Status === 'Scheduled') {
-            const statusupdateres = await fetch(url + '/update-appointment-status' + '/' + token, {
+            const statusupdateres = await fetch(url + '/update-appointment-status' + '/' + getToken(), {
               method: 'POST',
               body: JSON.stringify({
                 Id: meeting.Id,
@@ -547,7 +555,7 @@ export async function getAppointments(type) {
           if (pairs[i].MentorId === user.id) {
             meeting.isMentor = true;
             meeting.titleText = "Mentee Meeting";
-            const avres = await fetch(url + "/user/id/" + pairs[i].MenteeId + '/' + token, {
+            const avres = await fetch(url + "/user/id/" + pairs[i].MenteeId + '/' + getToken(), {
               method: 'GET'
             });
             const avPayload = await avres.json();
@@ -628,7 +636,7 @@ export async function getAppointments(type) {
           } else {
             meeting.isMentor = false;
             meeting.titleText = "Mentor Meeting";
-            const avres = await fetch(url + "/user/id/" + pairs[i].MentorId + '/' + token, {
+            const avres = await fetch(url + "/user/id/" + pairs[i].MentorId + '/' + getToken(), {
               method: 'GET'
             });
             const avPayload = await avres.json();

@@ -8,7 +8,7 @@ import IonIcon from 'react-native-vector-icons/Ionicons';
 import {mainTitleWidth, styles, colors} from './Styles.js';
 import {retTopic} from './API.js';
 import Button from 'react-native-button';
-import {cur, accountID, accountType, url} from './globals.js';
+import {accountID, accountType, url} from './globals.js';
 
 export default class WriteSummaryScreen extends React.Component {
     constructor(props) {

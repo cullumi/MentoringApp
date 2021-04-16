@@ -1,6 +1,6 @@
 
 
-import { Notifications } from 'expo';
+import * as Notifications from 'expo-notifications'
 import * as Permissions from 'expo-permissions';
 import { updatePushToken } from './API.js';
 import { cur } from './globals.js';

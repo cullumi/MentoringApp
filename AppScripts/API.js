@@ -13,7 +13,7 @@ import * as Crypto from 'expo-crypto';
 
 // Register Push Token
 export async function updatePushToken() {
-  var user = await curUser();
+  var user = await getLocalUser();
   var pushToken = user.expoPushToken;
   var token = user.token;
   var email = user.email;

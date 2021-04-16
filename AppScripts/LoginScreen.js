@@ -9,7 +9,7 @@ import LinkedInModal from 'react-native-linkedin';
 import {styles, colors} from './Styles.js';
 import {getCurrentUser, postNewUser} from './API.js';
 import {registerForPushNotifications} from './PushNotifs.js';
-import {url, setLocalUser} from './globals';
+import {url, setLocalUser} from './globals.js';
 import { setStatusBarNetworkActivityIndicatorVisible } from 'expo-status-bar';
 
 // LOGIN AND PRIVACY SCREENS

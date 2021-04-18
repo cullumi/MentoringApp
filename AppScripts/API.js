@@ -169,14 +169,20 @@ export async function ensureUserExists (source="unknown") {
       userPayload = await getUserPayloadByEmail(email);
     }
 
+    console.log(userPayload["recordset"]);
+    console.log(userPayload["recordset"][0]);
+    console.log(userPayload["recordset"][0]["Id"]);
+    userPayload = await getUserPayloadByID(userPayload["recordset"][0]["Id"]);
+
     const payload = userPayload;
     return payload;
 }
 
 // Fetches a User Payload using a User Email.
 export async function getUserPayloadByEmail(email) {
-    console.log("Getting Payload Resource...");
-    const userres = await fetch(url + '/user/email/' + email + '/' + getToken(), {
+    var fetchUrl = url + '/user/email/' + email + '/' + await getToken();
+    console.log("Getting Payload Resource...", fetchUrl);
+    const userres = await fetch(fetchUrl, {
       method: 'GET'
     });
 

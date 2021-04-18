@@ -137,8 +137,8 @@ export default class LoginScreen extends React.Component {
         // Setting Local User and Registering for Push Notifications
         console.log("Setting Local User...");
         setLocalUser(curUser);
-        console.log("Registering for Push Notifications...");
-        registerForPushNotifications();
+        // console.log("Registering for Push Notifications...");
+        // registerForPushNotifications();
 
         console.log("Navigating to the appropriate screen...");
         // check if this user needs to be added to DB.

@@ -7,6 +7,7 @@ import IonIcon from 'react-native-vector-icons/Ionicons';
 import {TitleBar} from './ScreenComponents.js';
 import {styles, colors} from './Styles.js';
 import {getMentorsOf, getMenteesOf, getCurrentUser, checkMeetingsHome, updateAppointmentStatus, createSummary} from './API.js';
+import { useNotification } from './PushNotifs.js';
 
 // HOME SCREEN
 export default class HomeScreen extends React.Component {
@@ -33,6 +34,7 @@ export default class HomeScreen extends React.Component {
     }
 
     async componentDidMount() {
+      // useNotification();
       if (this.state.shouldUpdate) {
         this.setPairs();
         var meetings = await checkMeetingsHome();

@@ -2,6 +2,7 @@
 
 import * as Notifications from 'expo-notifications'
 import * as Permissions from 'expo-permissions';
+import { useEffect } from 'react';
 import { updatePushToken } from './API.js';
 import { cur } from './globals.js';
 
@@ -12,6 +13,14 @@ Notifications.setNotificationHandler({
       shouldSetBadge: false,
     }),
 });
+
+export const useNotification = (notificationListener) => {
+    useEffect(() => {
+        registerForPushNotifications();
+
+        if (notificationListener) Notifications.addPushTokenListener(notificationListener);
+    }, []);
+}
 
 export async function registerForPushNotifications() {
     try {

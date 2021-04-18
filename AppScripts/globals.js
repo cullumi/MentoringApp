@@ -3,6 +3,7 @@
 import { AsyncStorage } from "react-native";
 
 // export const cur = {user:{name:"null"}};
+const apiKey = "364ec08dac33889d5ee1e15c86c0194bf91916938c5b64ea5055ac2fe6f281b5";
 export const accountID = 1;
 export const accountType = 0;
 export const url = "https://mentorship.cs.wwu.edu"//"http://mshipapp2.loca.lt";
@@ -21,7 +22,12 @@ export async function setToken(token){
 }
 
 export async function getToken(){
-    return await AsyncStorage.getItem('Token');
+    var token = await AsyncStorage.getItem('Token');
+    if (token == null) {
+        token = apiKey;
+    }
+    console.log("Token get: \"" + token + "\"");
+    return token;
 }
 
 export async function setLocalUser(user){

@@ -21,12 +21,22 @@ export async function setToken(token){
     await AsyncStorage.setItem('Token', token);
 }
 
-export async function getToken(){
+export async function getToken(source='unknown'){
     var token = await AsyncStorage.getItem('Token');
     if (token == null) {
         token = apiKey;
     }
-    console.log("Token get: \"" + token + "\"");
+    console.log("Token get from " + source + ": \"" + token + "\"");
+    return token;
+}
+
+export async function setLinkedInToken(token){
+    await AsyncStorage.setItem('LinkedInToken', token);
+}
+
+export async function getLinkedInToken(source='unknown'){
+    var token = await AsyncStorage.getItem('LinkedInToken');
+    console.log("LinkedIn Token get from " + source + ": \"" + token + "\"");
     return token;
 }
 

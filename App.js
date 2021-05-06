@@ -155,7 +155,7 @@ export default class AppContainer extends React.Component {
   // Note: The Login and Privacy screens have been added to the Stack Navigator.
   //        I found that React Navigation creates problems when trying to pass along state.
   render() {
-    // emergencyLogout();
+    emergencyLogout();
 
 
     // emergencyLogout();

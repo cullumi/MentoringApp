@@ -7,9 +7,9 @@ import {AsyncStorage, View, Image} from 'react-native';
 import Button from 'react-native-button';
 import LinkedInModal from 'react-native-linkedin';
 import {styles, colors} from './Styles.js';
-import {getCurrentUser, postNewUser, getUserPayloadByEmail} from './API.js';
+import {getCurrentUser, postNewUser, getUserIdPayloadByEmail, getAuthorizedUser} from './API.js';
 import {registerForPushNotifications} from './PushNotifs.js';
-import {url, setLocalUser} from './globals.js';
+import {url, setLocalUser, setLinkedInToken} from './globals.js';
 import { setStatusBarNetworkActivityIndicatorVisible } from 'expo-status-bar';
 
 // LOGIN AND PRIVACY SCREENS
@@ -67,6 +67,8 @@ export default class LoginScreen extends React.Component {
 
       if (!authentication_code) {
 
+        setLinkedInToken(access_token);
+
         console.log("Fetching authentication code...");
 
         this.setState({ refreshing: true });
@@ -113,7 +115,7 @@ export default class LoginScreen extends React.Component {
         //   method: 'GET'
         // });
         // const checkPayload = await checkres.json();
-        const checkPayload = await getUserPayloadByEmail(email);
+        const authPayload = await getAuthorizedUser();
 
         console.log("Constructing user details...");
 
@@ -142,7 +144,7 @@ export default class LoginScreen extends React.Component {
 
         console.log("Navigating to the appropriate screen...");
         // check if this user needs to be added to DB.
-        if (checkPayload.rowsAffected == 0) {
+        if (authPayload.rowsAffected == 0) {
           // postNewUser(email, first, last, pic);
           this.props.navigation.navigate('Privacy');
         } else {
@@ -152,5 +154,4 @@ export default class LoginScreen extends React.Component {
         console.log("Authentication Code Received: " + authentication_code);
       }
     }
-  
 }

@@ -67,7 +67,7 @@ export default class LoginScreen extends React.Component {
 
       if (!authentication_code) {
 
-        setLinkedInToken(access_token);
+        await setLinkedInToken(access_token);
 
         console.log("Fetching authentication code...");
 
@@ -115,7 +115,7 @@ export default class LoginScreen extends React.Component {
         //   method: 'GET'
         // });
         // const checkPayload = await checkres.json();
-        const authPayload = await getAuthorizedUser();
+        const authPayload = await getAuthorizedUser('Login-Direct');
 
         console.log("Constructing user details...");
 

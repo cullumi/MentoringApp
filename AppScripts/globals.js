@@ -30,6 +30,12 @@ export async function getToken(source='unknown'){
     return token;
 }
 
+export async function isUserTokenPresent() {
+    let present = await AsyncStorage.getItem('Token') != null
+    console.log("Token Present? ", present);
+    return present;
+}
+
 export async function setLinkedInToken(token){
     await AsyncStorage.setItem('LinkedInToken', token);
 }
@@ -41,7 +47,7 @@ export async function getLinkedInToken(source='unknown'){
 }
 
 export async function setLocalUser(user){
-    token = user.token;
+    setToken(user.Token);
     await AsyncStorage.setItem('User', JSON.stringify(user));
 }
 

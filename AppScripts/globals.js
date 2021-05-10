@@ -52,5 +52,5 @@ export async function setLocalUser(user){
 }
 
 export async function getLocalUser(){
-    return await AsyncStorage.getItem("User");
+    return JSON.parse(await AsyncStorage.getItem("User"));
 }

@@ -144,7 +144,7 @@ export function createLocalUser(userPayload) {
 export async function ensureUserExists (source="unknown") {
 
   var userId = null;
-  if (!await isUserTokenPresent()){   
+  if (!await isUserTokenPresent()){
     const email = await AsyncStorage.getItem("Email");
     const first = await AsyncStorage.getItem('FirstName');
     const last = await AsyncStorage.getItem('LastName');
@@ -165,7 +165,9 @@ export async function ensureUserExists (source="unknown") {
     await setToken(userToken);
     console.log("(ensureUserExists) "+ source + ": ", await getToken('ensureUserExists[userToken]'));
   } else {
-    userId = await getLocalUser().Id;
+    var user = await getLocalUser()
+    userId = user.Id;
+    console.log("LOOK HERE", userId)
   }
   let userPayload = await getUserPayloadByID(userId);
   const payload = userPayload
@@ -404,7 +406,7 @@ export async function checkMeetingsHome() {
     var user = await getCurrentUser('checkMeetingsHome');
     // var user = JSON.parse(await AsyncStorage.getItem('User'));
 
-    const appres = await fetch(url + '/pair/' + user.id + '/' + await getToken('checkMeetingsHome'), {
+    const appres = await fetch(url + '/pair/' + user.Id + '/' + await getToken('checkMeetingsHome'), {
       method: 'GET'
     });
     const appPayload = await appres.json();

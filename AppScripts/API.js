@@ -52,16 +52,15 @@ export async function retTopic(topicId) {
 }
 
 // Gets all pairs containing the given user as a mentor, then gets a list of mentees using those pairs.
-export async function getMenteesOf (userID) {
+export async function getMenteesOf (userId) {
 
     console.log("Getting Mentees...")
 
-    const pairs = await getPairsOf('mentor', userID);
+    const pairs = await getPairsOf('mentor', userId);
     const mentees = [];
     for (var i = 0; i < pairs.length; i++) {
       const index = i;
-      const value = await getUserPayloadByID(pairs[index]["MenteeId"]);
-      const mentee = JSON.parse(JSON.stringify(value["recordset"][0]));
+      const mentee = await getPairedUser(pairs[index]["MenteeId"], userId);
       mentee.homeBoxStyle = styles.homeMenteeBox;
       mentee.contactButtonStatus = true;
       mentee.contactButtonStyle = styles.hiddenButton;
@@ -72,17 +71,16 @@ export async function getMenteesOf (userID) {
 }
 
 // Gets all pairs containing the given user as a mentee, then gets a list of mentors from those pairs.
-export async function getMentorsOf (userID) {
+export async function getMentorsOf (userId) {
     console.log("Getting Mentors...");
 
-    const pairs = await getPairsOf('mentee', userID);
+    const pairs = await getPairsOf('mentee', userId);
     console.log("getMentorsOf: ", pairs);
     const mentors = [];
     for (var i = 0; i < pairs.length; i++) {
       const index = i;
-      const value = await getUserPayloadByID(pairs[index]["MentorId"]);
-      console.log("Mentor: ", value);
-      const mentor = JSON.parse(JSON.stringify(value["recordset"][0]));
+      const mentor = await getPairedUser(pairs[index]["MentorId"], userId);
+      console.log("Mentor: ", mentor);
       mentor.homeBoxStyle = styles.homeMentorBox;
       mentor.contactButtonStatus = false;
       mentor.contactButtonStyle = styles.summaryButton;
@@ -112,6 +110,19 @@ export async function getPairsOf(type, userID) {
     }
 
     return pairs;
+}
+
+// Gets basic semi-public information about a paired user.
+export async function getPairedUser(targetId, userId) {
+  const fullUrl = url + '/user/' + targetId + '/' + userId + '/' + await getToken('getUserPayloadByID');
+  // console.log("getUserPayloadById: " + fullUrl);
+  const userres = await fetch(fullUrl, {
+    method: 'GET'
+  });
+  console.log("getPairedUser: ", userres);
+  const userPayload = await userres.json();
+  console.log("getPairedUser: ", userPayload);
+  return JSON.parse(JSON.stringify(userPayload.recordset[0]));
 }
 
 // Gets the Current User via the ensureUserExists method and the createLocalUser method.

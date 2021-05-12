@@ -134,11 +134,10 @@ export default class LoginScreen extends React.Component {
         // Getting and ensuring user exists.
         this.setState({ refreshing: false });
         let curUser = await getCurrentUser("Login");
-        console.log(curUser);
+        // console.log("User Logged In: ", curUser);
+        // console.log(curUser);
 
         // Setting Local User and Registering for Push Notifications
-        console.log("Setting Local User...");
-        setLocalUser(curUser);
         // console.log("Registering for Push Notifications...");
         // registerForPushNotifications();
 

@@ -26,13 +26,13 @@ export async function getToken(source='unknown'){
     if (token == null) {
         token = apiKey;
     }
-    console.log("Token get from " + source + ": \"" + token + "\"");
+    // console.log("Token get from " + source + ": \"" + token + "\"");
     return token;
 }
 
 export async function isUserTokenPresent() {
     let present = await AsyncStorage.getItem('Token') != null
-    console.log("Token Present? ", present);
+    // console.log("Token Present? ", present);
     return present;
 }
 
@@ -42,7 +42,7 @@ export async function setLinkedInToken(token){
 
 export async function getLinkedInToken(source='unknown'){
     var token = await AsyncStorage.getItem('LinkedInToken');
-    console.log("LinkedIn Token get from " + source + ": \"" + token + "\"");
+    // console.log("LinkedIn Token get from " + source + ": \"" + token + "\"");
     return token;
 }
 

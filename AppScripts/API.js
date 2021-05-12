@@ -76,10 +76,12 @@ export async function getMentorsOf (userID) {
     console.log("Getting Mentors...");
 
     const pairs = await getPairsOf('mentee', userID);
+    console.log("getMentorsOf: ", pairs);
     const mentors = [];
     for (var i = 0; i < pairs.length; i++) {
       const index = i;
       const value = await getUserPayloadByID(pairs[index]["MentorId"]);
+      console.log("Mentor: ", value);
       const mentor = JSON.parse(JSON.stringify(value["recordset"][0]));
       mentor.homeBoxStyle = styles.homeMentorBox;
       mentor.contactButtonStatus = false;
@@ -92,7 +94,7 @@ export async function getMentorsOf (userID) {
 
 // Gets all pairs relative to a user's Role and a user's ID.
 export async function getPairsOf(type, userID) {
-    const pairsres = await fetch(url + '/pair/' + type + '/' + userID + '/' + await getToken('getPairsOf'), {
+    const pairsres = await fetch(url + '/pair/' + type + '/' + userID + '/' + userID + '/' + await getToken('getPairsOf'), {
       method: 'GET'
     });
 
@@ -116,7 +118,7 @@ export async function getPairsOf(type, userID) {
 // Should Phase Out the CreateLocalUser method in favor of a simple .json() call on the payload.
 export async function getCurrentUser (source="unknown") {
   const userPayload = await ensureUserExists(source);
-  console.log(source, "getCurrentUser URL: ", url);
+  // console.log(source, "getCurrentUser URL: ", url);
   console.log(source, "getCurrentUser ", userPayload);
   return createLocalUser(userPayload);
 }
@@ -130,10 +132,10 @@ export async function getUserByID(id) {
 // Creates a javascript object out of a user payload for use elsewhere in the React Native app.
 // Note:  this should probably be replaced with a .json() call or otherwise by using JSON.parse().
 export function createLocalUser(userPayload) {
-  console.log(userPayload);
+  // console.log(userPayload);
     const recordSet = userPayload["recordset"][0];
     const user = JSON.parse(JSON.stringify(recordSet));
-    console.log("Local User: ", user);
+    // console.log("Local User: ", user);
     setLocalUser(user);
     return user;
     // return JSON.parse(JSON.stringify(userPayload['recordset'][0]));
@@ -150,9 +152,9 @@ export async function ensureUserExists (source="unknown") {
     const last = await AsyncStorage.getItem('LastName');
     const pic = await AsyncStorage.getItem('Avatar');
 
-    console.log("Getting user payload...");
+    // console.log("Getting user payload...");
     let authPayload = await getAuthorizedUser('ensureUserExists');
-    console.log(source, "ensureUserExists auth pyld: ", authPayload);
+    // console.log(source, "ensureUserExists auth pyld: ", authPayload);
 
     // check if this user needs to be added to DB.
     while (authPayload.rowsAffected == 0) {
@@ -163,11 +165,11 @@ export async function ensureUserExists (source="unknown") {
     const userToken = authPayload["recordset"][0]["Token"];
     userId = authPayload["recordset"][0]["Id"]
     await setToken(userToken);
-    console.log("(ensureUserExists) "+ source + ": ", await getToken('ensureUserExists[userToken]'));
+    // console.log("(ensureUserExists) "+ source + ": ", await getToken('ensureUserExists[userToken]'));
   } else {
     var user = await getLocalUser()
     userId = user.Id;
-    console.log("LOOK HERE", userId)
+    // console.log("LOOK HERE", userId)
   }
   let userPayload = await getUserPayloadByID(userId);
   const payload = userPayload
@@ -176,34 +178,36 @@ export async function ensureUserExists (source="unknown") {
 
 export async function getAuthorizedUser(source='unknown') {
   var fetchUrl = url + '/user/access/' + await getLinkedInToken('getAuthorizedUser');
-  console.log("(" + source + ") Getting User Auth Payload... ", fetchUrl);
+  // console.log("(" + source + ") Getting User Auth Payload... ", fetchUrl);
   const authres = await fetch(fetchUrl, {
     method: 'GET'
   });
-  console.log("(" + source + ") User Authorization Payload Received: ", authres);
+  if (authres.status != 200){
+    console.log("(" + source + ") User Authorization Payload Received: ", authres);
+  }
   const authPayload = await authres.json();
-  console.log("(" + source + ") User Auth Payload Parsed: ", authPayload);
+  // console.log("(" + source + ") User Auth Payload Parsed: ", authPayload);
   return authPayload;
 }
 
 // Fetches a User Payload using a User Email.
 export async function getUserIdPayloadByEmail(email) {
     var fetchUrl = url + '/user/email/' + email + '/' + await getToken('getUserIdPayloadByEmail');
-    console.log("Getting Payload Resource...", fetchUrl);
+    // console.log("Getting Payload Resource...", fetchUrl);
     const userres = await fetch(fetchUrl, {
       method: 'GET'
     });
 
-    console.log("User Id Payload Resource Gotten: ", userres);
+    // console.log("User Id Payload Resource Gotten: ", userres);
     const userPayload = await userres.json();
-    console.log("User Id Payload Parsed.");
+    // console.log("User Id Payload Parsed.");
     return userPayload;
 }
 
 // Fetches a User Payload using a User ID.
 export async function getUserPayloadByID(id) {
     const fullUrl = url + '/user/id/' + id + '/' + await getToken('getUserPayloadByID');
-    console.log("getUserPayloadById: " + fullUrl);
+    // console.log("getUserPayloadById: " + fullUrl);
     const userres = await fetch(fullUrl, {
       method: 'GET'
     });
@@ -215,7 +219,7 @@ export async function getUserPayloadByID(id) {
 // Creates a User via POST
 export async function postNewUser(email, first, last, pic) {
 
-    console.log("Posting new user");
+    // console.log("Posting new user");
 
     var created = new Date();
 

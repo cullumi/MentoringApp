@@ -59,8 +59,9 @@ export default class HomeScreen extends React.Component {
   
         console.log("setPairs in Home: ");
         const curUser = await getCurrentUser("Home");
-        newMentors = await getMentorsOf(curUser.id);
-        newMentees = await getMenteesOf(curUser.id);
+        console.log("Setting Pairs based on: ", curUser);
+        newMentors = await getMentorsOf(curUser.Id);
+        newMentees = await getMenteesOf(curUser.Id);
         doSetAsyncStorage = true;
 
       } catch (error) {

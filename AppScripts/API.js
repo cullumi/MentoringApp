@@ -56,7 +56,7 @@ export async function getMenteesOf (userId) {
 
     console.log("Getting Mentees...")
 
-    const pairs = await getPairsOf('mentor', userId);
+    const pairs = await getMPairsOf('mentor', userId);
     const mentees = [];
     for (var i = 0; i < pairs.length; i++) {
       const index = i;
@@ -74,7 +74,7 @@ export async function getMenteesOf (userId) {
 export async function getMentorsOf (userId) {
     console.log("Getting Mentors...");
 
-    const pairs = await getPairsOf('mentee', userId);
+    const pairs = await getMPairsOf('mentee', userId);
     console.log("getMentorsOf: ", pairs);
     const mentors = [];
     for (var i = 0; i < pairs.length; i++) {
@@ -91,25 +91,22 @@ export async function getMentorsOf (userId) {
 }
 
 // Gets all pairs relative to a user's Role and a user's ID.
-export async function getPairsOf(type, userID) {
-    const pairsres = await fetch(url + '/pair/' + type + '/' + userID + '/' + userID + '/' + await getToken('getPairsOf'), {
+export async function getMPairsOf(mType, userID) {
+    const pairsres = await fetch(url + '/pair/' + mType + '/' + userID + '/' + userID + '/' + await getToken('getPairsOf'), {
       method: 'GET'
     });
-
-    console.log("getPairsOf res: ", pairsres);
-
+    // console.log("getPairsOf res: ", pairsres);
     const pairsPayload = await pairsres.json();
+    // console.log("getPairsOf pyld: ", pairsPayload);
+    return pairsPayload["recordset"];
+}
 
-    console.log("getPairsOf pyld: ", pairsPayload);
-
-    const recordSet = pairsPayload["recordset"];
-    var pairs = [];
-    for (var i = 0; i < recordSet.length; i++) {
-      var pair = JSON.parse(JSON.stringify(recordSet[i]));
-      pairs.push(pair);
-    }
-
-    return pairs;
+export async function getPairsOf(userId) {
+  const pairsres = await fetch(url + '/pair/' + userId + '/' + await getToken('getPairsOf'), {
+    method: 'GET'
+  });
+  const pairsPayload = await pairsres.json();
+  return pairsPayload["recordset"];
 }
 
 // Gets basic semi-public information about a paired user.
@@ -295,24 +292,6 @@ export async function createMeeting(mentorId, menteeId, scheduledAt) {
 
 }
 
-// Updates appointment status
-export async function updateAppointmentStatus(id, status) {
-  const statusupdateres = await fetch(url + '/update-appointment-status' + '/' + await getToken('updateAppointmentStatus'), {
-    method: 'POST',
-    body: JSON.stringify({
-      Id: id,
-      Status: status
-    }),
-    headers: {
-      'Accept': 'application/json',
-      'Content-Type': 'application/json',
-    }
-  })
-  .catch((error) => {
-    console.error(error);
-  });
-}
-
 // Create Summary
 export async function createSummary(id, curSummary, userID) {
   const postres = fetch (url + '/create-summary' + '/' + await getToken('createSummary'), {
@@ -330,6 +309,7 @@ export async function createSummary(id, curSummary, userID) {
   .catch((error) => {
     console.error(error);
   });
+  
 }
 
 // Updates the privacy setting of a user, based on a given email.
@@ -409,87 +389,91 @@ export async function getAllTopics() {
     return topics;
 }
 
+export async function getTopic(topicId) {
+  const topicres = await fetch(url + "/topic/" + topicId + '/' + await getToken('checkMeetingsHome(topic)'), {
+    method: 'GET'
+  });
+  const topicPayload = await topicres.json();
+  return topicPayload.recordset[0];
+}
+
+// Gets past appointments
+export async function getPastAppointments(pairId, userId) {
+  const res = await fetch(url + '/appointment/past/' + pairId + '/' + userId + '/' + await getToken('checkMeetingsHome(pastapts)'), {
+    method: 'GET'
+  });
+  const payload = await res.json();
+  return payload.recordset;
+}
+
+// Updates appointment status
+export async function updateAppointmentStatus(id, status) {
+  const statusupdateres = await fetch(url + '/update-appointment-status' + '/' + await getToken('updateAppointmentStatus'), {
+    method: 'POST',
+    body: JSON.stringify({
+      Id: id,
+      Status: status
+    }),
+    headers: {
+      'Accept': 'application/json',
+      'Content-Type': 'application/json',
+    }
+  })
+  .catch((error) => {
+    console.error(error);
+  });
+}
+
 // Is this redundant?  (I'm not entirely sure what it does yet...)
 // Does it return a different set of meetings than the getAppointments() method?
 // Either way, it's likely we can split it up into smaller methods.
-export async function checkMeetingsHome() {
+export async function checkMeetings() {
 
-    console.log("Checking Upcoming Appointments For Home...")
-
+    console.log("Checking Upcoming Appointments...")
     var meetings = [];
-    var pairs = [];
-    var user = await getCurrentUser('checkMeetingsHome');
-    // var user = JSON.parse(await AsyncStorage.getItem('User'));
+    var user = await getCurrentUser('checkMeetings');
+    var pairs = await getPairsOf(user.Id);
 
-    const appres = await fetch(url + '/pair/' + user.Id + '/' + await getToken('checkMeetingsHome'), {
-      method: 'GET'
-    });
-    const appPayload = await appres.json();
-
-    pairs = appPayload['recordset'];
+    // pairs = appPayload['recordset'];
     // Get appointments for each pair the user is a part of.
     for (var i = 0; i < pairs.length; i++) {
       const pairId = pairs[i].Id;
+      const userId = user.Id;
       const menteeId = pairs[i].MenteeId;
-      const getres = await fetch(url + '/appointment/past/' + pairId + '/' + await getToken('checkMeetingsHome(pastapts)'), {
-        method: 'GET'
-      });
-      const getPayload = await getres.json();
-      if (getPayload.rowsAffected !== 0) {
+      const pastAppointments = await getPastAppointments(pairId, userId);
+      if (pastAppointments.length !== 0) {
         // Add each appointment to the meetings array with other necessary data.
-        for (var j = 0; j < getPayload.rowsAffected; j++) {
-          var meeting = JSON.parse(JSON.stringify(getPayload['recordset'][j]));
+        for (var j = 0; j < pastAppointments.length; j++) {
+          var meeting = JSON.parse(JSON.stringify(pastAppointments[j]));
           let date = new Date(meeting.ScheduledAt);
           let cur = new Date();
           meeting.updated = false;
 
           // Check if we should process this meeting (user should be Mentee, meeting should be newly Done)...
-          if (menteeId === user.id && cur > date && meeting.Status === 'Scheduled') {
+          if (menteeId === userId && cur > date && meeting.Status === 'Scheduled') {
+            await updateAppointmentStatus(meeting.Id, 'Done');
             meeting.updated = true;
-            const statusupdateres = await fetch(url + '/update-appointment-status' + '/' + await getToken('checkMeetingsHome(aptstatus)'), {
-              method: 'POST',
-              body: JSON.stringify({
-                Id: meeting.Id,
-                Status: 'Done'
-              }),
-              headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json',
-              }
-            }).catch((error) => {
-              console.error(error);
-            });
-
             meeting.Status = 'Done';
             meeting.dateText = parseDateText(date);
 
             // Get mentor/mentee avatar, and mark whether this user is the mentor/mentee, and provide title/prompt text.
             meeting.titleText = "Mentor Meeting";
-            const avres = await fetch(url + "/user/id/" + pairs[i].MentorId + '/' + await getToken('checkMeetingsHome(mentor/mentee)'), {
-              method: 'GET'
-            });
-            const avPayload = await avres.json();
-            meeting.Avatar = avPayload['recordset'][0].Avatar;
-            meeting.MentorFirstName = avPayload['recordset'][0].FirstName;
+            const mentor = await getPairedUser(pairs[i].MentorId, userId);
+            meeting.Avatar = mentor.Avatar;
+            meeting.MentorFirstName = mentor.FirstName;
 
             // Get associated topic information and store it.
-            const topicres = await fetch(url + "/topic/" + meeting.TopicId + '/' + await getToken('checkMeetingsHome(topic)'), {
-              method: 'GET'
-            });
-            const topicPayload = await topicres.json();
+            meeting.topic = await getTopic(meeting.TopicId);
+            meeting.topic.dueDateText = parseDateText(new Date(meeting.topic.DueDate));
 
-            meeting.topic = topicPayload['recordset'][0];
-            meeting.topic.dueDateText = parseDateText(new Date(meeting.topic["DueDate"]));
+            console.log("Finished Updating Appointment...");
           }
-
           meetings.push(meeting);
-
         }
-
+        console.log("Finished Updating Past Appointments...");
       }
-
     }
-
+    console.log("Finished checking appointments...");
     return meetings;
 }
 

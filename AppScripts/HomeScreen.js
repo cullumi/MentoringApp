@@ -6,7 +6,7 @@ import {AsyncStorage, View, Text, Button, ScrollView, RefreshControl, TouchableO
 import IonIcon from 'react-native-vector-icons/Ionicons';
 import {TitleBar} from './ScreenComponents.js';
 import {styles, colors} from './Styles.js';
-import {getMentorsOf, getMenteesOf, getCurrentUser, checkMeetingsHome, updateAppointmentStatus, createSummary} from './API.js';
+import {getMentorsOf, getMenteesOf, getCurrentUser, checkMeetings, updateAppointmentStatus, createSummary} from './API.js';
 import { useNotification } from './PushNotifs.js';
 
 // HOME SCREEN
@@ -37,7 +37,7 @@ export default class HomeScreen extends React.Component {
       // useNotification();
       if (this.state.shouldUpdate) {
         this.setPairs();
-        var meetings = await checkMeetingsHome();
+        var meetings = await checkMeetings();
         if (meetings && meetings.length > 0) {
           for (var meetingC = 0; meetingC < meetings.length; meetingC++) {
             if (meetings[meetingC].updated == true) {

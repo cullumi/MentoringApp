@@ -24,6 +24,126 @@ export const colors = {
     yellow: '#f1c40f'
 };
 
+export function assignMeetingStyle(type, status, meeting)
+{
+  meeting.buttonDisabled = false;
+
+  switch(meeting.Status) {
+    case 'Pending':
+    meeting.meetingStatus = {
+      textAlign:"right",
+      color: '#003F87'
+    }
+    break;
+    case 'Scheduled':
+    meeting.meetingStatus = {
+      textAlign:"right",
+      color: colors.green
+    }
+    break;
+    case 'Done':
+    meeting.meetingStatus = {
+      textAlign:"right",
+      color: colors.green
+    }
+    break;
+    case 'Completed':
+    meeting.meetingStatus = {
+      textAlign:"right",
+      color: colors.green
+    }
+    break;
+    case 'Cancelled':
+    meeting.meetingStatus = {
+      textAlign:"right",
+      color: colors.red
+    }
+    break;
+    case 'Missed':
+    meeting.meetingStatus = {
+      textAlign:"right",
+      color: colors.red
+    }
+    break;
+  }
+
+  if (type == 'mentee')
+  {
+    switch(status) {
+      case 'Pending':
+        meeting.meetingButton = {padding: 15, backgroundColor: colors.vikingBlue}
+        meeting.meetingButtonText = {textAlign: 'center', fontSize:16, color: '#fff'}
+        meeting.buttonText = 'Accept Meeting Time';
+        meeting.buttonPress = 'accept';
+        break;
+      case 'Scheduled':
+        meeting.meetingButton = {padding: 15, backgroundColor: colors.red}
+        meeting.meetingButtonText = {textAlign: 'center', fontSize:16, color: '#fff'}
+        meeting.buttonText = 'Cancel Meeting';
+        meeting.buttonPress = 'cancel';
+        break;
+      case 'Done':
+        meeting.meetingButton = {width: 0, height: 0}
+        meeting.meetingButtonText = {textAlign: 'center'}
+        meeting.buttonText = '';
+        meeting.buttonPress = ''; meeting.buttonDisabled = true;
+        break;
+      case 'Completed':
+        meeting.meetingButton = {width: 0, height: 0}
+        meeting.meetingButtonText = {textAlign: 'center'}
+        meeting.buttonText = '';
+        meeting.buttonPress = ''; meeting.buttonDisabled = true;
+        break;
+      case 'Cancelled':
+        meeting.meetingButton = {width: 0, height: 0}
+        meeting.meetingButtonText = {textAlign: 'center'}
+        meeting.buttonText = '';
+        meeting.buttonPress = ''; meeting.buttonDisabled = true;
+        break;
+      case 'Missed':
+        meeting.meetingButton = {width: 0, height: 0}
+        meeting.meetingButtonText = {textAlign: 'center'}
+        meeting.buttonText = '';
+        meeting.buttonPress = ''; meeting.buttonDisabled = true;
+        break;
+    }
+  }
+  else if (type == 'mentor') {
+    switch(meeting.Status) {
+      case 'Pending':
+        meeting.meetingButton = {padding: 15, backgroundColor: colors.vikingBlue}
+        meeting.meetingButtonText = {textAlign: 'center', fontSize:16, color: '#fff'}
+        meeting.buttonText = 'Waiting for Mentor to Confirm...';
+        meeting.buttonPress = ''; meeting.buttonDisabled = true;
+        break;
+      case 'Scheduled':
+        meeting.meetingButton = {padding: 15, backgroundColor: colors.red}
+        meeting.meetingButtonText = {textAlign: 'center', fontSize:16, color: '#fff'}
+        meeting.buttonText = 'Cancel Meeting';
+        meeting.buttonPress = 'cancel';
+        break;
+      case 'Done':
+        meeting.meetingButton = {padding: 15, backgroundColor: colors.yellow}
+        meeting.meetingButtonText = {textAlign: 'center', fontSize:16, color: '#fff'}
+        meeting.buttonText = 'Write Summary';
+        meeting.buttonPress = 'submitSummary';
+        break;
+      case 'Completed':
+        meeting.meetingButton = {padding: 15, backgroundColor: colors.green}
+        meeting.meetingButtonText = {textAlign: 'center', color:'#fff'}
+        meeting.buttonText = 'Edit Summary';
+        meeting.buttonPress = 'editSummary';
+        break;
+      case 'Cancelled':
+        meeting.meetingButton = {width: 0, height: 0}
+        meeting.meetingButtonText = {textAlign: 'center'}
+        meeting.buttonText = '';
+        meeting.buttonPress = ''; meeting.buttonDisabled = true;
+        break;
+    }
+  }
+}
+
 export const styles = StyleSheet.create({
     container: {
       flex: 1,

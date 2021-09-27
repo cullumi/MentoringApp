@@ -10,6 +10,7 @@ import {BackTitleBarContact} from './ScreenComponents.js';
 import {styles, colors} from './Styles.js';
 import {getCurrentUser, getContactInfoOf, createMeeting} from './API.js';
 import DateTimePickerModal from "react-native-modal-datetime-picker";
+import {getLocalUser} from './globals.js';
 
 export default class ContactInfoScreen extends React.Component {
     constructor(props) {
@@ -85,9 +86,10 @@ export default class ContactInfoScreen extends React.Component {
     };
 
     async handleConfirm(date) {
-      var user = JSON.parse(await AsyncStorage.getItem('User'));
-      console.log(this.props.route.params.user.Id + " " + user.id);
-      createMeeting(this.props.route.params.user.Id, user.id, date);
+      var user = await getLocalUser()
+      console.log(this.props.route.params.user.Id, user);
+      await createMeeting(this.props.route.params.user.Id, user.Id, date);
+      console.log("Done creating meeting.");
       this.hideModal();
       this.props.navigation.navigate('Meetings');
     };

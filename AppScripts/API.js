@@ -36,17 +36,16 @@ export async function updatePushToken() {
   });
 }
 
-// Returns a topic based on it's ID?  Could you a more cohesive name.
+// Gets a topic based on it's ID.
 export async function retTopic(topicId) {
-
     const topicRes = await fetch(url + '/topic/' + topicId + '/' + await getToken('retTopic'), {
       method: 'GET'
     });
     const topicPayload = await topicRes.json();
-    var top = JSON.parse(JSON.stringify(topicPayload["recordset"][0]));
-    top['dueDateText'] = parseDateText(new Date(top["DueDate"]));
-    top['createdText'] = parseSimpleDateText(new Date(top["Created"]));
-    return top;
+    var topic = JSON.parse(JSON.stringify(topicPayload["recordset"][0]));
+    topic['dueDateText'] = parseDateText(new Date(topic["DueDate"]));
+    topic['createdText'] = parseSimpleDateText(new Date(topic["Created"]));
+    return topic;
 }
 
 // Gets all pairs containing the given user as a mentor, then gets a list of mentees using those pairs.
@@ -101,10 +100,23 @@ export async function getPairsOf(userId) {
   return pairsPayload["recordset"];
 }
 
+export async function getPair(mentorId, menteeId) {
+
+  const userID = (await getLocalUser()).Id;
+  const userToken = await getToken('createMeeting(pairId)');
+  console.log("getPair:", mentorId, menteeId, userID, userToken);
+  const pairres = await fetch(url + '/pair/both/' + mentorId + "/" + menteeId + '/' + userID + '/' + userToken, {
+    method: 'GET'
+  });
+  const ppayload = await pairres.json();
+  console.log("Pair:", ppayload);
+  return JSON.parse(JSON.stringify(ppayload.recordset[0]));
+}
+
 // Gets basic semi-public information about a paired user.
 export async function getPairedUser(targetId, userId) {
 
-  const fullUrl = url + '/user/' + targetId + '/' + userId + '/' + await getToken('getUserPayloadByID');
+  const fullUrl = url + '/user/other/' + targetId + '/' + userId + '/' + await getToken('getUserPayloadByID');
   const userres = await fetch(fullUrl, {
     method: 'GET'
   });
@@ -173,7 +185,7 @@ export async function getAuthorizedUser(source='unknown') {
     method: 'GET'
   });
   if (authres.status != 200){
-    console.log("(" + source + ") User Authorization Payload Received: ", authres);
+    console.log("(" + source + ") Non-200 User Authorization Payload Received: ", authres);
   }
   const authPayload = await authres.json();
   return authPayload;
@@ -233,27 +245,24 @@ export async function postNewUser(email, first, last, pic) {
 
 export async function createMeeting(mentorId, menteeId, scheduledAt) {
 
-  // Get current topicId.
-  const topicres = await fetch(url + '/current-topic' + '/' + await getToken('createMeeting(topicId)'), {
-    method: 'GET'
-  });
-  const payload = await topicres.json();
-  const topicValue = JSON.parse(JSON.stringify(payload));
-
-  // Get pairId
-  const pairres = await fetch(url + '/pair/both/' + mentorId + "/" + menteeId + '/' + await getToken('createMeeting(pairId)'), {
-    method: 'GET'
-  });
-  const ppayload = await pairres.json();
-  const pairValue = JSON.parse(JSON.stringify(ppayload));
+  console.log("Getting meeting topic and pair.");
+  const topic = await getCurrentTopic();
+  console.log("Gotten.", topic);
+  const pair = await getPair(mentorId, menteeId);
+  console.log("Gotten.", pair);
+  const userId = (await getLocalUser()).Id;
+  const userToken = await getToken("createMeeting");
 
   // Create appointment.
-  const post = fetch(url + '/create-appointment' + '/' + await getToken('createMeeting(aptmt)'), {
+  console.log("Posting appointment:", pair.Id, scheduledAt, topic.Id, userId, userToken);
+  const post = await fetch(url + '/create-appointment', {
     method: 'POST',
     body: JSON.stringify({
-      PairId: pairValue["recordset"][0].Id,
+      PairId: pair.Id,
       ScheduledAt: scheduledAt,
-      TopicId: topicValue["recordset"][0].Id
+      TopicId: topic.Id,
+      UserId: userId,
+      Token: userToken,
     }),
     headers: {
       'Accept': 'application/json',
@@ -263,7 +272,7 @@ export async function createMeeting(mentorId, menteeId, scheduledAt) {
   .catch((error) => {
     console.error(error);
   });
-
+  console.log("Finished posting appointment.", post);
 }
 
 // Create Summary
@@ -365,7 +374,7 @@ export async function getTopic(topicId) {
 
   var user = await getLocalUser();
   var userId = user.Id;
-  const topicres = await fetch(url + "/topic/" + topicId + '/' + userId + '/' + await getToken('checkMeetingsHome(topic)'), {
+  const topicres = await fetch(url + "/topic/" + topicId + '/' + userId + '/' + await getToken('getTopic'), {
     method: 'GET'
   });
   const topicPayload = await topicres.json();

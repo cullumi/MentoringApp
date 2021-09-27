@@ -6,7 +6,7 @@ import React from 'react';
 import {Alert, AsyncStorage, View, Text, ScrollView, TouchableOpacity, TextInput, Animated} from 'react-native';
 import IonIcon from 'react-native-vector-icons/Ionicons';
 import {mainTitleWidth, styles, colors} from './Styles.js';
-import {retTopic} from './API.js';
+import {getTopic} from './API.js';
 import Button from 'react-native-button';
 import {accountID, accountType, url} from './globals.js';
 
@@ -40,7 +40,7 @@ export default class WriteSummaryScreen extends React.Component {
     }
 
     getData() {
-      retTopic(this.state.topicId)
+      getTopic(this.state.topicId)
       .then((data) => {
         this.setState({
           topic:data

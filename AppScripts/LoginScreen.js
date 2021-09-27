@@ -14,6 +14,10 @@ import { setStatusBarNetworkActivityIndicatorVisible } from 'expo-status-bar';
 
 // LOGIN AND PRIVACY SCREENS
 
+const linkedInClientId = "86w6fxbbujlvnb" //"86bzo41s6bc4am"
+const linkedInClientSecret = "vXprrY81P3JisVKx" //"O2U1ANijJnQG2E3s"
+const linkedInRedirectUri = "https://cs.wwu.edu/"
+
 // A LoginScreen class-- used to help with some state setting problems-- "refreshing" is now within this class' scope.
 // Note: the Stack Navigator automatically sets the "navigation" prop, which can be accessed via this.props.navigation.
 // The original issue I stumbled across was an attempt to pass a "Type" (a clear remnant of the TypeScript source).
@@ -44,9 +48,9 @@ export default class LoginScreen extends React.Component {
                 <Image style={{width:200, height:200}} source={require('../assets/logo.png')} />
                 <View style={{height:20}} />
                 <LinkedInModal
-                  clientID="86bzo41s6bc4am"
-                  clientSecret="O2U1ANijJnQG2E3s"
-                  redirectUri="https://cs.wwu.edu/"
+                  clientID={linkedInClientId}
+                  clientSecret={linkedInClientSecret}
+                  redirectUri={linkedInRedirectUri}
                   ref={ref => { this.modal = ref; }}
                   renderButton={renderButton}
                   onSuccess={data => {

@@ -52,5 +52,7 @@ export async function setLocalUser(user){
 }
 
 export async function getLocalUser(){
-    return JSON.parse(await AsyncStorage.getItem("User"));
+    var user = JSON.parse(await AsyncStorage.getItem("User"));
+    console.log("GetLocalUser:", user);
+    return user;
 }

@@ -6,7 +6,8 @@ import {AsyncStorage, View, Text, Button, ScrollView, RefreshControl, TouchableO
 import IonIcon from 'react-native-vector-icons/Ionicons';
 import {TitleBar} from './ScreenComponents.js';
 import {styles, colors} from './Styles.js';
-import {getMentorsOf, getMenteesOf, getCurrentUser, checkMeetingsHome, updateAppointmentStatus, createSummary} from './API.js';
+import {getMentorsOf, getMenteesOf, getCurrentUser, checkMeetings, updateAppointmentStatus, createSummary} from './API.js';
+import { useNotification } from './PushNotifs.js';
 
 // HOME SCREEN
 export default class HomeScreen extends React.Component {
@@ -33,9 +34,10 @@ export default class HomeScreen extends React.Component {
     }
 
     async componentDidMount() {
+      // useNotification();
       if (this.state.shouldUpdate) {
         this.setPairs();
-        var meetings = await checkMeetingsHome();
+        var meetings = await checkMeetings();
         if (meetings && meetings.length > 0) {
           for (var meetingC = 0; meetingC < meetings.length; meetingC++) {
             if (meetings[meetingC].updated == true) {
@@ -57,8 +59,14 @@ export default class HomeScreen extends React.Component {
   
         console.log("setPairs in Home: ");
         const curUser = await getCurrentUser("Home");
+<<<<<<< HEAD
         newMentors = await getMentorsOf(curUser.id);
         newMentees = await getMenteesOf(curUser.id);
+=======
+        console.log("Setting Pairs based on: ", curUser);
+        newMentors = await getMentorsOf(curUser.Id);
+        newMentees = await getMenteesOf(curUser.Id);
+>>>>>>> push-notifs
         doSetAsyncStorage = true;
 
       } catch (error) {

@@ -3,8 +3,8 @@
 
 import React from 'react';
 import {View, Text, AsyncStorage} from 'react-native';
-import {getCurrentUser, getUserPayloadByEmail} from './API.js';
-import {cur} from './globals';
+// import {getCurrentUser, getUserPayloadByEmail} from './API.js';
+// import {cur} from './globals.js';
 
 // SPLASH SCREEN
 

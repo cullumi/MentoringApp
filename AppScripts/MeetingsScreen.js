@@ -6,8 +6,13 @@ import React from 'react';
 import {View, Text, Image, ScrollView, RefreshControl, Alert} from 'react-native';
 import {TitleBar} from './ScreenComponents.js';
 import {styles, colors} from './Styles.js';
+<<<<<<< HEAD
 import {getAppointments} from './API.js';
 import {url} from './globals';
+=======
+import {getMeetings, updateAppointmentStatus} from './API.js';
+import {url} from './globals.js';
+>>>>>>> push-notifs
 import Button from 'react-native-button';
 
 // MEETING SCREENS
@@ -30,7 +35,7 @@ export default class MeetingsScreen extends React.Component {
 
     componentDidUpdate() {
       if (this.state.refreshing == true) {
-        getAppointments('upcoming')
+        getMeetings('upcoming')
         .then((data) => {
           this.setState({
             upcomingMeetings:data,
@@ -41,14 +46,14 @@ export default class MeetingsScreen extends React.Component {
     };
 
     getData() {
-      getAppointments('past')
+      getMeetings('past')
       .then((data) => {
         this.setState({
           pastMeetings:data,
           refreshing: false
         })
       });
-      getAppointments('upcoming')
+      getMeetings('upcoming')
       .then((data) => {
         this.setState({
           upcomingMeetings:data,
@@ -64,20 +69,7 @@ export default class MeetingsScreen extends React.Component {
     }
 
     async acceptMeeting (id) {
-      const statusupdateres = await fetch(url + '/update-appointment-status', {
-        method: 'POST',
-        body: JSON.stringify({
-          Id: id,
-          Status: 'Scheduled'
-        }),
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-        }
-      })
-      .catch((error) => {
-        console.error(error);
-      });
+      updateAppointmentStatus(id, 'Scheduled');
       this.setState({refreshing: true});
     }
 
@@ -99,19 +91,7 @@ export default class MeetingsScreen extends React.Component {
     }
 
     async cancelMeeting (id) {
-      const statusupdateres = await fetch(url + '/update-appointment-status', {
-        method: 'POST',
-        body: JSON.stringify({
-          Id: id,
-          Status: 'Cancelled'
-        }),
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-        }
-      }).catch((error) => {
-        console.error(error);
-      });
+      updateAppointmentStatus(id, 'Canceled');
     }
 
     cancelMeetingAlert = (id) => {

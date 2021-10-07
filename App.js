@@ -4,7 +4,7 @@ import 'react-native-gesture-handler';
 import React, { useState, Component } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
-import {AsyncStorage} from 'react-native';
+import {AsyncStorage, PushNotificationIOS} from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import IonIcon from 'react-native-vector-icons/Ionicons';
 import { color, debug } from 'react-native-reanimated';
@@ -61,6 +61,8 @@ import LoginScreen from './AppScripts/LoginScreen.js';
 import PrivacyScreen from './AppScripts/PrivacyScreen.js';
 // // 15. SettingsScreen class now in the SettingsScreen.js file.
 import SettingsScreen from './AppScripts/SettingsScreen.js';
+// import { registerForPushNotifications } from './AppScripts/PushNotifs.js';
+import * as Globals from './AppScripts/globals.js';
 
 // Needs to be implemented:
 // import Storage from './localstorage';
@@ -92,9 +94,19 @@ const Tab = createBottomTabNavigator();
 //        + Commonly Used UI Structures
 //        + Common Parsing or Calculations (Such as with Dates)
 
+// PushNotificationIOS.setNotificationHandler({
+//   handleNotification: async () => ({
+//     shouldShowAlert: true,
+//     shouldPlaySound: false,
+//     shouldSetBadge: false,
+//   }),
+// });
+
+const initialParams = Globals.globalParams();
 
 // HOME STACK
 function HomeStack() {
+
   return (
     <Tab.Navigator
         screenOptions={({ route }) => ({
@@ -120,9 +132,9 @@ function HomeStack() {
             showLabel: false
         }}
     >
-        <Tab.Screen name="Home" component={HomeScreen} initialParams={globals}/>
-        <Tab.Screen name="Meetings" component={MeetingsScreen} initialParams={globals}/>
-        <Tab.Screen name="Topics" component={TopicsScreen} initialParams={globals}/>
+        <Tab.Screen name="Home" component={HomeScreen} initialParams={initialParams}/>
+        <Tab.Screen name="Meetings" component={MeetingsScreen} initialParams={initialParams}/>
+        <Tab.Screen name="Topics" component={TopicsScreen} initialParams={initialParams}/>
     </Tab.Navigator>
   );
 }
@@ -135,10 +147,16 @@ function emergencyLogout() {
 // Main class for app. Responsible for rendering app container.
 export default class AppContainer extends React.Component {
 
+  // componentDidMount() {
+  //   registerForPushNotifications();
+  // }
+
   // Main rendering function. Always begins on the SplashScreen.
   // Note: The Login and Privacy screens have been added to the Stack Navigator.
   //        I found that React Navigation creates problems when trying to pass along state.
   render() {
+    emergencyLogout();
+
 
     // emergencyLogout();
     // console.ignoredYellowBox
@@ -147,15 +165,15 @@ export default class AppContainer extends React.Component {
     return (
         <NavigationContainer>
           <Stack.Navigator headerMode='none' initialRouteName='Splash'>
-            <Stack.Screen name='Splash' component={SplashScreen} initialParams={globals}/>
-            <Stack.Screen name='Login' component={LoginScreen} initialParams={globals}/>
-            <Stack.Screen name='Privacy' component={PrivacyScreen} initialParams={globals}/>
-            <Stack.Screen name='Main' component={HomeStack} initialParams={globals}/>
-            <Stack.Screen name='SettingsModal' component={SettingsScreen} initialParams={globals}/>
-            <Stack.Screen name='HelpModal' component={HelpScreen} initialParams={globals}/>
-            <Stack.Screen name='ProposeMeeting' component={ProposeMeetingScreen} initialParams={globals}/>
-            <Stack.Screen name='WriteSummary' component={WriteSummaryScreen} initialParams={globals}/>
-            <Stack.Screen name='ContactInfo' component={ContactInfoScreen} initialParams={globals}/>
+            <Stack.Screen name='Splash' component={SplashScreen} initialParams={initialParams}/>
+            <Stack.Screen name='Login' component={LoginScreen} initialParams={initialParams}/>
+            <Stack.Screen name='Privacy' component={PrivacyScreen} initialParams={initialParams}/>
+            <Stack.Screen name='Main' component={HomeStack} initialParams={initialParams}/>
+            <Stack.Screen name='SettingsModal' component={SettingsScreen} initialParams={initialParams}/>
+            <Stack.Screen name='HelpModal' component={HelpScreen} initialParams={initialParams}/>
+            <Stack.Screen name='ProposeMeeting' component={ProposeMeetingScreen} initialParams={initialParams}/>
+            <Stack.Screen name='WriteSummary' component={WriteSummaryScreen} initialParams={initialParams}/>
+            <Stack.Screen name='ContactInfo' component={ContactInfoScreen} initialParams={initialParams}/>
           </Stack.Navigator>
         </NavigationContainer>
     );

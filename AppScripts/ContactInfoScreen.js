@@ -2,34 +2,16 @@
 
 
 
-import React from 'react';
-<<<<<<< HEAD
-<<<<<<< HEAD
-import { Linking, View, TouchableOpacity, Text, Button, Image, AsyncStorage} from 'react-native';
-import IonIcon from 'react-native-vector-icons/Ionicons';
-import {BackTitleBarContact} from './ScreenComponents.js';
-import {styles, colors} from './Styles.js';
-import {getContactInfoOf} from './API.js';
-import * as Contacts from 'expo-contacts';
-=======
-import {Alert, View, TouchableOpacity, Text, Image, AsyncStorage} from 'react-native';
-import Button from 'react-native-button';
-import IonIcon from 'react-native-vector-icons/Ionicons';
-import {BackTitleBarContact} from './ScreenComponents.js';
-import {styles, colors} from './Styles.js';
-import {getCurrentUser, getContactInfoOf, createMeeting} from './API.js';
-import DateTimePickerModal from "react-native-modal-datetime-picker";
->>>>>>> ec3bf39196d13f1d01b969945b93ab690bcabfb1
-=======
-import {Alert, View, TouchableOpacity, Text, Image, AsyncStorage} from 'react-native';
-import Button from 'react-native-button';
+import React from 'react'
+import * as Contacts from 'expo-contacts'
+import {Alert, View, TouchableOpacity, Text, Image, AsyncStorage} from 'react-native'
+import Button from 'react-native-button'
 import IonIcon from 'react-native-vector-icons/Ionicons';
 import {BackTitleBarContact} from './ScreenComponents.js';
 import {styles, colors} from './Styles.js';
 import {getCurrentUser, getContactInfoOf, createMeeting} from './API.js';
 import DateTimePickerModal from "react-native-modal-datetime-picker";
 import {getLocalUser} from './globals.js';
->>>>>>> push-notifs
 
 export default class ContactInfoScreen extends React.Component {
     constructor(props) {
@@ -96,8 +78,6 @@ export default class ContactInfoScreen extends React.Component {
       this.setState({refreshing: false, contactInfo: newCI});
     }
 
-<<<<<<< HEAD
-<<<<<<< HEAD
     async openContactPicker() {
 
       const { status } = await Contacts.requestPermissionsAsync();
@@ -152,9 +132,8 @@ export default class ContactInfoScreen extends React.Component {
 
       }
 
-=======
-=======
->>>>>>> push-notifs
+    }
+
     showModal() {
       this.setState({modalVisible:true});
     };
@@ -164,21 +143,19 @@ export default class ContactInfoScreen extends React.Component {
     };
 
     async handleConfirm(date) {
-<<<<<<< HEAD
+
       var user = JSON.parse(await AsyncStorage.getItem('User'));
       console.log(this.props.route.params.user.Id + " " + user.id);
       createMeeting(this.props.route.params.user.Id, user.id, date);
       this.hideModal();
       this.props.navigation.navigate('Meetings');
->>>>>>> ec3bf39196d13f1d01b969945b93ab690bcabfb1
-=======
       var user = await getLocalUser()
       console.log(this.props.route.params.user.Id, user);
       await createMeeting(this.props.route.params.user.Id, user.Id, date);
       console.log("Done creating meeting.");
       this.hideModal();
       this.props.navigation.navigate('Meetings');
->>>>>>> push-notifs
+
     };
 
     infoItem(info) {

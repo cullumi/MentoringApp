@@ -10,21 +10,6 @@ import * as Crypto from 'expo-crypto';
 
 // API GET and POST Methods
 
-<<<<<<< HEAD
-// Returns a topic based on it's ID?  Could you a more cohesive name.
-export async function retTopic(topicId) {
-
-    const topicRes = await fetch(url + '/topic/' + topicId, {
-      method: 'GET'
-    });
-    const topicPayload = await topicRes.json();
-
-    var top = JSON.parse(JSON.stringify(topicPayload["recordset"][0]));
-    top['dueDateText'] = parseDateText(new Date(top["DueDate"]));
-    top['createdText'] = parseSimpleDateText(new Date(top["Created"]));
-
-    return top;
-=======
 
 // Register Push Token
 export async function updatePushToken() {
@@ -61,19 +46,12 @@ export async function retTopic(topicId) {
     topic['dueDateText'] = parseDateText(new Date(topic["DueDate"]));
     topic['createdText'] = parseSimpleDateText(new Date(topic["Created"]));
     return topic;
->>>>>>> push-notifs
 }
 
 // Gets all pairs containing the given user as a mentor, then gets a list of mentees using those pairs.
 export async function getMenteesOf (userId) {
 
-<<<<<<< HEAD
-    console.log("Getting Mentees...")
-
-    const pairs = await getPairsOf('mentor', userID);
-=======
     const pairs = await getMPairsOf('mentor', userId);
->>>>>>> push-notifs
     const mentees = [];
     for (var i = 0; i < pairs.length; i++) {
       const index = i;
@@ -83,25 +61,14 @@ export async function getMenteesOf (userId) {
       mentee.contactButtonStyle = styles.hiddenButton;
       mentees.push(mentee);
     }
-<<<<<<< HEAD
-
-=======
->>>>>>> push-notifs
     return mentees;
 }
 
 // Gets all pairs containing the given user as a mentee, then gets a list of mentors from those pairs.
-<<<<<<< HEAD
-export async function getMentorsOf (userID) {
-    console.log("Getting Mentors...");
-
-    const pairs = await getPairsOf('mentee', userID);
-=======
 export async function getMentorsOf (userId) {
 
     const pairs = await getMPairsOf('mentee', userId);
     console.log("getMentorsOf: ", pairs);
->>>>>>> push-notifs
     const mentors = [];
     for (var i = 0; i < pairs.length; i++) {
       const index = i;
@@ -111,10 +78,6 @@ export async function getMentorsOf (userId) {
       mentor.contactButtonStyle = styles.summaryButton;
       mentors.push(mentor);
     }
-<<<<<<< HEAD
-
-=======
->>>>>>> push-notifs
     return mentors;
 }
 
@@ -124,31 +87,6 @@ export async function getMPairsOf(mType, userID) {
     const pairsres = await fetch(url + '/pair/' + mType + '/' + userID + '/' + userID + '/' + await getToken('getPairsOf'), {
       method: 'GET'
     });
-<<<<<<< HEAD
-
-    console.log("getPairsOf res: ", pairsres);
-
-    const pairsPayload = await pairsres.json();
-
-    console.log("getPairsOf pyld: ", pairsPayload);
-
-    const recordSet = pairsPayload["recordset"];
-    var pairs = [];
-    for (var i = 0; i < recordSet.length; i++) {
-      var pair = JSON.parse(JSON.stringify(recordSet[i]));
-      pairs.push(pair);
-    }
-
-    return pairs;
-}
-
-// Gets the Current User via the ensureUserExists method and the createLocalUser method.
-// Should Phase Out the CreateLocalUser method in favor of a simple .json() call on the payload.
-export async function getCurrentUser (source="unknown") {
-  const userPayload = await ensureUserExists(source);
-  console.log(source, "getCurrentUser URL: ", url);
-  console.log(source, "getCurrentUser ", userPayload);
-=======
     const pairsPayload = await pairsres.json();
     return pairsPayload["recordset"];
 }
@@ -191,7 +129,6 @@ export async function getPairedUser(targetId, userId) {
 export async function getCurrentUser (source="unknown") {
 
   const userPayload = await ensureUserExists(source);
->>>>>>> push-notifs
   return createLocalUser(userPayload);
 }
 
@@ -223,24 +160,13 @@ export async function ensureUserExists (source="unknown") {
     const last = await AsyncStorage.getItem('LastName');
     const pic = await AsyncStorage.getItem('Avatar');
 
-<<<<<<< HEAD
-    let userPayload = await getUserPayloadByEmail(email);
-
-    console.log(source, "ensureUserExists pyld: ", userPayload);
-=======
     let authPayload = await getAuthorizedUser('ensureUserExists');
->>>>>>> push-notifs
 
     // check if this user needs to be added to DB.
     while (authPayload.rowsAffected == 0) {
       await postNewUser(email, first, last, pic);
       authPayload = await getAuthorizedUser('ensureUserExists');
     }
-<<<<<<< HEAD
-
-    const payload = userPayload;
-    return payload;
-=======
     // Set the user
     const userToken = authPayload["recordset"][0]["Token"];
     userId = authPayload["recordset"][0]["Id"]
@@ -263,7 +189,6 @@ export async function getAuthorizedUser(source='unknown') {
   }
   const authPayload = await authres.json();
   return authPayload;
->>>>>>> push-notifs
 }
 
 // Fetches a User Payload using a User Email.
@@ -292,14 +217,11 @@ export async function getUserPayloadByID(id) {
 // Creates a User via POST
 export async function postNewUser(email, first, last, pic) {
 
-<<<<<<< HEAD
-=======
     var created = new Date();
     var token = await Crypto.digestStringAsynce(
       Crypto.CryptoDigestAlgorith, SHA256,
       email + first + last + parseDateText(created)
     );
->>>>>>> push-notifs
     const postres = fetch(url + '/create-user', {
       method: 'POST',
       body: JSON.stringify({
@@ -319,44 +241,6 @@ export async function postNewUser(email, first, last, pic) {
     .catch((error) => {
       console.error(error);
     });
-<<<<<<< HEAD
-}
-
-export async function createMeeting(mentorId, menteeId, scheduledAt) {
-
-  // Get current topicId.
-  const topicres = await fetch(url + '/current-topic', {
-    method: 'GET'
-  });
-  const payload = await topicres.json();
-  const topicValue = JSON.parse(JSON.stringify(payload));
-
-  // Get pairId
-  const pairres = await fetch(url + '/pair/both/' + mentorId + "/" + menteeId, {
-    method: 'GET'
-  });
-  const ppayload = await pairres.json();
-  const pairValue = JSON.parse(JSON.stringify(ppayload));
-
-  // Create appointment.
-  const post = fetch(url + '/create-appointment', {
-    method: 'POST',
-    body: JSON.stringify({
-      PairId: pairValue["recordset"][0].Id,
-      ScheduledAt: scheduledAt,
-      TopicId: topicValue["recordset"][0].Id
-    }),
-    headers: {
-      'Accept': 'application/json',
-      'Content-Type': 'application/json',
-    }
-  })
-  .catch((error) => {
-    console.error(error);
-  });
-
-=======
->>>>>>> push-notifs
 }
 
 export async function createMeeting(mentorId, menteeId, scheduledAt) {
@@ -415,11 +299,7 @@ export async function createSummary(id, curSummary, userID) {
 // Updates the privacy setting of a user, based on a given email.
 export async function updatePrivacy(email, privacyAccepted) {
 
-<<<<<<< HEAD
-    const postres = fetch (url + '/update-privacy', {
-=======
     const postres = fetch (url + '/update-privacy' + '/' + await getToken('updatePrivacy'), {
->>>>>>> push-notifs
       method: 'POST',
       body: JSON.stringify({
         Email: email,
@@ -441,13 +321,7 @@ export async function getContactInfoOf(userID) {
     const cInfores = await fetch(url + '/contact/' + userID + '/' + await getToken('getContactInfoOf'), {
       method: 'GET'
     });
-<<<<<<< HEAD
-
     const cInfoPayload = await cInfores.json();
-
-=======
-    const cInfoPayload = await cInfores.json();
->>>>>>> push-notifs
     const recordSet = JSON.parse(JSON.stringify(cInfoPayload["recordset"]));
     var cInfos = [];
     for (var i = 0; i < recordSet.length; i++) {
@@ -462,20 +336,6 @@ export async function getContactInfoOf(userID) {
 
 // Returns the current topic from the database.
 export async function getCurrentTopic() {
-<<<<<<< HEAD
-    const topicres = await fetch(url + '/current-topic', {
-      method: 'GET'
-    });
-
-    const topicPayload = await topicres.json();
-
-    var topic = JSON.parse(JSON.stringify(topicPayload['recordset'][0]));
-
-    topic.DueDateText = parseDateText(new Date(topic.DueDate));
-    topic.CreatedText = parseSimpleDateText(new Date(topic.Created));
-
-    return topic;
-=======
 
   var user = await getLocalUser();
   var userId = user.Id;
@@ -487,30 +347,11 @@ export async function getCurrentTopic() {
   topic.DueDateText = parseDateText(new Date(topic.DueDate));
   topic.CreatedText = parseSimpleDateText(new Date(topic.Created));
   return topic;
->>>>>>> push-notifs
 }
 
 // Returns a list of all topics from the database
 // NOTE: excludes the current topic?  The API could use a more descriptive rename if this is the case.
 export async function getAllTopics() {
-<<<<<<< HEAD
-    const topicsres = await fetch(url + '/all-topics', {
-      method: 'GET'
-    });
-
-    const topicsPayload = await topicsres.json();
-
-    const recordSet = topicsPayload["recordset"];
-    var topics = [];
-    for (var i = 0; i < recordSet.length; i++) {
-      var topic = JSON.parse(JSON.stringify(recordSet[i]));
-      topic.DueDateText = parseDateText(new Date(topic.DueDate));
-      topic.CreatedText = parseSimpleDateText(new Date(topic.Created));
-      topics.push(topic);
-    }
-
-    return topics;
-=======
 
   var user = await getLocalUser();
   var userId = user.Id;
@@ -579,7 +420,6 @@ export async function updateAppointmentStatus(meetingId, status, userId) {
   .catch((error) => {
     console.error(error);
   });
->>>>>>> push-notifs
 }
 
 // Is this redundant?  (I'm not entirely sure what it does yet...)
@@ -587,26 +427,10 @@ export async function updateAppointmentStatus(meetingId, status, userId) {
 // Either way, it's likely we can split it up into smaller methods.
 export async function checkMeetings() {
 
-<<<<<<< HEAD
-    console.log("Checking Upcoming Appointments For Home...")
-
-    var meetings = [];
-    var pairs = [];
-    var user = getCurrentUser();
-    // var user = JSON.parse(await AsyncStorage.getItem('User'));
-
-    const appres = await fetch(url + '/pair/' + user.id, {
-      method: 'GET'
-    });
-    const appPayload = await appres.json();
-
-    pairs = appPayload['recordset'];
-=======
     var meetings = [];
     var user = await getCurrentUser('checkMeetings');
     var pairs = await getPairsOf(user.Id);
 
->>>>>>> push-notifs
     // Get appointments for each pair the user is a part of.
     for (var i = 0; i < pairs.length; i++) {
       const pairId = pairs[i].Id;
@@ -625,55 +449,11 @@ export async function checkMeetings() {
           if (menteeId === userId && cur > date && meeting.Status === 'Scheduled') {
             await updateAppointmentStatus(meeting.Id, 'Done', userId);
             meeting.updated = true;
-<<<<<<< HEAD
-            const statusupdateres = await fetch(url + '/update-appointment-status', {
-              method: 'POST',
-              body: JSON.stringify({
-                Id: meeting.Id,
-                Status: 'Done'
-              }),
-              headers: {
-                'Accept': 'application/json',
-                'Content-Type': 'application/json',
-              }
-            }).catch((error) => {
-              console.error(error);
-            });
-
-=======
->>>>>>> push-notifs
             meeting.Status = 'Done';
             meeting.dateText = parseDateText(date);
 
             // Get mentor/mentee avatar, and mark whether this user is the mentor/mentee, and provide title/prompt text.
             meeting.titleText = "Mentor Meeting";
-<<<<<<< HEAD
-            const avres = await fetch(url + "/user/id/" + pairs[i].MentorId, {
-              method: 'GET'
-            });
-            const avPayload = await avres.json();
-            meeting.Avatar = avPayload['recordset'][0].Avatar;
-            meeting.MentorFirstName = avPayload['recordset'][0].FirstName;
-
-            // Get associated topic information and store it.
-            const topicres = await fetch(url + "/topic/" + meeting.TopicId, {
-              method: 'GET'
-            });
-            const topicPayload = await topicres.json();
-
-            meeting.topic = topicPayload['recordset'][0];
-            meeting.topic.dueDateText = parseDateText(new Date(meeting.topic["DueDate"]));
-          }
-
-          meetings.push(meeting);
-
-        }
-
-      }
-
-    }
-
-=======
             const mentor = await getPairedUser(pairs[i].MentorId, userId);
             meeting.Avatar = mentor.Avatar;
             meeting.MentorFirstName = mentor.FirstName;
@@ -686,7 +466,6 @@ export async function checkMeetings() {
         }
       }
     }
->>>>>>> push-notifs
     return meetings;
 }
 
@@ -694,29 +473,6 @@ export async function checkMeetings() {
 // (It takes up half of the API file, after all)
 export async function getMeetings(type) {
 
-<<<<<<< HEAD
-    console.log("Getting Appointments...")
-
-    var meetings = [];
-    var pairs = [];
-    var user = JSON.parse(await AsyncStorage.getItem('User'));
-
-    const appres = await fetch(url + '/pair/' + user.id, {
-      method: 'GET'
-    });
-    const appPayload = await appres.json();
-
-    pairs = appPayload['recordset'];
-
-    // Get appointments for each pair the user is a part of.
-    for (var i = 0; i < pairs.length; i++) {
-      const getres = await fetch(url + '/appointment/' + type + "/" + pairs[i].Id, {
-        method: 'GET'
-      });
-      const getPayload = await getres.json();
-
-      if (getPayload.rowsAffected !== 0) {
-=======
     var meetings = [];
     var user = await getCurrentUser('getAppointments');
     var pairs = await getPairsOf(user.Id);
@@ -726,7 +482,6 @@ export async function getMeetings(type) {
       const appointments = getAppointments(type, pairs[i].Id, user.Id, 'getMeetings');
       if (appointments.length !== 0) {
 
->>>>>>> push-notifs
         // Add each appointment to the meetings array with other necessary data.
         for (var j = 0; j < appointments.length; j++) {
           var meeting = JSON.parse(JSON.stringify(appointments[j]));
@@ -738,53 +493,8 @@ export async function getMeetings(type) {
             await updateAppointmentStatus(meeting.Id, 'Done', user.Id);
             meeting.Status = 'Done';
           }
-<<<<<<< HEAD
-
-          meeting.dateText = parseDateText(date);
-
-          meeting.buttonDisabled = false;
-          switch(meeting.Status) {
-            case 'Pending':
-            meeting.meetingStatus = {
-              textAlign:"right",
-              color: '#003F87'
-            }
-            break;
-            case 'Scheduled':
-            meeting.meetingStatus = {
-              textAlign:"right",
-              color: colors.green
-            }
-            break;
-            case 'Done':
-            meeting.meetingStatus = {
-              textAlign:"right",
-              color: colors.green
-            }
-            break;
-            case 'Completed':
-            meeting.meetingStatus = {
-              textAlign:"right",
-              color: colors.green
-            }
-            break;
-            case 'Cancelled':
-            meeting.meetingStatus = {
-              textAlign:"right",
-              color: colors.red
-            }
-            break;
-            case 'Missed':
-            meeting.meetingStatus = {
-              textAlign:"right",
-              color: colors.red
-            }
-            break;
-          }
-=======
           meeting.dateText = parseDateText(date);
           
->>>>>>> push-notifs
           // Get mentor/mentee avatar, and mark whether this user is the mentor/mentee, and provide title/date text.
           if (pairs[i].MentorId === user.Id) {
             meeting.isMentor = true;
@@ -801,25 +511,10 @@ export async function getMeetings(type) {
             meeting.summaryTitle = "Reflect on your conversation with " + mentor.FirstName + ":";
             assignmeetingStyle('mentor', meeting.Status, meeting);
           }
-<<<<<<< HEAD
-
-          meetings.push(meeting);
-
-        }
-
-      }
-
-    }
-
-    meetings.sort((a,b) => new Date(b.dateText) - new Date(a.dateText));
-
-    //console.log(type + " meetings: " + JSON.stringify(meetings));
-=======
           meetings.push(meeting);
         }
       }
     }
     meetings.sort((a,b) => new Date(b.dateText) - new Date(a.dateText));
->>>>>>> push-notifs
     return meetings;
 }

@@ -9,42 +9,24 @@
   },
   "dependencies": {
     "@react-native-community/datetimepicker": "3.0.4",
-<<<<<<< HEAD
     "@react-navigation/bottom-tabs": "^5.11.7",
     "@react-navigation/native": "^5.9.2",
     "@react-navigation/stack": "^5.14.2",
     "expo": "^40.0.1",
-<<<<<<< HEAD
     "expo-contacts": "~8.6.0",
-=======
->>>>>>> ec3bf39196d13f1d01b969945b93ab690bcabfb1
-    "expo-status-bar": "~1.0.3",
-=======
-    "@react-navigation/bottom-tabs": "^5.11.15",
-    "@react-navigation/native": "^5.9.8",
-    "@react-navigation/stack": "^5.14.9",
-    "expo": "^40.0.1",
     "expo-crypto": "~8.4.0",
     "expo-notifications": "^0.12.3",
     "expo-status-bar": "^1.0.4",
->>>>>>> push-notifs
     "react": "16.13.1",
     "react-dom": "16.13.1",
     "react-native": "https://github.com/expo/react-native/archive/sdk-40.0.1.tar.gz",
     "react-native-button": "^3.0.1",
     "react-native-gesture-handler": "~1.8.0",
     "react-native-linkedin": "^2.1.1",
-<<<<<<< HEAD
     "react-native-modal-datetime-picker": "^9.1.0",
     "react-native-reanimated": "^1.13.2",
     "react-native-screens": "~2.15.2",
     "react-native-web": "~0.13.12"
-=======
-    "react-native-modal-datetime-picker": "^9.2.3",
-    "react-native-reanimated": "^1.13.3",
-    "react-native-screens": "~2.15.2",
-    "react-native-web": "^0.17.1"
->>>>>>> push-notifs
   },
   "devDependencies": {
     "@babel/core": "~7.9.0"

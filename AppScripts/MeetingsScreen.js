@@ -6,13 +6,8 @@ import React from 'react';
 import {View, Text, Image, ScrollView, RefreshControl, Alert} from 'react-native';
 import {TitleBar} from './ScreenComponents.js';
 import {styles, colors} from './Styles.js';
-<<<<<<< HEAD
 import {getAppointments} from './API.js';
 import {url} from './globals';
-=======
-import {getMeetings, updateAppointmentStatus} from './API.js';
-import {url} from './globals.js';
->>>>>>> push-notifs
 import Button from 'react-native-button';
 
 // MEETING SCREENS

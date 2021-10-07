@@ -7,8 +7,6 @@ const apiKey = "364ec08dac33889d5ee1e15c86c0194bf91916938c5b64ea5055ac2fe6f281b5
 export const accountID = 1;
 export const accountType = 0;
 export const url = "https://mentorship.cs.wwu.edu"//"http://mshipapp2.loca.lt";
-<<<<<<< HEAD
-=======
 
 export function globalParams() {
     var globals = {
@@ -58,4 +56,3 @@ export async function getLocalUser(){
     console.log("GetLocalUser:", user);
     return user;
 }
->>>>>>> push-notifs

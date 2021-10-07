@@ -24,8 +24,6 @@ export const colors = {
     yellow: '#f1c40f'
 };
 
-<<<<<<< HEAD
-=======
 export function assignMeetingStyle(type, status, meeting)
 {
   meeting.buttonDisabled = false;
@@ -146,7 +144,6 @@ export function assignMeetingStyle(type, status, meeting)
   }
 }
 
->>>>>>> push-notifs
 export const styles = StyleSheet.create({
     container: {
       flex: 1,

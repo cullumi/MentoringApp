@@ -138,34 +138,17 @@ export default class LoginScreen extends React.Component {
         // Getting and ensuring user exists.
         this.setState({ refreshing: false });
         let curUser = await getCurrentUser("Login");
-<<<<<<< HEAD
 
         // check if this user needs to be added to DB.
         if (checkPayload.rowsAffected == 0) {
   
           postNewUser(email, first, last, pic);
           await AsyncStorage.setItem('User', JSON.stringify(curUser));
-=======
-        // console.log("User Logged In: ", curUser);
-        // console.log(curUser);
-
-        // Setting Local User and Registering for Push Notifications
-        // console.log("Registering for Push Notifications...");
-        // registerForPushNotifications();
-
-        console.log("Navigating to the appropriate screen...");
-        // check if this user needs to be added to DB.
-        if (authPayload.rowsAffected == 0) {
-          // postNewUser(email, first, last, pic);
->>>>>>> push-notifs
           this.props.navigation.navigate('Privacy');
         } else {
-<<<<<<< HEAD
   
           await AsyncStorage.setItem('User', JSON.stringify(curUser));
   
-=======
->>>>>>> push-notifs
           this.props.navigation.navigate('Main');
         }
       } else {

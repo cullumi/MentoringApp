@@ -6,15 +6,9 @@ import React from 'react';
 import {Alert, AsyncStorage, View, Text, ScrollView, TouchableOpacity, TextInput, Animated} from 'react-native';
 import IonIcon from 'react-native-vector-icons/Ionicons';
 import {mainTitleWidth, styles, colors} from './Styles.js';
-<<<<<<< HEAD
-import {retTopic} from './API.js';
-import Button from 'react-native-button';
-import {cur, accountID, accountType, url} from './globals.js';
-=======
 import {getTopic} from './API.js';
 import Button from 'react-native-button';
 import {accountID, accountType, url} from './globals.js';
->>>>>>> push-notifs
 
 export default class WriteSummaryScreen extends React.Component {
     constructor(props) {

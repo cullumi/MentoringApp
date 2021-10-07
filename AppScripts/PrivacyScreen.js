@@ -3,9 +3,10 @@
 
 
 import React from 'react';
-import {View, Text, Button, Image, ScrollView, SafeAreaView} from 'react-native';
+import {View, Text, Image, ScrollView, SafeAreaView} from 'react-native';
+import Button from 'react-native-button';
 import {styles, colors} from './Styles.js';
-import {updatePrivacy} from './API.js';
+import {getCurrentUser, updatePrivacy} from './API.js';
 
 // PrivacyScreen class
 export default class PrivacyScreen extends React.Component {
@@ -17,12 +18,12 @@ export default class PrivacyScreen extends React.Component {
     }
   
     acceptAgreement = () => {
-      updatePrivacy(curUser.email, 1);
+      updatePrivacy(getCurrentUser().email, 1);
       this.props.navigation.navigate("Main");
     }
   
     denyAgreement = () => {
-      updatePrivacy(curUser.email, 0);
+      updatePrivacy(getCurrentUser().email, 0);
       this.props.navigation.navigate("Main");
     }
   
@@ -101,16 +102,18 @@ export default class PrivacyScreen extends React.Component {
           <View style={{height:25}} />
           <View style={{flexDirection:"row", alignItems:"center", justifyContent:"center"}}>
             <Button
-              title="Disagree"
               containerStyle={{padding:12, height:45, width:"45%", overflow:'hidden', borderRadius:4, backgroundColor: '#95a5a6'}}
               style={{fontSize: 16, color: 'white'}}
-              onPress={() => this.denyAgreement()} />
+              onPress={() => this.denyAgreement()}>
+                Disagree
+            </Button>
             <View style={{width:10}} />
             <Button
-              title="Agree"
               containerStyle={{padding:12, height:45, width:"45%", overflow:'hidden', borderRadius:4, backgroundColor: '#003F87'}}
               style={{fontSize: 16, color: 'white'}}
-              onPress={() => this.acceptAgreement()} />
+              onPress={() => this.acceptAgreement()} >
+                Agree
+            </Button>
           </View>
           <View style={{height:25}} />
         </ScrollView>

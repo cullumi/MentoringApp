@@ -9,14 +9,15 @@ import {TitleBar} from './ScreenComponents.js';
 import {styles, colors} from './Styles.js';
 import {getAllTopics, getCurrentTopic} from './API.js';
 
+
 export default function TopicsScreen() {
 
-  const [shouldUpdate, setShouldUpdate] = useState(true)
-  const [topics, setTopics] = useState([])
-  const [currentTopic, setCurrentTopic] = useState(null)
-  const [refreshControl, setRefreshControl] = useState(true)
+  const [shouldUpdate, setShouldUpdate] = useState(true);
+  const [topics, setTopics] = useState([]);
+  const [currentTopic, setCurrentTopic] = useState(null);
+  const [refreshControl, setRefreshControl] = useState(true);
 
-  const getData = () => {
+  const getData = async () => {
     var newTopics = [];
     var newCurrentTopic = null;
     var doSetAsyncStorage = false;
@@ -50,10 +51,10 @@ export default function TopicsScreen() {
       }
     }
 
-    setShouldUpdate(false)
-    setTopics(newTopics)
-    setCurrentTopic(newCurrentTopic)
-    setRefreshControl(false)
+    setShouldUpdate(false);
+    setTopics(newTopics);
+    setCurrentTopic(newCurrentTopic);
+    setRefreshControl(false);
   }
 
   const topicItem = (topic, i=0) => {
@@ -108,6 +109,7 @@ export default function TopicsScreen() {
     </View>
   );
 }
+
 
 /*
 // Topic Screen -- for displaying a list of all current and past monthly topics.

@@ -10,6 +10,249 @@ import {getTopic} from './API.js';
 import Button from 'react-native-button';
 import {accountID, accountType, url} from './globals.js';
 
+export default function TopicsScreen() {
+  const [storageId, setStorageId] = useState('')
+  const [normalId, setNormalId] = useState(-1)
+  const [topicId, setTopicId] = useState('')
+  const [type, setType] = useState('')
+  const [curSummary, setCurSummary] = useState('')
+  const [summaryTitle, setSummaryTitle] = useState('')
+  const [fade, setFade] = useState(new Animated.Value(0))
+  const [topic, setTopic] = useState([])
+
+  const handleBack = () => {
+    this.props.route.params.onGoBack();
+    this.props.navigation.goBack();
+  }
+
+  const componentDidMount = () => {
+    const id = this.props.route.params.id;
+    const topicId = this.props.route.params.topicId;
+    const type = this.props.route.params.type;
+    const summaryTitle = this.props.route.params.summaryTitle;
+    const storageId = 'summary_' + id;
+    setStorageId(storageId);
+    setNormalId(id);
+    setTopicId(topicId);
+    setType(type);
+    setSummaryTitle(summaryTitle);
+    AsyncStorage.getItem(storageId).then((value) => this.setSkipValue(value, id, type));
+  }
+
+  const getData = () => {
+    getTopic(this.state.topicId)
+    .then((data) => { setTopic(data) });
+  }
+
+  const setSkipValue = async (value, id, type) => {
+    if (value !== null) {
+      setCurSummary(value)
+    } else {
+      if (type === 'edit') {
+        // Move to API.js
+        const summaryres = await fetch(url + '/summary/appointment/' + id, {
+          method: 'GET'
+        });
+        const summaryPayload = await summaryres.json();
+        var summary = summaryPayload['recordset'][0].SummaryText;
+        setCurSummary(summary)
+      } else {
+        setCurSummary('')
+      }
+    }
+  }
+
+  const saveSummary = async (text) => {
+    setCurSummary(text)
+    await AsyncStorage.setItem(this.state.storageId, text);
+  }
+
+  const handleSubmit = async () => {
+    const user = JSON.parse(await AsyncStorage.getItem('User'));
+    // Move to API.js
+    if (this.state.type === 'submit') {
+      // post insert
+      const postres = fetch (url + '/create-summary', {
+        method: 'POST',
+        body: JSON.stringify({
+          AppointmentId: this.state.normalId,
+          SummaryText: this.state.curSummary,
+          UserId: user.id
+        }),
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        }
+      })
+      .catch((error) => {
+        console.error(error);
+      });
+      const statusupdateres = await fetch(url + '/update-appointment-status', {
+        method: 'POST',
+        body: JSON.stringify({
+          Id: this.state.normalId,
+          Status: 'Completed'
+        }),
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        }
+      })
+      .catch((error) => {
+        console.error(error);
+      });
+    } else {
+      console.log(this.state.normalId + " " + this.state.curSummary + " " + user.id);
+      // post update
+      const postres = fetch (url + '/update-summary', {
+        method: 'POST',
+        body: JSON.stringify({
+          AppointmentId: this.state.normalId,
+          SummaryText: this.state.curSummary,
+          UserId: user.id
+        }),
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        }
+      })
+      .catch((error) => {
+        console.error(error);
+      });
+    }
+    this.fadeOut();
+  }
+
+  const fadeOut = () => {
+    setFade(new Animated.Value(1));
+    setType('edit');
+  }
+
+  const componentDidUpdate = () => {
+    if (this.state.fade.value == 1) {
+      Animated.timing(
+        this.state.fade,
+        {
+          toValue: 0,
+          duration: 2000,
+          useNativeDriver: true
+        }
+      ).start();
+    }
+  }
+
+  const markMissedMeeting = async (id) => {
+    // Move to API.js
+    // Mark Appointment as 'Missed'
+    const statusupdateres = await fetch(url + '/update-appointment-status', {
+      method: 'POST',
+      body: JSON.stringify({
+        Id: id,
+        Status: 'Missed'
+      }),
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+      }
+    })
+    .catch((error) => {
+      console.error(error);
+    });
+    // Delete any summary the user may have submitted accidentally...
+    const user = JSON.parse(await AsyncStorage.getItem('User'));
+    const postres = fetch (url + '/delete-summary', {
+      method: 'POST',
+      body: JSON.stringify({
+        AppointmentId: id,
+        UserId: user.id
+      }),
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+      }
+    })
+    .catch((error) => {
+      console.error(error);
+    });
+    this.handleBack();
+  }
+
+  const markMissedAlert = (id) => {
+    Alert.alert(
+      "Mark as Missed?",
+      "If you or your mentor were unable to attend this meeting, mark it as missed.",
+      [
+        {
+          text: "Nevermind",
+          onPress: () => console.log("Cancel Pressed"),
+          style: "cancel"
+        },
+        { text: "Confirm", onPress: () => this.markMissedMeeting(id) }
+      ],
+      { cancelable: false }
+    );
+  }
+
+  useEffect(() => {
+    getData();
+  }, [])
+
+  return ( 
+    <View style={{flex:1}}>
+      <View>
+        <View style={{height:25, backgroundColor: colors.vikingBlue}}></View>
+        <View style={{height:30, backgroundColor: colors.white}}></View>
+        <View style={{flexDirection:'row', backgroundColor: colors.white, alignItems:'center'}}>
+          <TouchableOpacity style={{marginLeft:15,width:30}} onPress={() => this.handleBack()} activeOpacity={0.5}>
+            <IonIcon type='Ionicons' name='ios-arrow-back' size={30} color={colors.vikingBlue} />
+          </TouchableOpacity>
+          <View style={{width:mainTitleWidth,textAlign:'center',alignItems:'center'}}>
+            <Text style={{fontSize:18}}>Edit Summary</Text>
+          </View>
+          <TouchableOpacity onPress={() => this.markMissedAlert(this.state.normalId)} activeOpacity={0.5}>
+              <IonIcon name="ios-trash" size={30} color={colors.red} />
+          </TouchableOpacity>
+        </View>
+        <View style={{height:30, backgroundColor: colors.white}}></View>
+      </View>
+      <ScrollView style={styles.scrollView}>
+        <Text style={styles.reminderText}>Review this meeting's topic then scroll down:</Text>
+        <View style={styles.topicContainer}>
+          <View style={styles.topicHeader}>
+            <Text style={styles.topicTitleText}>{this.state.topic.Title}</Text>
+            <Text style={styles.topicHeaderDateText}>{this.state.topic.createdText}</Text>
+          </View>
+          <View style={styles.topicInfo}>
+            <Text style={styles.topicDateText}>Due: {this.state.topic.dueDateText}</Text>
+            <Text>{this.state.topic.Description}</Text>
+          </View>
+        </View>
+        <Text style={styles.summaryTitle}>{this.state.summaryTitle}</Text>
+        <View style={styles.summaryInputBox}>
+          <TextInput
+            multiline
+            numberOfLines={6}
+            style={styles.summaryInput}
+            onChangeText={text => this.saveSummary(text)}
+            value={this.state.curSummary} />
+        </View>
+        <Button
+          containerStyle={styles.summaryButton}
+          style={styles.summaryButtonText}
+          onPress={() => this.handleSubmit()}>
+          Save
+        </Button>
+        <Animated.View style={{opacity: this.state.fade}}>
+          <View style={styles.savedNotification}>
+            <Text style={{textAlign: 'center'}}>Summary saved!</Text>
+          </View>
+        </Animated.View>
+      </ScrollView>
+    </View>
+  );
+}
+
+/*
 export default class WriteSummaryScreen extends React.Component {
     constructor(props) {
       super(props)
@@ -247,3 +490,4 @@ export default class WriteSummaryScreen extends React.Component {
       </View>
     }
 }
+*/

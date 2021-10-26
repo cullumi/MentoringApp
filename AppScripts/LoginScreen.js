@@ -166,6 +166,7 @@ export default function LoginScreen() {
 // A LoginScreen class-- used to help with some state setting problems-- "refreshing" is now within this class' scope.
 // Note: the Stack Navigator automatically sets the "navigation" prop, which can be accessed via this.props.navigation.
 // The original issue I stumbled across was an attempt to pass a "Type" (a clear remnant of the TypeScript source).
+/*
 export default class LoginScreen extends React.Component {
     constructor(props) {
       super(props)
@@ -301,3 +302,4 @@ export default class LoginScreen extends React.Component {
       }
     }
 }
+*/

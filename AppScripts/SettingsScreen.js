@@ -9,7 +9,7 @@ import Button from 'react-native-button';
 import {BackTitleBarHelp} from './ScreenComponents.js';
 import {styles, colors} from './Styles.js';
 
-export function SettingsScreen() {
+export default function SettingsScreen() {
   const [refreshing, setRefreshing] = useState(false)
   const [user, setUser] = useState([])
 

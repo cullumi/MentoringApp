@@ -138,9 +138,9 @@ export default function LoginScreen() {
     );
   };
 
-  const useEffect = () => {
+  useEffect(() => {
     renderButton();
-  }
+  }, []);
 
   return (
     <View style={styles.container}>

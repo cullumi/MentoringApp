@@ -28,9 +28,9 @@ export default function ProposeMeetingScreen() {
     this.props.navigation.navigate('Meetings');
   }
 
-  const useEffect = () => {
+  useEffect(() => {
     console.log("Rendering Propose Meeting Screen...");
-  }
+  }, []);
 
   return (
     <View style={styles.contactContainer}>

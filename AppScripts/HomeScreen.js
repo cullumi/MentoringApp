@@ -195,9 +195,9 @@ export default function HomeScreen() {
     );
   };
 
-  const useEffect = () => {
+  useEffect( () => {
     var meeting = this.state.meeting;
-  }
+  }, []);
 
   return (
     <View style={{flex: 1, flexDirection: 'column'}}>

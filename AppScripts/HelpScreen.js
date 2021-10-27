@@ -3,7 +3,7 @@
 
 
 
-import React from 'react';
+import React, {useState} from 'react';
 import {View, Text, ScrollView, TouchableOpacity} from 'react-native';
 import IonIcon from 'react-native-vector-icons/Ionicons';
 import {styles, colors, mainTitleWidth} from './Styles.js';
@@ -86,6 +86,7 @@ export default function HelpScreen() {
         </View>
       </ScrollView>
     </View>
+  );
 }
 
 // Now has an independent titlebar housed within render, since it only has a single back button.

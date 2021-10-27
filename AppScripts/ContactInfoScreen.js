@@ -2,7 +2,7 @@
 
 
 
-import React from 'react'
+import React, {useState, useEffect} from 'react'
 import * as Contacts from 'expo-contacts'
 import {Alert, View, TouchableOpacity, Text, Image, AsyncStorage} from 'react-native'
 import Button from 'react-native-button'
@@ -202,6 +202,7 @@ export default function ContactInfoScreen() {
 
   useEffect(() => {
     console.log("Rendering Contact Info Screen...");
+    componentDidMount();
   }, []);
   
   return (

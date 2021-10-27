@@ -3,7 +3,7 @@
 
 
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import {View, Text, ScrollView, RefreshControl, AsyncStorage} from 'react-native';
 import {TitleBar} from './ScreenComponents.js';
 import {styles, colors} from './Styles.js';
@@ -72,6 +72,7 @@ export default function TopicsScreen() {
     );
   }
 
+  // May need to be modified
   const onRefresh = () => {
     setRefreshControl(true);
     getData();

@@ -2,7 +2,7 @@
 
 
 
-import React from 'react';
+import React, {useState, useEffect} from 'react';
 import {View, Text, Image, AsyncStorage} from 'react-native';
 import Button from 'react-native-button';
 import {BackTitleBar, SettingsModal} from './ScreenComponents.js';

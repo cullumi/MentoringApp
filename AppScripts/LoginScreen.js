@@ -2,7 +2,7 @@
 
 
 
-import React from 'react';
+import React, {useState} from 'react';
 import {AsyncStorage, View, Image} from 'react-native';
 import Button from 'react-native-button';
 import LinkedInModal from 'react-native-linkedin';
@@ -19,7 +19,8 @@ const linkedInClientSecret = "vXprrY81P3JisVKx" //"O2U1ANijJnQG2E3s"
 const linkedInRedirectUri = "https://cs.wwu.edu/"
 
 export default function LoginScreen() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);  // Maybe shouldn't use state... look into to proper conversion?
+  // isLoggedIn doesn't actually get used it seems?
+  //const [isLoggedIn, setIsLoggedIn] = useState(false);  // Maybe shouldn't use state... look into to proper conversion?
   const [refreshing, setRefreshing] = useState(false);
 
   const getLinkedInProfileInfo = async (access_token) => {
@@ -137,10 +138,6 @@ export default function LoginScreen() {
       </Button>
     );
   };
-
-  useEffect(() => {
-    renderButton();
-  }, []);
 
   return (
     <View style={styles.container}>

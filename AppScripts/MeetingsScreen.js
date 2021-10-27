@@ -2,7 +2,7 @@
 
 
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {View, Text, Image, ScrollView, RefreshControl, Alert} from 'react-native';
 import {TitleBar} from './ScreenComponents.js';
 import {styles, colors} from './Styles.js';
@@ -46,6 +46,7 @@ export function MeetingsScreen() {
     });
   }
 
+  // Might need to modify this
   const onRefresh = () => {
     setRefreshControl(true)
     this.getData();
@@ -192,6 +193,14 @@ export function MeetingsScreen() {
     }
 
   }
+
+  useEffect(() => {
+    componentDidMount();
+  }, []);
+
+  useEffect(() => {
+    componentDidUpdate();
+  });
 
   return (
     <View style={{flex:1}} key={this.state.refreshing}>

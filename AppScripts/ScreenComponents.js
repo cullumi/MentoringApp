@@ -2,7 +2,7 @@
 
 
 
-import React from 'react';
+import React, {useEffect} from 'react';
 import {View, TouchableOpacity, Text} from 'react-native';
 import IonIcon from 'react-native-vector-icons/Ionicons';
 import {colors, mainTitleWidth} from './Styles.js';

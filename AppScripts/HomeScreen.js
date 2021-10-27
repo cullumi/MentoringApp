@@ -1,7 +1,7 @@
 
 
 
-import React from 'react';
+import React, {useState, useEffect} from 'react';
 import {AsyncStorage, View, Text, Button, ScrollView, RefreshControl, TouchableOpacity, Image, Modal, TextInput} from 'react-native';
 import IonIcon from 'react-native-vector-icons/Ionicons';
 import {TitleBar} from './ScreenComponents.js';
@@ -27,20 +27,6 @@ export default function HomeScreen() {
           "dueDateText":"",
           "Description":""
   }});
-
-  const componentDidMount = async () => {
-    // useNotification();
-    if (this.state.shouldUpdate) {
-      this.setPairs();
-      var meetings = await checkMeetings();
-      if (meetings && meetings.length > 0) {
-        for (var meetingC = 0; meetingC < meetings.length; meetingC++) {
-          if (meetings[meetingC].updated == true) {
-            setMeeting(meetings[meetingC]);
-            setMeetingPromptModalVisible(true);
-            meetingC = meetings.length;
-    }}}}
-  };
 
   const setPairs = async () => {
     var newMentors = [];
@@ -99,6 +85,7 @@ export default function HomeScreen() {
     );
   };
 
+  // May need to be modified
   const onRefresh = () => {
     setRefreshControl(true);
     this.setPairs();
@@ -195,8 +182,23 @@ export default function HomeScreen() {
     );
   };
 
+  const componentDidMount = async () => {
+    // useNotification();
+    if (this.state.shouldUpdate) {
+      this.setPairs();
+      var meetings = await checkMeetings();
+      if (meetings && meetings.length > 0) {
+        for (var meetingC = 0; meetingC < meetings.length; meetingC++) {
+          if (meetings[meetingC].updated == true) {
+            setMeeting(meetings[meetingC]);
+            setMeetingPromptModalVisible(true);
+            meetingC = meetings.length;
+    }}}}
+  };
+
   useEffect( () => {
     var meeting = this.state.meeting;
+    componentDidMount();
   }, []);
 
   return (

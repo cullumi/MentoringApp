@@ -4,6 +4,7 @@
 
 import React, {useState} from 'react';
 import {View, Text, Image, ScrollView, SafeAreaView} from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import Button from 'react-native-button';
 import {styles, colors} from './Styles.js';
 import {getCurrentUser, updatePrivacy} from './API.js';
@@ -11,15 +12,16 @@ import {getCurrentUser, updatePrivacy} from './API.js';
 export default function PrivacyScreen() {
 
   const [refreshing, setRefreshing] = useState(false)
+  const navigation = useNavigation();
 
   const acceptAgreement = () => {
     updatePrivacy(getCurrentUser().email, 1);
-    this.props.navigation.navigate("Main");
+    navigation.navigate("Main");
   }
 
   const denyAgreement = () => {
     updatePrivacy(getCurrentUser().email, 0);
-    this.props.navigation.navigate("Main");
+    navigation.navigate("Main");
   }
 
   return (
@@ -99,14 +101,14 @@ export default function PrivacyScreen() {
           <Button
             containerStyle={{padding:12, height:45, width:"45%", overflow:'hidden', borderRadius:4, backgroundColor: '#95a5a6'}}
             style={{fontSize: 16, color: 'white'}}
-            onPress={() => this.denyAgreement()}>
+            onPress={() => denyAgreement()}>
               Disagree
           </Button>
           <View style={{width:10}} />
           <Button
             containerStyle={{padding:12, height:45, width:"45%", overflow:'hidden', borderRadius:4, backgroundColor: '#003F87'}}
             style={{fontSize: 16, color: 'white'}}
-            onPress={() => this.acceptAgreement()} >
+            onPress={() => acceptAgreement()} >
               Agree
           </Button>
         </View>

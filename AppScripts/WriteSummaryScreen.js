@@ -4,6 +4,7 @@
 
 import React, {useState, useEffect} from 'react';
 import {Alert, AsyncStorage, View, Text, ScrollView, TouchableOpacity, TextInput, Animated} from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import IonIcon from 'react-native-vector-icons/Ionicons';
 import {mainTitleWidth, styles, colors} from './Styles.js';
 import {getTopic} from './API.js';
@@ -19,6 +20,7 @@ export default function TopicsScreen() {
   const [summaryTitle, setSummaryTitle] = useState('')
   const [fade, setFade] = useState(new Animated.Value(0))
   const [topic, setTopic] = useState([])
+  const navigation = useNavigation();
 
   const componentDidMount = () => {
     const id = this.props.route.params.id;
@@ -31,13 +33,13 @@ export default function TopicsScreen() {
     setTopicId(topicId);
     setType(type);
     setSummaryTitle(summaryTitle);
-    AsyncStorage.getItem(storageId).then((value) => this.setSkipValue(value, id, type));
+    AsyncStorage.getItem(storageId).then((value) => setSkipValue(value, id, type));
   }
 
   const componentDidUpdate = () => {
-    if (this.state.fade.value == 1) {
+    if (fade.value == 1) {
       Animated.timing(
-        this.state.fade,
+        fade,
         {
           toValue: 0,
           duration: 2000,
@@ -48,13 +50,13 @@ export default function TopicsScreen() {
   }
 
   const getData = () => {
-    getTopic(this.state.topicId)
+    getTopic(topicId)
     .then((data) => { setTopic(data) });
   }
 
   const handleBack = () => {
     this.props.route.params.onGoBack();
-    this.props.navigation.goBack();
+    navigation.goBack();
   }
 
   const setSkipValue = async (value, id, type) => {
@@ -77,19 +79,19 @@ export default function TopicsScreen() {
 
   const saveSummary = async (text) => {
     setCurSummary(text)
-    await AsyncStorage.setItem(this.state.storageId, text);
+    await AsyncStorage.setItem(storageId, text);
   }
 
   const handleSubmit = async () => {
     const user = JSON.parse(await AsyncStorage.getItem('User'));
     // Move to API.js
-    if (this.state.type === 'submit') {
+    if (type === 'submit') {
       // post insert
       const postres = fetch (url + '/create-summary', {
         method: 'POST',
         body: JSON.stringify({
-          AppointmentId: this.state.normalId,
-          SummaryText: this.state.curSummary,
+          AppointmentId: normalId,
+          SummaryText: curSummary,
           UserId: user.id
         }),
         headers: {
@@ -103,7 +105,7 @@ export default function TopicsScreen() {
       const statusupdateres = await fetch(url + '/update-appointment-status', {
         method: 'POST',
         body: JSON.stringify({
-          Id: this.state.normalId,
+          Id: normalId,
           Status: 'Completed'
         }),
         headers: {
@@ -115,13 +117,13 @@ export default function TopicsScreen() {
         console.error(error);
       });
     } else {
-      console.log(this.state.normalId + " " + this.state.curSummary + " " + user.id);
+      console.log(normalId + " " + curSummary + " " + user.id);
       // post update
       const postres = fetch (url + '/update-summary', {
         method: 'POST',
         body: JSON.stringify({
-          AppointmentId: this.state.normalId,
-          SummaryText: this.state.curSummary,
+          AppointmentId: normalId,
+          SummaryText: curSummary,
           UserId: user.id
         }),
         headers: {
@@ -133,7 +135,7 @@ export default function TopicsScreen() {
         console.error(error);
       });
     }
-    this.fadeOut();
+    fadeOut();
   }
 
   const fadeOut = () => {
@@ -174,7 +176,7 @@ export default function TopicsScreen() {
     .catch((error) => {
       console.error(error);
     });
-    this.handleBack();
+    handleBack();
   }
 
   const markMissedAlert = (id) => {
@@ -187,7 +189,7 @@ export default function TopicsScreen() {
           onPress: () => console.log("Cancel Pressed"),
           style: "cancel"
         },
-        { text: "Confirm", onPress: () => this.markMissedMeeting(id) }
+        { text: "Confirm", onPress: () => markMissedMeeting(id) }
       ],
       { cancelable: false }
     );
@@ -208,13 +210,13 @@ export default function TopicsScreen() {
         <View style={{height:25, backgroundColor: colors.vikingBlue}}></View>
         <View style={{height:30, backgroundColor: colors.white}}></View>
         <View style={{flexDirection:'row', backgroundColor: colors.white, alignItems:'center'}}>
-          <TouchableOpacity style={{marginLeft:15,width:30}} onPress={() => this.handleBack()} activeOpacity={0.5}>
+          <TouchableOpacity style={{marginLeft:15,width:30}} onPress={() => handleBack()} activeOpacity={0.5}>
             <IonIcon type='Ionicons' name='ios-arrow-back' size={30} color={colors.vikingBlue} />
           </TouchableOpacity>
           <View style={{width:mainTitleWidth,textAlign:'center',alignItems:'center'}}>
             <Text style={{fontSize:18}}>Edit Summary</Text>
           </View>
-          <TouchableOpacity onPress={() => this.markMissedAlert(this.state.normalId)} activeOpacity={0.5}>
+          <TouchableOpacity onPress={() => markMissedAlert(normalId)} activeOpacity={0.5}>
               <IonIcon name="ios-trash" size={30} color={colors.red} />
           </TouchableOpacity>
         </View>
@@ -224,30 +226,30 @@ export default function TopicsScreen() {
         <Text style={styles.reminderText}>Review this meeting's topic then scroll down:</Text>
         <View style={styles.topicContainer}>
           <View style={styles.topicHeader}>
-            <Text style={styles.topicTitleText}>{this.state.topic.Title}</Text>
-            <Text style={styles.topicHeaderDateText}>{this.state.topic.createdText}</Text>
+            <Text style={styles.topicTitleText}>{topic.Title}</Text>
+            <Text style={styles.topicHeaderDateText}>{topic.createdText}</Text>
           </View>
           <View style={styles.topicInfo}>
-            <Text style={styles.topicDateText}>Due: {this.state.topic.dueDateText}</Text>
-            <Text>{this.state.topic.Description}</Text>
+            <Text style={styles.topicDateText}>Due: {topic.dueDateText}</Text>
+            <Text>{topic.Description}</Text>
           </View>
         </View>
-        <Text style={styles.summaryTitle}>{this.state.summaryTitle}</Text>
+        <Text style={styles.summaryTitle}>{summaryTitle}</Text>
         <View style={styles.summaryInputBox}>
           <TextInput
             multiline
             numberOfLines={6}
             style={styles.summaryInput}
-            onChangeText={text => this.saveSummary(text)}
-            value={this.state.curSummary} />
+            onChangeText={text => saveSummary(text)}
+            value={curSummary} />
         </View>
         <Button
           containerStyle={styles.summaryButton}
           style={styles.summaryButtonText}
-          onPress={() => this.handleSubmit()}>
+          onPress={() => handleSubmit()}>
           Save
         </Button>
-        <Animated.View style={{opacity: this.state.fade}}>
+        <Animated.View style={{opacity: fade}}>
           <View style={styles.savedNotification}>
             <Text style={{textAlign: 'center'}}>Summary saved!</Text>
           </View>

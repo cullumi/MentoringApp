@@ -3,6 +3,7 @@
 
 import React, {useState, useEffect} from 'react';
 import {View, Text, AsyncStorage} from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 // import {getCurrentUser, getUserPayloadByEmail} from './API.js';
 // import {cur} from './globals.js';
 
@@ -10,10 +11,11 @@ import {View, Text, AsyncStorage} from 'react-native';
 
 export default function SplashScreen() {
   const [refreshing, setRefreshing] = useState(false)
-  const [value, setValue] = useState(null)
+  const [value, setValue] = useState(false)
+  const navigation = useNavigation();
 
   const componentDidMount = () => {
-    AsyncStorage.getItem('Email').then((value) => this.setSkipValue(value));
+    AsyncStorage.getItem('Email').then((value) => setSkipValue(value));
   }
   
   const setSkipValue = async (newValue) => {
@@ -31,14 +33,15 @@ export default function SplashScreen() {
     }
   
     useEffect(() => {
-      if (this.state.value != false) {
-        if (this.state.value !== null) {
-          this.props.navigation.navigate('Main');
+      componentDidMount();
+      console.log(value);
+      if (value !== null) {
+        if (value != false) {
+          navigation.navigate('Main');
         } else {
-          this.props.navigation.navigate('Login');
+          navigation.navigate('Login');
         }
       }
-      componentDidMount();
     }, [])
 
     return (
@@ -77,8 +80,8 @@ export default class SplashScreen extends React.Component {
   
     render () {
 
-      if (this.state.value != false) {
-        if (this.state.value !== null) {
+      if (this.value != false) {
+        if (this.value !== null) {
           this.props.navigation.navigate('Main');
         } else {
           this.props.navigation.navigate('Login');

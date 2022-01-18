@@ -4,6 +4,7 @@
 
 import React, { useState, useEffect } from 'react';
 import {View, Text, Image, ScrollView, RefreshControl, Alert} from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import {TitleBar} from './ScreenComponents.js';
 import {styles, colors} from './Styles.js';
 import {getAppointments} from './API.js';
@@ -17,13 +18,14 @@ export function MeetingsScreen() {
   const [refreshing, setRefreshing] = useState(false)
   const [keyUpdate, setKeyUpdate] = useState(true)
   const [refreshControl, setRefreshControl] = useState(true)
+  const navigation = useNavigation();
 
   const componentDidMount = () => {
-    this.getData();
+    getData();
   }
 
   const componentDidUpdate = () => {
-    if (this.state.refreshing == true) {
+    if (refreshing == true) {
       getMeetings('upcoming')
       .then((data) => {
         setUpcomingMeetings(data);
@@ -49,7 +51,7 @@ export function MeetingsScreen() {
   // Might need to modify this
   const onRefresh = () => {
     setRefreshControl(true)
-    this.getData();
+    getData();
   }
 
   const acceptMeeting = async (id) => {
@@ -68,7 +70,7 @@ export function MeetingsScreen() {
           onPress: () => console.log("Cancel Pressed"),
           style: "cancel"
         },
-        { text: "Confirm", onPress: () => this.acceptMeeting(id) }
+        { text: "Confirm", onPress: () => acceptMeeting(id) }
       ],
       { cancelable: false }
     );
@@ -89,7 +91,7 @@ export function MeetingsScreen() {
           onPress: () => console.log("Cancel Pressed"),
           style: "cancel"
         },
-        { text: "Confirm", onPress: () => this.cancelMeeting(id) }
+        { text: "Confirm", onPress: () => cancelMeeting(id) }
       ],
       { cancelable: false }
     );
@@ -98,30 +100,30 @@ export function MeetingsScreen() {
   const handlePress = (type, id, topicId, str) => {
     switch(type) {
       case 'accept':
-      this.acceptMeetingAlert(id);
+      acceptMeetingAlert(id);
       setRefreshing(true);
       break;
       case 'cancel':
-      this.cancelMeetingAlert(id);
+      cancelMeetingAlert(id);
       setRefreshing(true);
       break;
       case 'submitSummary':
-      this.props.navigation.navigate('WriteSummary', { id: id, topicId: topicId, type: 'submit', summaryTitle: str, onGoBack: () => this.getData() });
+      navigation.navigate('WriteSummary', { id: id, topicId: topicId, type: 'submit', summaryTitle: str, onGoBack: () => getData() });
       break;
       case 'editSummary':
-      this.props.navigation.navigate('WriteSummary', { id: id, topicId: topicId, type: 'edit', summaryTitle: str, onGoBack: () => this.getData() });
+      navigation.navigate('WriteSummary', { id: id, topicId: topicId, type: 'edit', summaryTitle: str, onGoBack: () => getData() });
       break;
     }
   }
 
   const printPastMeetings = () => {
-    console.log("Past Meetings: " + JSON.stringify(this.state.pastMeetings));
-    if (this.state.pastMeetings[0] !== undefined) {
+    console.log("Past Meetings: " + JSON.stringify(pastMeetings));
+    if (pastMeetings[0] !== undefined) {
       return (<View>
         <View style={styles.meetingsGroup}>
           <Text style={styles.meetingsTitle}>Past</Text>
         </View>
-        { this.state.pastMeetings.map((m, i) => {
+        { pastMeetings.map((m, i) => {
           return (<View key={i} style={styles.meeting}>
             <View style={styles.meetingInfo}>
               <View style={styles.meetingMainRow}>
@@ -138,7 +140,7 @@ export function MeetingsScreen() {
             <Button
               containerStyle={m.meetingButton}
               style={m.meetingButtonText}
-              onPress={() => this.handlePress(m.buttonPress, m.Id, m.TopicId, m.summaryTitle)}
+              onPress={() => handlePress(m.buttonPress, m.Id, m.TopicId, m.summaryTitle)}
               disabled={m.buttonDisabled}>
               {m.buttonText}
               </Button>
@@ -152,13 +154,13 @@ export function MeetingsScreen() {
   }
 
   const printUpcomingMeetings = () => {
-    console.log("Upcoming Meetings: " + JSON.stringify(this.state.upcomingMeetings));
-    if (this.state.upcomingMeetings[0] !== undefined) {
+    console.log("Upcoming Meetings: " + JSON.stringify(upcomingMeetings));
+    if (upcomingMeetings[0] !== undefined) {
       return (<View>
         <View style={styles.meetingsGroup}>
           <Text style={styles.meetingsTitle}>Upcoming</Text>
         </View>
-        { this.state.upcomingMeetings.map((m, i) => {
+        { upcomingMeetings.map((m, i) => {
           return (<View key={i} style={styles.meeting}>
             <View style={styles.meetingInfo}>
               <View style={styles.meetingMainRow}>
@@ -176,7 +178,7 @@ export function MeetingsScreen() {
             <Button
               containerStyle={m.meetingButton}
               style={m.meetingButtonText}
-              onPress={() => this.handlePress(m.buttonPress, m.Id)}
+              onPress={() => handlePress(m.buttonPress, m.Id)}
               disabled={m.buttonDisabled}>
               {m.buttonText}
               </Button>
@@ -203,17 +205,17 @@ export function MeetingsScreen() {
   });
 
   return (
-    <View style={{flex:1}} key={this.state.refreshing}>
+    <View style={{flex:1}} key={refreshing}>
       <TitleBar
           title="Meetings"
-          navFunction={() => this.props.navigation.navigate('SettingsModal')}
-          navigation={this.props.navigation} />
+          navFunction={() => navigation.navigate('SettingsModal')}
+          navigation={navigation} />
       <ScrollView contentContainerStyle={styles.scrollView}
           refreshControl={
-              <RefreshControl refreshing={this.state.refreshControl} onRefresh={this.onRefresh.bind(this)} />
+              <RefreshControl refreshing={refreshControl} onRefresh={this.onRefresh.bind(this)} />
           }>
-        { this.printUpcomingMeetings() }
-        { this.printPastMeetings() }
+        { printUpcomingMeetings() }
+        { printPastMeetings() }
       </ScrollView>
     </View>
   );
@@ -239,7 +241,7 @@ export default class MeetingsScreen extends React.Component {
     };
 
     componentDidUpdate() {
-      if (this.state.refreshing == true) {
+      if (this.refreshing == true) {
         getMeetings('upcoming')
         .then((data) => {
           this.setState({
@@ -336,13 +338,13 @@ export default class MeetingsScreen extends React.Component {
     }
 
     printPastMeetings = () => {
-      console.log("Past Meetings: " + JSON.stringify(this.state.pastMeetings));
-      if (this.state.pastMeetings[0] !== undefined) {
+      console.log("Past Meetings: " + JSON.stringify(this.pastMeetings));
+      if (this.pastMeetings[0] !== undefined) {
         return (<View>
           <View style={styles.meetingsGroup}>
             <Text style={styles.meetingsTitle}>Past</Text>
           </View>
-          { this.state.pastMeetings.map((m, i) => {
+          { this.pastMeetings.map((m, i) => {
             return (<View key={i} style={styles.meeting}>
               <View style={styles.meetingInfo}>
                 <View style={styles.meetingMainRow}>
@@ -373,13 +375,13 @@ export default class MeetingsScreen extends React.Component {
     }
 
     printUpcomingMeetings = () => {
-      console.log("Upcoming Meetings: " + JSON.stringify(this.state.upcomingMeetings));
-      if (this.state.upcomingMeetings[0] !== undefined) {
+      console.log("Upcoming Meetings: " + JSON.stringify(this.upcomingMeetings));
+      if (this.upcomingMeetings[0] !== undefined) {
         return (<View>
           <View style={styles.meetingsGroup}>
             <Text style={styles.meetingsTitle}>Upcoming</Text>
           </View>
-          { this.state.upcomingMeetings.map((m, i) => {
+          { this.upcomingMeetings.map((m, i) => {
             return (<View key={i} style={styles.meeting}>
               <View style={styles.meetingInfo}>
                 <View style={styles.meetingMainRow}>
@@ -416,14 +418,14 @@ export default class MeetingsScreen extends React.Component {
     }
 
     render () {
-      return (<View style={{flex:1}} key={this.state.refreshing}>
+      return (<View style={{flex:1}} key={this.refreshing}>
       <TitleBar
           title="Meetings"
           navFunction={() => this.props.navigation.navigate('SettingsModal')}
           navigation={this.props.navigation} />
       <ScrollView contentContainerStyle={styles.scrollView}
                   refreshControl={
-                      <RefreshControl refreshing={this.state.refreshControl} onRefresh={this.onRefresh.bind(this)} />
+                      <RefreshControl refreshing={this.refreshControl} onRefresh={this.onRefresh.bind(this)} />
                     }>
       { this.printUpcomingMeetings() }
       { this.printPastMeetings() }

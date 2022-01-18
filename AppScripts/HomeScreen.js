@@ -4,6 +4,7 @@
 import React, {useState, useEffect} from 'react';
 import {AsyncStorage, View, Text, Button, ScrollView, RefreshControl, TouchableOpacity, Image, Modal, TextInput} from 'react-native';
 import IonIcon from 'react-native-vector-icons/Ionicons';
+import { useNavigation } from '@react-navigation/native';
 import {TitleBar} from './ScreenComponents.js';
 import {styles, colors} from './Styles.js';
 import {getMentorsOf, getMenteesOf, getCurrentUser, checkMeetings, updateAppointmentStatus, createSummary} from './API.js';
@@ -27,6 +28,7 @@ export default function HomeScreen() {
           "dueDateText":"",
           "Description":""
   }});
+  const navigation = useNavigation();
 
   const setPairs = async () => {
     var newMentors = [];
@@ -88,17 +90,17 @@ export default function HomeScreen() {
   // May need to be modified
   const onRefresh = () => {
     setRefreshControl(true);
-    this.setPairs();
+    setPairs();
   };
 
   const submitModalSummary = async (id) => {
     const user = JSON.parse(await AsyncStorage.getItem('User'));
     // post insert
-    createSummary(id, this.state.curSummary, user.id);
+    createSummary(id, curSummary, user.id);
     // update appointment status
     updateAppointmentStatus(id, 'Completed')
     // Refresh meetings state
-    this.refreshMeetings('')
+    refreshMeetings('')
   };
 
   const refreshMeetings = async (curSummary) => {
@@ -126,7 +128,7 @@ export default function HomeScreen() {
       // Update meeting in DB
       updateAppointmentStatus(meeting.id, 'Missed');
       // Refresh meeting state
-      this.refreshMeetings(this.state.curSummary);
+      refreshMeetings(curSummary);
     } else {
       setWriteSummaryModalVisible(true);
       setMeetingPromptModalVisible(false);
@@ -137,22 +139,22 @@ export default function HomeScreen() {
     return (
       <ScrollView contentContainerStyle={{flex: 1, flexDirection: 'column'}}
           refreshControl={
-              <RefreshControl refreshing={this.state.refreshControl} onRefresh={this.onRefresh.bind(this)} />
+              <RefreshControl refreshing={refreshControl} onRefresh={this.onRefresh.bind(this)} />
       }>
         <View style={styles.meetingsGroup}>
           <Text style={styles.meetingsTitle}>Mentors</Text>
         </View>
         {
-          this.state.mentors.map( (mentor, i) => {
-            return this.pairItem(mentor, "Mentor", i);
+          mentors.map( (mentor, i) => {
+            return pairItem(mentor, "Mentor", i);
           })
         }
         <View style={styles.meetingsGroup}>
           <Text style={styles.meetingsTitle}>Mentees</Text>
         </View>
         {
-          this.state.mentees.map( (mentee, i) => {
-            return this.pairItem(mentee, "Mentee", i);
+          mentees.map( (mentee, i) => {
+            return pairItem(mentee, "Mentee", i);
           })
         }
       </ScrollView>
@@ -163,7 +165,7 @@ export default function HomeScreen() {
     return (
       <View key={i}>
         <TouchableOpacity onPress={() =>
-          this.props.navigation.navigate('ContactInfo', { user: otherUser, type: otherType })} key={otherUser.Id.toString()} style={styles.homeItem} >
+          navigation.navigate('ContactInfo', { user: otherUser, type: otherType })} key={otherUser.Id.toString()} style={styles.homeItem} >
           <View style={styles.homeAvatarColumn}>
             <Image style={styles.homeItemAvatar} source={{uri: otherUser.Avatar}} />
             <View style={otherUser.homeBoxStyle}>
@@ -184,8 +186,8 @@ export default function HomeScreen() {
 
   const componentDidMount = async () => {
     // useNotification();
-    if (this.state.shouldUpdate) {
-      this.setPairs();
+    if (shouldUpdate) {
+      setPairs();
       var meetings = await checkMeetings();
       if (meetings && meetings.length > 0) {
         for (var meetingC = 0; meetingC < meetings.length; meetingC++) {
@@ -197,7 +199,6 @@ export default function HomeScreen() {
   };
 
   useEffect( () => {
-    var meeting = this.state.meeting;
     componentDidMount();
   }, []);
 
@@ -205,13 +206,13 @@ export default function HomeScreen() {
     <View style={{flex: 1, flexDirection: 'column'}}>
       <TitleBar
           title="Home"
-          navFunction={() => this.props.navigation.navigate('SettingsModal')}
-          navigation={this.props.navigation}/>
-      { this.props.route.params.accountType == 1 ? this.unapprovedAccount() : this.approvedHome() }
+          navFunction={() => navigation.navigate('SettingsModal')}
+          navigation={navigation}/>
+      { this.props.route.params.accountType == 1 ? unapprovedAccount() : approvedHome() }
       <Modal
           animationType="slide"
           transparent={true}
-          visible={this.state.meetingPromptModalVisible}>
+          visible={meetingPromptModalVisible}>
         <View style={styles.meetingPromptModalContainer}>
           <Image style={styles.bigAvatar} source={{uri: meeting.Avatar}} />
           <Text style={styles.meetingPromptModalHeader}>Meeting Debrief</Text>
@@ -219,13 +220,13 @@ export default function HomeScreen() {
           <Button
               containerStyle={styles.meetingPromptModalConfirm}
               style={styles.summaryButtonText}
-              onPress={() => this.processMeeting('confirmed', meeting)}>
+              onPress={() => processMeeting('confirmed', meeting)}>
             Yes, We Met
           </Button>
           <Button
               containerStyle={styles.meetingPromptModalMissed}
               style={styles.summaryButtonText}
-              onPress={() => this.processMeeting('missed', meeting)}>
+              onPress={() => processMeeting('missed', meeting)}>
             Meeting Was Missed
           </Button>
         </View>
@@ -233,7 +234,7 @@ export default function HomeScreen() {
       <Modal
           animationType="slide"
           transparent={true}
-          visible={this.state.writeSummaryModalVisible}>
+          visible={writeSummaryModalVisible}>
         <View style={styles.writeSummaryModalContainer}>
           <ScrollView style={styles.scrollView}>
             <Text style={styles.reminderText}>Review this meeting's topic then scroll down:</Text>
@@ -253,13 +254,13 @@ export default function HomeScreen() {
                   multiline
                   numberOfLines={6}
                   style={styles.summaryModalInput}
-                  onChangeText={text => this.setState({'curSummary': text})}
-                  value={this.state.curSummary} />
+                  onChangeText={text => setState({'curSummary': text})}
+                  value={curSummary} />
             </View>
             <Button
                 containerStyle={styles.submitSummaryModalButton}
                 style={styles.summaryButtonText}
-                onPress={() => this.submitModalSummary(meeting.Id)}>
+                onPress={() => submitModalSummary(meeting.Id)}>
               Submit Summary
             </Button>
           </ScrollView>
@@ -297,7 +298,7 @@ export default class HomeScreen extends React.Component {
 
     async componentDidMount() {
       // useNotification();
-      if (this.state.shouldUpdate) {
+      if (this.shouldUpdate) {
         this.setPairs();
         var meetings = await checkMeetings();
         if (meetings && meetings.length > 0) {
@@ -379,7 +380,7 @@ export default class HomeScreen extends React.Component {
     async submitModalSummary(id) {
       const user = JSON.parse(await AsyncStorage.getItem('User'));
       // post insert
-      createSummary(id, this.state.curSummary, user.id);
+      createSummary(id, this.curSummary, user.id);
       // update appointment status
       updateAppointmentStatus(id, 'Completed')
       // Refresh meetings state
@@ -407,7 +408,7 @@ export default class HomeScreen extends React.Component {
         // Update meeting in DB
         updateAppointmentStatus(meeting.id, 'Missed');
         // Refresh meeting state
-        this.refreshMeetings(this.state.curSummary);
+        this.refreshMeetings(this.curSummary);
       } else {
         this.setState({writeSummaryModalVisible:true,meetingPromptModalVisible:false});
       }
@@ -417,13 +418,13 @@ export default class HomeScreen extends React.Component {
       return (
         <ScrollView contentContainerStyle={{flex: 1, flexDirection: 'column'}}
               refreshControl={
-                  <RefreshControl refreshing={this.state.refreshControl} onRefresh={this.onRefresh.bind(this)} />
+                  <RefreshControl refreshing={this.refreshControl} onRefresh={this.onRefresh.bind(this)} />
                 }>
           <View style={styles.meetingsGroup}>
             <Text style={styles.meetingsTitle}>Mentors</Text>
           </View>
           {
-            this.state.mentors.map( (mentor, i) => {
+            this.mentors.map( (mentor, i) => {
               return this.pairItem(mentor, "Mentor", i);
             })
           }
@@ -431,7 +432,7 @@ export default class HomeScreen extends React.Component {
             <Text style={styles.meetingsTitle}>Mentees</Text>
           </View>
           {
-            this.state.mentees.map( (mentee, i) => {
+            this.mentees.map( (mentee, i) => {
               return this.pairItem(mentee, "Mentee", i);
             })
           }
@@ -463,7 +464,7 @@ export default class HomeScreen extends React.Component {
     };
 
     render() {
-      var meeting = this.state.meeting;
+      var meeting = this.meeting;
 
       return (
       <View style={{flex: 1, flexDirection: 'column'}}>
@@ -475,7 +476,7 @@ export default class HomeScreen extends React.Component {
         <Modal
           animationType="slide"
           transparent={true}
-          visible={this.state.meetingPromptModalVisible}>
+          visible={this.meetingPromptModalVisible}>
           <View style={styles.meetingPromptModalContainer}>
             <Image style={styles.bigAvatar} source={{uri: meeting.Avatar}} />
             <Text style={styles.meetingPromptModalHeader}>Meeting Debrief</Text>
@@ -497,7 +498,7 @@ export default class HomeScreen extends React.Component {
         <Modal
           animationType="slide"
           transparent={true}
-          visible={this.state.writeSummaryModalVisible}>
+          visible={this.writeSummaryModalVisible}>
           <View style={styles.writeSummaryModalContainer}>
             <ScrollView style={styles.scrollView}>
               <Text style={styles.reminderText}>Review this meeting's topic then scroll down:</Text>
@@ -518,7 +519,7 @@ export default class HomeScreen extends React.Component {
               numberOfLines={6}
               style={styles.summaryModalInput}
               onChangeText={text => this.setState({'curSummary': text})}
-              value={this.state.curSummary} />
+              value={this.curSummary} />
               </View>
               <Button
                 containerStyle={styles.submitSummaryModalButton}

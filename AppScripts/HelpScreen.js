@@ -5,11 +5,13 @@
 
 import React, {useState} from 'react';
 import {View, Text, ScrollView, TouchableOpacity} from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import IonIcon from 'react-native-vector-icons/Ionicons';
 import {styles, colors, mainTitleWidth} from './Styles.js';
 
 export default function HelpScreen() {
   const [refreshing, setRefreshing] = useState(false);
+  const navigation = useNavigation();
 
   return (
     <View>
@@ -19,7 +21,7 @@ export default function HelpScreen() {
         <View style={{flexDirection:'row', backgroundColor: colors.white, alignItems:'center'}}>
           <TouchableOpacity 
                 style={{marginLeft:15,width:30}} 
-                onPress={() => this.props.navigation.navigate('SettingsModal')} 
+                onPress={() => navigation.navigate('SettingsModal')} 
                 activeOpacity={0.5}>
             <IonIcon type='Ionicons' name='ios-arrow-back' size={30} color={colors.vikingBlue} />
           </TouchableOpacity>

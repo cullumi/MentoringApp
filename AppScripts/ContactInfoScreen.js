@@ -5,6 +5,7 @@
 import React, {useState, useEffect} from 'react'
 import * as Contacts from 'expo-contacts'
 import {Alert, View, TouchableOpacity, Text, Image, AsyncStorage} from 'react-native'
+import { useNavigation } from '@react-navigation/native';
 import Button from 'react-native-button'
 import IonIcon from 'react-native-vector-icons/Ionicons';
 import {BackTitleBarContact} from './ScreenComponents.js';
@@ -17,14 +18,16 @@ import {getLocalUser} from './globals.js';
 export default function ContactInfoScreen() {
   const [refreshing, setRefreshing] = useState(true);
   const [contactInfo, setContactInfo] = useState([]);
+  const [modalVisible, setModalVisible] = useSTate([]);
+  const navigation = useNavigation();
 
   const componentDidMount = () => {
-    if (this.state.refreshing) {
-      this.setContactInfo()
+    if (refreshing) {
+      updateContactInfo()
     }
   };
 
-  const setContactInfo = async () => {
+  const updateContactInfo = async () => {
 
     console.log("setting contact info...");
     var newCI = [];
@@ -89,7 +92,7 @@ export default function ContactInfoScreen() {
         console.log(contact);
       }
 
-      var ci = this.state.contactInfo;
+      var ci = contactInfo;
       const user = this.props.route.params.user;
       var givenName = user.FirstName;
       var familyName = user.LastName;
@@ -137,14 +140,14 @@ export default function ContactInfoScreen() {
     var user = JSON.parse(await AsyncStorage.getItem('User'));
     console.log(this.props.route.params.user.Id + " " + user.id);
     createMeeting(this.props.route.params.user.Id, user.id, date);
-    this.hideModal();
-    this.props.navigation.navigate('Meetings');
+    hideModal();
+    navigation.navigate('Meetings');
     var user = await getLocalUser()
     console.log(this.props.route.params.user.Id, user);
     await createMeeting(this.props.route.params.user.Id, user.Id, date);
     console.log("Done creating meeting.");
-    this.hideModal();
-    this.props.navigation.navigate('Meetings');
+    hideModal();
+    navigation.navigate('Meetings');
   };
 
   const infoItem = (info) => {
@@ -155,7 +158,7 @@ export default function ContactInfoScreen() {
                 if (info.ContactType == 'Email') {
                   Linking.openURL('mailto:' + info.ContactValue)
                 } else {
-                  this.openContactPicker()
+                  openContactPicker()
               }}
             }>
           <View style={styles.contactIconContainer}>
@@ -185,14 +188,14 @@ export default function ContactInfoScreen() {
         <View style={styles.contactText}>
           { console.log(JSON.stringify(cInfo)) }
           { cInfo.map( (info) => {
-              return this.infoItem(info);
+              return infoItem(info);
           })}
         </View>
         <Button
             containerStyle={user.contactButtonStyle}
             style={styles.summaryButtonText}
             minimumDate={new Date(2021, 12, 12)}
-            onPress={() => this.showModal()}
+            onPress={() => showModal()}
             disabled={user.contactButtonStatus}>
           Propose Meeting
         </Button>
@@ -207,13 +210,13 @@ export default function ContactInfoScreen() {
   
   return (
     <View style={{flex: 1, flexDirection: 'column', backgroundColor:'#fff'}}>
-      <BackTitleBarContact title="Contact Info" navigation={this.props.navigation} />
-      { this.displayCI(this.state.contactInfo) }
+      <BackTitleBarContact title="Contact Info" navigation={navigation} />
+      { displayCI(contactInfo) }
       <DateTimePickerModal style={styles.dateTimeBox}
-          isVisible={this.state.modalVisible}
+          isVisible={modalVisible}
           mode="datetime"
-          onConfirm={(date) => this.handleConfirm(date)}
-          onCancel={() => this.hideModal()}
+          onConfirm={(date) => handleConfirm(date)}
+          onCancel={() => hideModal()}
         />
     </View>
   );
@@ -231,7 +234,7 @@ export default class ContactInfoScreen extends React.Component {
     }
 
     componentDidMount() {
-      if (this.state.refreshing) {
+      if (this.refreshing) {
         this.setContactInfo()
       }
     }
@@ -304,7 +307,7 @@ export default class ContactInfoScreen extends React.Component {
           const contact = data[0];
           console.log(contact);
         }
-        var ci = this.state.contactInfo;
+        var ci = this.contactInfo;
         const user = this.props.route.params.user;
         var givenName = user.FirstName;
         var familyName = user.LastName;
@@ -433,9 +436,9 @@ export default class ContactInfoScreen extends React.Component {
       return (
         <View style={{flex: 1, flexDirection: 'column', backgroundColor:'#fff'}}>
           <BackTitleBarContact title="Contact Info" navigation={this.props.navigation} />
-          { this.displayCI(this.state.contactInfo) }
+          { this.displayCI(this.contactInfo) }
           <DateTimePickerModal style={styles.dateTimeBox}
-            isVisible={this.state.modalVisible}
+            isVisible={this.modalVisible}
             mode="datetime"
             onConfirm={(date) => this.handleConfirm(date)}
             onCancel={() => this.hideModal()}

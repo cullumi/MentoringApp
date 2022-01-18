@@ -5,6 +5,7 @@
 
 import React, { useEffect, useState } from 'react';
 import {View, Text, ScrollView, RefreshControl, AsyncStorage} from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import {TitleBar} from './ScreenComponents.js';
 import {styles, colors} from './Styles.js';
 import {getAllTopics, getCurrentTopic} from './API.js';
@@ -16,6 +17,7 @@ export default function TopicsScreen() {
   const [topics, setTopics] = useState([]);
   const [currentTopic, setCurrentTopic] = useState(null);
   const [refreshControl, setRefreshControl] = useState(true);
+  const navigation = useNavigation();
 
   const getData = async () => {
     var newTopics = [];
@@ -86,24 +88,24 @@ export default function TopicsScreen() {
     <View style={{flex: 1, flexDirection: 'column'}}>
       <TitleBar 
           title="Topics" 
-          navFunction={() => this.props.navigation.navigate('SettingsModal')}
-          navigation={this.props.navigation} />
+          navFunction={() => navigation.navigate('SettingsModal')}
+          navigation={navigation} />
       <ScrollView
         refreshControl={
-            <RefreshControl refreshing={this.state.refreshControl} onRefresh={this.onRefresh.bind(this)} />
+            <RefreshControl refreshing={refreshControl} onRefresh={onRefresh.bind(this)} />
           }>
         <View style={styles.meetingsGroup}>
           <Text style={styles.meetingsTitle}>Current Topic</Text>
         </View>
         {
-          this.state.currentTopic != null ? this.topicItem(this.state.currentTopic) : <View/>
+          currentTopic != null ? topicItem(currentTopic) : <View/>
         }
         <View style={styles.meetingsGroup}>
           <Text style={styles.meetingsTitle}>All Topics</Text>
         </View>
         {
-          this.state.topics.map( (topic, i) => {
-            return this.topicItem(topic, i);
+          topics.map( (topic, i) => {
+            return topicItem(topic, i);
           })
         }
       </ScrollView>

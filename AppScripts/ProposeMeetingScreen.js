@@ -4,6 +4,7 @@
 
 import React, {useState, useEffect} from 'react';
 import {View, Text, Image, AsyncStorage} from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import Button from 'react-native-button';
 import {BackTitleBar, SettingsModal} from './ScreenComponents.js';
 import {styles, colors} from './Styles.js';
@@ -13,6 +14,7 @@ import DateTimePickerModal from "react-native-modal-datetime-picker";
 export default function ProposeMeetingScreen() {
   const [refreshing, setRefreshing] = useState(true);
   const [modalVisible, setModalVisible] = useState(false);
+  const navigation = useNavigation();
 
   const showModal = () => {
     setModalVisible(true);
@@ -24,8 +26,8 @@ export default function ProposeMeetingScreen() {
 
   const handleConfirm = (date) => {
     console.log("Date picked wawa: " + data);
-    this.hideModal();
-    this.props.navigation.navigate('Meetings');
+    hideModal();
+    navigation.navigate('Meetings');
   }
 
   useEffect(() => {
@@ -40,17 +42,17 @@ export default function ProposeMeetingScreen() {
       <View style={styles.dateTimeWrapper}>
         <View style={styles.dateTimeBox}>
           <DateTimePickerModal style={styles.dateTimeBox}
-              isVisible={this.state.modalVisible}
+              isVisible={modalVisible}
               mode="datetime"
               onConfirm={() => his.handleConfirm()}
-              onCancel={() => this.hideModal()}
+              onCancel={() => hideModal()}
           />
         </View>
       </View>
       <Button
           containerStyle={styles.summaryButton}
           style={styles.summaryButtonText}
-          onPress={() => this.showModal()}>
+          onPress={() => showModal()}>
           Choose
       </Button>
     </View>

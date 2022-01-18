@@ -186,6 +186,7 @@ export async function getAuthorizedUser(source='unknown') {
   });
   if (authres.status != 200){
     console.log("(" + source + ") Non-200 User Authorization Payload Received: ", authres);
+    return null;
   }
   const authPayload = await authres.json();
   return authPayload;

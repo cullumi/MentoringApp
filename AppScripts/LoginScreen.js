@@ -6,6 +6,7 @@ import React, {useState} from 'react';
 import {AsyncStorage, View, Image} from 'react-native';
 import Button from 'react-native-button';
 import LinkedInModal from 'react-native-linkedin';
+import { useNavigation } from '@react-navigation/native';
 import {styles, colors} from './Styles.js';
 import {getCurrentUser, postNewUser, getUserIdPayloadByEmail, getAuthorizedUser} from './API.js';
 import {registerForPushNotifications} from './PushNotifs.js';
@@ -22,6 +23,9 @@ export default function LoginScreen() {
   // isLoggedIn doesn't actually get used it seems?
   //const [isLoggedIn, setIsLoggedIn] = useState(false);  // Maybe shouldn't use state... look into to proper conversion?
   const [refreshing, setRefreshing] = useState(false);
+  const [valid, setValid] = useState(false);
+  const navigation = useNavigation();
+  var modal;
 
   const getLinkedInProfileInfo = async (access_token) => {
     console.log("Getting LinkedIn profile information...");
@@ -63,10 +67,6 @@ export default function LoginScreen() {
   const ensureUserExists = async (email, last, first, pic) => {
     // Check if user exists in database before ensuring it exists.
     console.log("Checking if user exists in database...");
-    // const checkres = await fetch(url + '/user/email/' + email, {
-    //   method: 'GET'
-    // });
-    // const checkPayload = await checkres.json();
     const authPayload = await getAuthorizedUser('Login-Direct');
 
     // Get Current User.
@@ -74,14 +74,13 @@ export default function LoginScreen() {
     let curUser = await getCurrentUser("Login");
 
     // Check if this user needs to be added to DB.
-    //if (checkPayload.rowsAffected == 0) {
     if (authPayload.rowsAffected == 0) {
       postNewUser(email, first, last, pic);
       await AsyncStorage.setItem('User', JSON.stringify(curUser));
-      this.props.navigation.navigate('Privacy');
+      navigation.navigate('Privacy');
     } else {
       await AsyncStorage.setItem('User', JSON.stringify(curUser));
-      this.props.navigation.navigate('Main');
+      navigation.navigate('Main');
     }
   }
 
@@ -118,10 +117,10 @@ export default function LoginScreen() {
       } catch (error) {
         console.log(error);
       }
+      await ensureUserExists(email, first, last, pic);
 
       setRefreshing(false);
-
-      await ensureUserExists(email, first, last, pic);
+      setValid(true);
 
     } else {
       console.log("Authentication Code Received: " + authentication_code);
@@ -133,7 +132,7 @@ export default function LoginScreen() {
       <Button
         containerStyle={{padding:12, height:45, width:"45%", overflow:'hidden', borderRadius:4, backgroundColor: '#003F87'}}
         style={{fontSize: 16, color: 'white'}}
-        onPress={() => this.modal.open()}>
+        onPress={() => modal.open()}>
           Sign in with LinkedIn
       </Button>
     );
@@ -147,13 +146,13 @@ export default function LoginScreen() {
           clientID={linkedInClientId}
           clientSecret={linkedInClientSecret}
           redirectUri={linkedInRedirectUri}
-          ref={ref => { this.modal = ref; }}
+          ref={ref => { modal = ref; }}
           renderButton={renderButton}
           onSuccess={data => {
-              this.handleLogin(data);
-              if (this.state.id != undefined) {
-                  this.props.navigation.navigate('Privacy');
-              }
+              handleLogin(data);
+              // if (valid) {
+              //     navigation.navigate('Privacy');
+              // }
           }}
       />
     </View>
@@ -198,7 +197,7 @@ export default class LoginScreen extends React.Component {
                   renderButton={renderButton}
                   onSuccess={data => {
                     this.handleLogin(data);
-                    if (this.state.id != undefined) {
+                    if (this.id != undefined) {
                       this.props.navigation.navigate('Privacy');
                     }
                   }}

@@ -1,7 +1,7 @@
 
 
 
-import React from 'react';
+import React, {useState, useEffect} from 'react';
 import {View, Text, AsyncStorage} from 'react-native';
 // import {getCurrentUser, getUserPayloadByEmail} from './API.js';
 // import {cur} from './globals.js';
@@ -38,6 +38,7 @@ export default function SplashScreen() {
           this.props.navigation.navigate('Login');
         }
       }
+      componentDidMount();
     }, [])
 
     return (

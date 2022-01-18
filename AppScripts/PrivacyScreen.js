@@ -2,7 +2,7 @@
 
 
 
-import React from 'react';
+import React, {useState} from 'react';
 import {View, Text, Image, ScrollView, SafeAreaView} from 'react-native';
 import Button from 'react-native-button';
 import {styles, colors} from './Styles.js';

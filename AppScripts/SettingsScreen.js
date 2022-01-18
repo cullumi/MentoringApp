@@ -3,7 +3,7 @@
 
 
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {View, Text, Image, ScrollView, AsyncStorage} from 'react-native';
 import Button from 'react-native-button';
 import {BackTitleBarHelp} from './ScreenComponents.js';
@@ -26,6 +26,10 @@ export default function SettingsScreen() {
   const componentDidMount = () => {
     this.getUser();
   }
+
+  useEffect(() => {
+    componentDidMount();
+  }, [])
 
   return (
     <View>

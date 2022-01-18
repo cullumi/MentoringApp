@@ -2,7 +2,7 @@
 
 
 
-import React from 'react';
+import React, {useState, useEffect} from 'react';
 import {Alert, AsyncStorage, View, Text, ScrollView, TouchableOpacity, TextInput, Animated} from 'react-native';
 import IonIcon from 'react-native-vector-icons/Ionicons';
 import {mainTitleWidth, styles, colors} from './Styles.js';
@@ -20,11 +20,6 @@ export default function TopicsScreen() {
   const [fade, setFade] = useState(new Animated.Value(0))
   const [topic, setTopic] = useState([])
 
-  const handleBack = () => {
-    this.props.route.params.onGoBack();
-    this.props.navigation.goBack();
-  }
-
   const componentDidMount = () => {
     const id = this.props.route.params.id;
     const topicId = this.props.route.params.topicId;
@@ -39,9 +34,27 @@ export default function TopicsScreen() {
     AsyncStorage.getItem(storageId).then((value) => this.setSkipValue(value, id, type));
   }
 
+  const componentDidUpdate = () => {
+    if (this.state.fade.value == 1) {
+      Animated.timing(
+        this.state.fade,
+        {
+          toValue: 0,
+          duration: 2000,
+          useNativeDriver: true
+        }
+      ).start();
+    }
+  }
+
   const getData = () => {
     getTopic(this.state.topicId)
     .then((data) => { setTopic(data) });
+  }
+
+  const handleBack = () => {
+    this.props.route.params.onGoBack();
+    this.props.navigation.goBack();
   }
 
   const setSkipValue = async (value, id, type) => {
@@ -128,19 +141,6 @@ export default function TopicsScreen() {
     setType('edit');
   }
 
-  const componentDidUpdate = () => {
-    if (this.state.fade.value == 1) {
-      Animated.timing(
-        this.state.fade,
-        {
-          toValue: 0,
-          duration: 2000,
-          useNativeDriver: true
-        }
-      ).start();
-    }
-  }
-
   const markMissedMeeting = async (id) => {
     // Move to API.js
     // Mark Appointment as 'Missed'
@@ -195,7 +195,12 @@ export default function TopicsScreen() {
 
   useEffect(() => {
     getData();
+    componentDidMount();
   }, [])
+
+  useEffect(() => {
+    componentDidUpdate();
+  })
 
   return ( 
     <View style={{flex:1}}>

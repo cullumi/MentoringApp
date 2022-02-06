@@ -4,7 +4,7 @@
 import React, {useState, useEffect} from 'react';
 import {AsyncStorage, View, Text, Button, ScrollView, RefreshControl, TouchableOpacity, Image, Modal, TextInput} from 'react-native';
 import IonIcon from 'react-native-vector-icons/Ionicons';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import {TitleBar} from './ScreenComponents.js';
 import {styles, colors} from './Styles.js';
 import {getMentorsOf, getMenteesOf, getCurrentUser, checkMeetings, updateAppointmentStatus, createSummary} from './API.js';
@@ -17,7 +17,7 @@ export default function HomeScreen() {
   const [mentees, setMentees] = useState([]);
   const [meetingPromptModalVisible, setMeetingPromptModalVisible] = useState(false);
   const [writeSummaryModalVisible, setWriteSummaryModalVisible] = useState(false);
-  const [curSummary, setCurSummary] = useState('');
+  const [curSummary, setCurSummary] = useState("");
   const [meeting, setMeeting] = useState({
       "MentorFirstName":"",
       "Avatar": "",
@@ -29,6 +29,7 @@ export default function HomeScreen() {
           "Description":""
   }});
   const navigation = useNavigation();
+  const route = useRoute();
 
   const setPairs = async () => {
     var newMentors = [];
@@ -139,7 +140,7 @@ export default function HomeScreen() {
     return (
       <ScrollView contentContainerStyle={{flex: 1, flexDirection: 'column'}}
           refreshControl={
-              <RefreshControl refreshing={refreshControl} onRefresh={this.onRefresh.bind(this)} />
+              <RefreshControl refreshing={refreshControl} onRefresh={onRefresh.bind(this)} />
       }>
         <View style={styles.meetingsGroup}>
           <Text style={styles.meetingsTitle}>Mentors</Text>
@@ -186,6 +187,7 @@ export default function HomeScreen() {
 
   const componentDidMount = async () => {
     // useNotification();
+    console.log("Main Screen Mounted");
     if (shouldUpdate) {
       setPairs();
       var meetings = await checkMeetings();
@@ -208,7 +210,7 @@ export default function HomeScreen() {
           title="Home"
           navFunction={() => navigation.navigate('SettingsModal')}
           navigation={navigation}/>
-      { this.props.route.params.accountType == 1 ? unapprovedAccount() : approvedHome() }
+      { route.params.accountType == 1 ? unapprovedAccount() : approvedHome() }
       <Modal
           animationType="slide"
           transparent={true}

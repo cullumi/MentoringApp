@@ -11,7 +11,7 @@ import {getAppointments} from './API.js';
 import {url} from './globals';
 import Button from 'react-native-button';
 
-export function MeetingsScreen() {
+export default function MeetingsScreen() {
   const [toolTipVisible, setToolTipVisible] = useState(false)
   const [upcomingMeetings, setUpcomingMeetings] = useState([])
   const [pastMeetings, setPastMeetings] = useState([])

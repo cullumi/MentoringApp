@@ -6,13 +6,15 @@ import React, {useEffect} from 'react';
 import {View, TouchableOpacity, Text} from 'react-native';
 import IonIcon from 'react-native-vector-icons/Ionicons';
 import {colors, mainTitleWidth} from './Styles.js';
+import { useNavigation } from '@react-navigation/native';
 
-export function SettingsModal() {
+export function SettingsModal(props) {
+  var navFunction = props.navFunction;
   useEffect(() => {
-    let navFunction = this.props.navFunction;
+    navFunction = props.navFunction;
     console.log(typeof colors.vikingBlue);
     console.log(navFunction);
-  }, []);
+  }, [props.navFunction]);
   return (
     <TouchableOpacity style={{width:30,marginRight:15}} onPress={navFunction} activeOpacity={0.5}>
         <IonIcon name="ios-settings" size={30} color={colors.vikingBlue} />
@@ -35,10 +37,8 @@ export class SettingsModal extends React.Component {
 }
 */
 
-export function BackButton() {
-  useEffect(() => {
-    let navigation = this.props.navigation;
-  }, []);
+export function BackButton(props) {
+  const navigation = useNavigation()
   return (
     <TouchableOpacity style={{marginLeft:15,justifyContent:'center',width:30}}
                       onPress={() => navigation.goBack()} activeOpacity={0.5}>
@@ -63,12 +63,14 @@ export class BackButton extends React.Component {
 
 // (title, navFunction)
 
-export function TitleBar() {
+export function TitleBar(props) {
+  var navigation = useNavigation();
+  var title = props.title;
+  var navFunction = props.navFunction;
   useEffect(() => {
-    let title = this.props.title;
-    let navFunction = this.props.navFunction;
-    let navigation = this.props.navigation;
-  }, []);
+    title = props.title;
+    navFunction = props.navFunction;
+  }, [props.title, props.navFunction]);
   return (
     <View key={title}>
       <View style={{height:25, backgroundColor: colors.vikingBlue}}></View>
@@ -109,11 +111,13 @@ export class TitleBar extends React.Component {
 */
 
 export function BackTitleBar() {
+  const navigation = useNavigation();
+  var title = props.title;
+  var navFunction = props.navFunction;
   useEffect(() => {
-    let title = this.props.title;
-    let navFunction = this.props.navFunction;
-    let navigation = this.props.navigation;
-  }, []);
+    title = props.title;
+    navFunction = props.navFunction;
+  }, [props.title, props.navFunction]);
   return (
     <View key={title}>
       <View style={{height:25, backgroundColor: colors.vikingBlue}}></View>
@@ -167,12 +171,10 @@ export class BackTitleBar extends React.Component {
 */
 
 export function HelpModal() {
-  useEffect(() => {
-    let navigation = this.props.navigation;
-  }, []);
+  const navigation = useNavigation();
   return (
     <TouchableOpacity style={{width:30,justifyContent:'center'}} 
-                      onPress={() => navigation.navigate('HelpModal')} activeOpacity={0.5}>
+            onPress={() => navigation.navigate('HelpModal')} activeOpacity={0.5}>
       <IonIcon name="ios-help-circle" size={30} color={colors.vikingBlue} />
     </TouchableOpacity>
   );
@@ -193,10 +195,11 @@ export class HelpModal extends React.Component {
 */
 
 export function BackButtonTitleBarHelp() {
+  const navigation = useNavigation();
+  var title = props.title;
   useEffect(() => {
-    let title = this.props.title;
-    let navigation = this.props.navigation;
-  }, []);
+    title = props.title;
+  }, [props.title]);
   return (
     <View key={title}>
       <View style={{height:25, backgroundColor: colors.vikingBlue}}></View>
@@ -247,10 +250,11 @@ export class BackTitleBarHelp extends React.Component {
 */
 
 export function BackTitleBarContact() {
+  const navigation = useNavigation();
+  var title = props.title;
   useEffect(() => {
-    let title = this.props.title;
-    let navigation = this.props.navigation;
-  }, []);
+    title = props.title;
+  }, [props.title]);
   return (
     <View key={title}>
       <View style={{height:25, backgroundColor: colors.vikingBlue}}></View>

@@ -10,7 +10,7 @@ import { useNavigation } from '@react-navigation/native';
 import {styles, colors} from './Styles.js';
 import {getCurrentUser, postNewUser, getUserIdPayloadByEmail, getAuthorizedUser} from './API.js';
 import {registerForPushNotifications} from './PushNotifs.js';
-import {url, setLocalUser, setLinkedInToken} from './globals.js';
+import {url, setLocalUser, setLinkedInToken, debug} from './globals.js';
 import { setStatusBarNetworkActivityIndicatorVisible } from 'expo-status-bar';
 
 // LOGIN AND PRIVACY SCREENS
@@ -73,6 +73,14 @@ export default function LoginScreen() {
     console.log("Ensuring user exists...");
     let curUser = await getCurrentUser("Login");
 
+    // Check if debugging is active
+    if (debug){
+      // await AsyncStorage.setItem('User', JSON.stringify(curUser));
+      console.log("Debug --> Navigate to Main Screen")
+      navigation.navigate('Main');
+      return;
+    }
+
     // Check if this user needs to be added to DB.
     if (authPayload.rowsAffected == 0) {
       postNewUser(email, first, last, pic);
@@ -89,7 +97,6 @@ export default function LoginScreen() {
     const { access_token, authentication_code } = data;
 
     console.log("Handling Login");
-
     if (!authentication_code) {
 
       setRefreshing(true);

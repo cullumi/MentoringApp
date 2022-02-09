@@ -4,7 +4,8 @@
 
 
 import React, { useEffect, useState } from 'react';
-import {View, Text, ScrollView, RefreshControl, AsyncStorage} from 'react-native';
+import {View, Text, ScrollView, RefreshControl} from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import {TitleBar} from './ScreenComponents.js';
 import {styles, colors} from './Styles.js';
@@ -60,6 +61,7 @@ export default function TopicsScreen() {
   }
 
   const topicItem = (topic, i=0) => {
+    // console.log('Topic Item:', topic);
     return (
       <View key={i} style={styles.topicContainer}>
         <View style={styles.topicHeader}>

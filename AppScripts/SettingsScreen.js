@@ -4,41 +4,39 @@
 
 
 import React, { useState, useEffect } from 'react';
-import {View, Text, Image, ScrollView, AsyncStorage} from 'react-native';
+import {View, Text, Image, ScrollView} from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import Button from 'react-native-button';
 import {BackTitleBarHelp} from './ScreenComponents.js';
 import {styles, colors} from './Styles.js';
+import {getLocalUser} from './globals.js';
 
 export default function SettingsScreen() {
   const [refreshing, setRefreshing] = useState(false)
-  const [user, setUser] = useState([])
+  const [user, setUser] = useState({})
   const navigation = useNavigation();
 
   logout = () => {
     AsyncStorage.clear();
     navigation.navigate('Login');
-  }
+  };
 
   const getUser = async () => {
-    const u = JSON.parse(await AsyncStorage.getItem('User'));
-    setUser(u);
-  }
+    setUser(getLocalUser('SettingsScreen'));
+  };
 
   const componentDidMount = () => {
     getUser();
-  }
+  };
 
   useEffect(() => {
     componentDidMount();
-  }, [])
+  }, []);
 
   return (
     <View>
-      <BackTitleBarHelp 
-          title="Settings" 
-          navFunction={() => navigation.navigate('HelpModal')} 
-          navigation={navigation} />
+      <BackTitleBarHelp title="Settings"/> 
       <ScrollView style={styles.scrollView}>
         <View style={{justifyContent: 'center',
         alignItems: 'center',paddingTop:25}}>

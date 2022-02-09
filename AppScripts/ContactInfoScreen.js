@@ -2,24 +2,27 @@
 
 
 
-import React, {useState, useEffect} from 'react'
+import React, { useState, useEffect } from 'react'
 import * as Contacts from 'expo-contacts'
-import {Alert, View, TouchableOpacity, Text, Image, AsyncStorage} from 'react-native'
-import { useNavigation } from '@react-navigation/native';
+import * as Linking from 'expo-linking';
+import { Alert, View, TouchableOpacity, Text, Image } from 'react-native'
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import Button from 'react-native-button'
 import IonIcon from 'react-native-vector-icons/Ionicons';
-import {BackTitleBarContact} from './ScreenComponents.js';
-import {styles, colors} from './Styles.js';
-import {getCurrentUser, getContactInfoOf, createMeeting} from './API.js';
+import { BackTitleBarContact } from './ScreenComponents.js';
+import { styles, colors } from './Styles.js';
+import { getCurrentUser, getContactInfoOf, createMeeting } from './API.js';
 import DateTimePickerModal from "react-native-modal-datetime-picker";
-import {getLocalUser} from './globals.js';
+import { getLocalUser, loadLocalArray, saveLocal } from './globals.js';
 
 
 export default function ContactInfoScreen() {
   const [refreshing, setRefreshing] = useState(true);
   const [contactInfo, setContactInfo] = useState([]);
-  const [modalVisible, setModalVisible] = useSTate([]);
+  const [modalVisible, setModalVisible] = useState(false);
   const navigation = useNavigation();
+  const route = useRoute();
 
   const componentDidMount = () => {
     if (refreshing) {
@@ -28,11 +31,10 @@ export default function ContactInfoScreen() {
   };
 
   const updateContactInfo = async () => {
-
     console.log("setting contact info...");
     var newCI = [];
     var doSetAsyncStorage = false;
-    const userID = this.props.route.params.user.Id;
+    const userID = route.params.user.Id;
     // console.warn(userID);
     console.log('uid: ' + userID);
     try {
@@ -40,36 +42,22 @@ export default function ContactInfoScreen() {
       doSetAsyncStorage = true;
     } catch (error) {
       console.log(error);
-      try {
-        var tempCI = JSON.parse(await AsyncStorage.getItem('ContactInfo/' + userID));
-        if (tempCI != null && Array.isArray(tempCI)) {
-          newCI = tempCI;
-        }
-      } catch (error) {
-        console.log(error);
-      }
+      newCI = await loadLocalArray('ContactInfo/' + userID, newCI);
     }
-
     // Save mentor/mentee info from the database into local storage, for when you're offline.
     if (doSetAsyncStorage) {
-      try {
-        await AsyncStorage.setItem('ContactInfo/' + userID, JSON.stringify(newCI));
-      } catch (error) {
-        console.log(error);
-      }
+      await saveLocal('ContactInfo/' + userID, newCI);
     }
-
     newCI.map( (info) => {
         switch(info.ContactType) {
           case 'Email':
-          info.ContactIcon = 'ios-mail';
-          break;
+            info.ContactIcon = 'ios-mail';
+            break;
           case 'Phone':
-          info.ContactIcon = 'ios-phone-portrait';
-          break;
+            info.ContactIcon = 'ios-phone-portrait';
+            break;
         }
     })
-
     setRefreshing(false);
     setContactInfo(newCI);
   }
@@ -93,7 +81,7 @@ export default function ContactInfoScreen() {
       }
 
       var ci = contactInfo;
-      const user = this.props.route.params.user;
+      const user = route.params.user;
       var givenName = user.FirstName;
       var familyName = user.LastName;
       var email = '';
@@ -137,22 +125,17 @@ export default function ContactInfoScreen() {
   };
 
   const handleConfirm = async (date) => {
-    var user = JSON.parse(await AsyncStorage.getItem('User'));
-    console.log(this.props.route.params.user.Id + " " + user.id);
-    createMeeting(this.props.route.params.user.Id, user.id, date);
-    hideModal();
-    navigation.navigate('Meetings');
-    var user = await getLocalUser()
-    console.log(this.props.route.params.user.Id, user);
-    await createMeeting(this.props.route.params.user.Id, user.Id, date);
+    var user = await getLocalUser('CInfo - ProposeMeeting');
+    console.log(route.params.user.Id, user);
+    await createMeeting(route.params.user.Id, user.Id, date);
     console.log("Done creating meeting.");
     hideModal();
     navigation.navigate('Meetings');
   };
 
-  const infoItem = (info) => {
+  const infoItem = (info, i) => {
     return (
-      <View>
+      <View key={i}>
         <TouchableOpacity style={styles.contactRow} onPress={
               () => {
                 if (info.ContactType == 'Email') {
@@ -174,8 +157,8 @@ export default function ContactInfoScreen() {
   }
 
   const displayCI = (cInfo) => {
-    const user = this.props.route.params.user;
-    const type = this.props.route.params.type;
+    const user = route.params.user;
+    const type = route.params.type;
     return(
       <View style={styles.contactContainer}>
         <View style={{flexGrow: 1}}>
@@ -187,9 +170,7 @@ export default function ContactInfoScreen() {
         </View>
         <View style={styles.contactText}>
           { console.log(JSON.stringify(cInfo)) }
-          { cInfo.map( (info) => {
-              return infoItem(info);
-          })}
+          { cInfo.map( (info, i) => { return infoItem(info, i); }) }
         </View>
         <Button
             containerStyle={user.contactButtonStyle}

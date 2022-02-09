@@ -2,7 +2,8 @@
 
 
 import React, {useState, useEffect} from 'react';
-import {View, Text, AsyncStorage} from 'react-native';
+import {View, Text} from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 // import {getCurrentUser, getUserPayloadByEmail} from './API.js';
 // import {cur} from './globals.js';

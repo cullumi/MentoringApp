@@ -8,12 +8,11 @@ import IonIcon from 'react-native-vector-icons/Ionicons';
 import {colors, mainTitleWidth} from './Styles.js';
 import { useNavigation } from '@react-navigation/native';
 
+
 export function SettingsModal(props) {
   var navFunction = props.navFunction;
   useEffect(() => {
     navFunction = props.navFunction;
-    console.log(typeof colors.vikingBlue);
-    console.log(navFunction);
   }, [props.navFunction]);
   return (
     <TouchableOpacity style={{width:30,marginRight:15}} onPress={navFunction} activeOpacity={0.5}>
@@ -110,7 +109,7 @@ export class TitleBar extends React.Component {
 };
 */
 
-export function BackTitleBar() {
+export function BackTitleBar(props) {
   const navigation = useNavigation();
   var title = props.title;
   var navFunction = props.navFunction;
@@ -170,7 +169,7 @@ export class BackTitleBar extends React.Component {
 }
 */
 
-export function HelpModal() {
+export function HelpModal(props) {
   const navigation = useNavigation();
   return (
     <TouchableOpacity style={{width:30,justifyContent:'center'}} 
@@ -194,7 +193,7 @@ export class HelpModal extends React.Component {
 }
 */
 
-export function BackButtonTitleBarHelp() {
+export function BackTitleBarHelp(props) {
   const navigation = useNavigation();
   var title = props.title;
   useEffect(() => {
@@ -249,7 +248,7 @@ export class BackTitleBarHelp extends React.Component {
 }
 */
 
-export function BackTitleBarContact() {
+export function BackTitleBarContact(props) {
   const navigation = useNavigation();
   var title = props.title;
   useEffect(() => {

@@ -7,7 +7,7 @@ import {View, Text, Image, ScrollView, RefreshControl, Alert} from 'react-native
 import { useNavigation } from '@react-navigation/native';
 import {TitleBar} from './ScreenComponents.js';
 import {styles, colors} from './Styles.js';
-import {getAppointments} from './API.js';
+import {getAppointments, updateAppointmentStatus} from './API.js';
 import {url} from './globals';
 import Button from 'react-native-button';
 
@@ -26,7 +26,7 @@ export default function MeetingsScreen() {
 
   const componentDidUpdate = () => {
     if (refreshing == true) {
-      getMeetings('upcoming')
+      getAppointments('upcoming')
       .then((data) => {
         setUpcomingMeetings(data);
         setRefreshing(false);
@@ -35,14 +35,14 @@ export default function MeetingsScreen() {
   }
 
   const getData = () => {
-    getMeetings('past')
-    .then((data) => {
-      setPastMeetings(data);
+    getAppointments('past')
+    .then((meetings) => {
+      setPastMeetings(meetings);
       setRefreshing(false);
     });
-    getMeetings('upcoming')
-    .then((data) => {
-      setUpcomingMeetings(data);
+    getAppointments('upcoming')
+    .then((meetings) => {
+      setUpcomingMeetings(meetings);
       setRefreshing(false);
       setRefreshControl(false);
     });
@@ -60,6 +60,7 @@ export default function MeetingsScreen() {
   }
 
   const acceptMeetingAlert = (id) => {
+    console.log('Alert: Accept Meeting Time');
     // Check if the user is sure they want to accept this meeting time.
     Alert.alert(
       "Accept Meeting",
@@ -78,20 +79,18 @@ export default function MeetingsScreen() {
 
   const cancelMeeting = async (id) => {
     updateAppointmentStatus(id, 'Canceled');
+    setRefreshing(true);
   }
 
   const cancelMeetingAlert = (id) => {
+    console.log('Alert: Cancel Meeting Alert');
     // Check if the user is sure they want to cancel this meeting.
     Alert.alert(
       "Cancel Meeting",
       "Are you sure you want to cancel? The mentee will need to schedule a new meeting.",
       [
-        {
-          text: "Nevermind",
-          onPress: () => console.log("Cancel Pressed"),
-          style: "cancel"
-        },
-        { text: "Confirm", onPress: () => cancelMeeting(id) }
+        { text: "Nevermind", onPress: () => console.log("Cancel Pressed"), style: "cancel" },
+        { text: "Confirm", onPress: () => cancelMeeting(id) },
       ],
       { cancelable: false }
     );
@@ -100,31 +99,30 @@ export default function MeetingsScreen() {
   const handlePress = (type, id, topicId, str) => {
     switch(type) {
       case 'accept':
-      acceptMeetingAlert(id);
-      setRefreshing(true);
-      break;
+        acceptMeetingAlert(id);
+        setRefreshing(true);
+        break;
       case 'cancel':
-      cancelMeetingAlert(id);
-      setRefreshing(true);
-      break;
+        cancelMeetingAlert(id);
+        setRefreshing(true);
+        break;
       case 'submitSummary':
-      navigation.navigate('WriteSummary', { id: id, topicId: topicId, type: 'submit', summaryTitle: str, onGoBack: () => getData() });
-      break;
+        console.log('Navigate: Submit Summary');
+        navigation.navigate('WriteSummary', { id: id, topicId: topicId, type: 'submit', summaryTitle: str, onGoBack: () => getData() });
+        break;
       case 'editSummary':
-      navigation.navigate('WriteSummary', { id: id, topicId: topicId, type: 'edit', summaryTitle: str, onGoBack: () => getData() });
-      break;
+        console.log('Navigate: Edit Summary');
+        navigation.navigate('WriteSummary', { id: id, topicId: topicId, type: 'edit', summaryTitle: str, onGoBack: () => getData() });
+        break;
     }
   }
 
-  const printPastMeetings = () => {
-    console.log("Past Meetings: " + JSON.stringify(pastMeetings));
-    if (pastMeetings[0] !== undefined) {
-      return (<View>
-        <View style={styles.meetingsGroup}>
-          <Text style={styles.meetingsTitle}>Past</Text>
-        </View>
-        { pastMeetings.map((m, i) => {
-          return (<View key={i} style={styles.meeting}>
+  const onPressWrapper = (m, onPress) => { return () => onPress(m); };
+  const printMeetingsList = (meetings, onPress=(m) => handlePress(m.buttonPress, m.Id)) => {
+    return (
+      meetings.map((m, i) => {
+        return (
+          <View key={i} style={styles.meeting}>
             <View style={styles.meetingInfo}>
               <View style={styles.meetingMainRow}>
                 <Image style={styles.meetingAvatar} source={{uri: m.Avatar}} />
@@ -140,60 +138,54 @@ export default function MeetingsScreen() {
             <Button
               containerStyle={m.meetingButton}
               style={m.meetingButtonText}
-              onPress={() => handlePress(m.buttonPress, m.Id, m.TopicId, m.summaryTitle)}
+              onPress={onPressWrapper(m, onPress)}
               disabled={m.buttonDisabled}>
               {m.buttonText}
               </Button>
-          </View>);
-        })}
-      </View>);
-    } else {
-      return (<View>
-      </View>);
-    }
+          </View>
+        );
+      })
+    );
   }
 
-  const printUpcomingMeetings = () => {
-    console.log("Upcoming Meetings: " + JSON.stringify(upcomingMeetings));
-    if (upcomingMeetings[0] !== undefined) {
-      return (<View>
-        <View style={styles.meetingsGroup}>
-          <Text style={styles.meetingsTitle}>Upcoming</Text>
-        </View>
-        { upcomingMeetings.map((m, i) => {
-          return (<View key={i} style={styles.meeting}>
-            <View style={styles.meetingInfo}>
-              <View style={styles.meetingMainRow}>
-                <Image style={styles.meetingAvatar} source={m.Avatar} />
-                <View style={styles.meetingMainInfo}>
-                  <Text style={styles.meetingTitleText}>{m.titleText}</Text>
-                  <Text style={styles.meetingDateText}>{m.dateText}</Text>
+  const pastOnPress = (m) => handlePress(m.buttonPress, m.Id, m.TopicId, m.summaryTitle);
+  const printPastMeetings = () => {
+    console.log("Past Meetings"); //:", JSON.stringify(pastMeetings));
+    return (
+      <View>{ 
+          (() => {if (pastMeetings[0] !== undefined) {
+            return(
+              <View>
+                <View style={styles.meetingsGroup}>
+                  <Text style={styles.meetingsTitle}>Past</Text>
                 </View>
-                <View style={{flex: 1}}>
-                  <Text style={m.meetingStatus}>{m.Status}</Text>
-                </View>
-
+                {printMeetingsList(pastMeetings, pastOnPress)}
               </View>
-            </View>
-            <Button
-              containerStyle={m.meetingButton}
-              style={m.meetingButtonText}
-              onPress={() => handlePress(m.buttonPress, m.Id)}
-              disabled={m.buttonDisabled}>
-              {m.buttonText}
-              </Button>
-          </View>);
-        })}
-      </View>);
-    } else {
-      return (<View>
+            );
+          } else {
+            return (<View/>);
+          }})()
+      }</View>
+    );
+  }
+
+  const upcomingOnPress = (m) => handlePress(m.buttonPress, m.Id);
+  const printUpcomingMeetings = () => {
+    console.log("Upcoming Meetings");//: " + JSON.stringify(upcomingMeetings));
+    return (
+      <View>
         <View style={styles.meetingsGroup}>
           <Text style={styles.meetingsTitle}>Upcoming</Text>
         </View>
-        <Text style={styles.meetingsPrimaryNone}>No scheduled meetings!</Text>
-      </View>);
-    }
-
+        { 
+          (() => {if (upcomingMeetings[0] !== undefined) {
+            return printMeetingsList(upcomingMeetings, upcomingOnPress);
+          } else {
+            return (<Text style={styles.meetingsPrimaryNone}>No scheduled meetings!</Text>);
+          }})()
+        }
+      </View>
+    );
   }
 
   useEffect(() => {
@@ -212,7 +204,7 @@ export default function MeetingsScreen() {
           navigation={navigation} />
       <ScrollView contentContainerStyle={styles.scrollView}
           refreshControl={
-              <RefreshControl refreshing={refreshControl} onRefresh={this.onRefresh.bind(this)} />
+              <RefreshControl refreshing={refreshControl} onRefresh={onRefresh} />
           }>
         { printUpcomingMeetings() }
         { printPastMeetings() }

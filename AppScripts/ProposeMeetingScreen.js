@@ -3,12 +3,13 @@
 
 
 import React, {useState, useEffect} from 'react';
-import {View, Text, Image, AsyncStorage} from 'react-native';
+import {View, Text, Image} from 'react-native';
+// import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import Button from 'react-native-button';
-import {BackTitleBar, SettingsModal} from './ScreenComponents.js';
+// import {BackTitleBar, SettingsModal} from './ScreenComponents.js';
 import {styles, colors} from './Styles.js';
-import {getContactInfoOf} from './API.js';
+// import {getContactInfoOf} from './API.js';
 import DateTimePickerModal from "react-native-modal-datetime-picker";
 
 export default function ProposeMeetingScreen() {
@@ -25,7 +26,7 @@ export default function ProposeMeetingScreen() {
   }
 
   const handleConfirm = (date) => {
-    console.log("Date picked wawa: " + data);
+    console.log("Date picked wawa: " + date);
     hideModal();
     navigation.navigate('Meetings');
   }
@@ -44,7 +45,7 @@ export default function ProposeMeetingScreen() {
           <DateTimePickerModal style={styles.dateTimeBox}
               isVisible={modalVisible}
               mode="datetime"
-              onConfirm={() => his.handleConfirm()}
+              onConfirm={() => handleConfirm()}
               onCancel={() => hideModal()}
           />
         </View>

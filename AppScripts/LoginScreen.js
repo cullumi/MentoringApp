@@ -3,7 +3,8 @@
 
 
 import React, {useState} from 'react';
-import {AsyncStorage, View, Image} from 'react-native';
+import {View, Image} from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import Button from 'react-native-button';
 import LinkedInModal from 'react-native-linkedin';
 import { useNavigation } from '@react-navigation/native';

@@ -14,13 +14,17 @@ export default function PrivacyScreen() {
   const [refreshing, setRefreshing] = useState(false)
   const navigation = useNavigation();
 
-  const acceptAgreement = () => {
-    updatePrivacy(getCurrentUser().email, 1);
+  const acceptAgreement = async () => {
+    const user = await getCurrentUser('PrivacyScreen');
+    const email = user.Email;
+    updatePrivacy(email, 1);
     navigation.navigate("Main");
   }
 
-  const denyAgreement = () => {
-    updatePrivacy(getCurrentUser().email, 0);
+  const denyAgreement = async () => {
+    const user = await getCurrentUser('PrivacyScreen');
+    const email = user.Email;
+    updatePrivacy(email, 0);
     navigation.navigate("Main");
   }
 

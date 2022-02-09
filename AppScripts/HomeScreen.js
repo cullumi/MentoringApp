@@ -1,14 +1,16 @@
 
 
 
-import React, {useState, useEffect} from 'react';
-import {AsyncStorage, View, Text, Button, ScrollView, RefreshControl, TouchableOpacity, Image, Modal, TextInput} from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, Button, ScrollView, RefreshControl, TouchableOpacity, Image, Modal, TextInput } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import IonIcon from 'react-native-vector-icons/Ionicons';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import {TitleBar} from './ScreenComponents.js';
-import {styles, colors} from './Styles.js';
-import {getMentorsOf, getMenteesOf, getCurrentUser, checkMeetings, updateAppointmentStatus, createSummary} from './API.js';
+import  {TitleBar} from './ScreenComponents.js';
+import { styles, colors } from './Styles.js';
+import { getMentorsOf, getMenteesOf, getCurrentUser, checkMeetings, updateAppointmentStatus, createSummary } from './API.js';
 import { useNotification } from './PushNotifs.js';
+import { saveLocals, loadLocalArray } from './globals.js';
 
 export default function HomeScreen() {
   const [shouldUpdate, setShouldUpdate] = useState(true);
@@ -36,41 +38,25 @@ export default function HomeScreen() {
     var newMentees = [];
     var doSetAsyncStorage = false;
     try {
-      console.log("setPairs in Home: ");
       const curUser = await getCurrentUser("Home");
-      console.log("Setting Pairs based on: ", curUser);
-      newMentors = await getMentorsOf(curUser.Id);
       newMentees = await getMenteesOf(curUser.Id);
+      newMentors = await getMentorsOf(curUser.Id);
       doSetAsyncStorage = true;
     } catch (error) {
       console.log(error);
-      try {
-        var tempMentors = JSON.parse(await AsyncStorage.getItem('Mentors'));
-        var tempMentees = JSON.parse(await AsyncStorage.getItem('Mentees'));
-
-        if (tempMentors != null && Array.isArray(tempMentors)) {
-          newMentors = tempMentors;
-        }
-        if (tempMentees != null && Array.isArray(tempMentees)) {
-          newMentees = tempMentees;
-        }
-      } catch (error) {
-        console.log(error);
-      }
+      newMentors = await loadLocalArray('Mentors', newMentors);
+      newMentees = await loadLocalArray('Mentees', newMentees);
     }
     // Save mentor/mentee info from the database into local storage, for when you're offline.
     if (doSetAsyncStorage) {
-      try {
-        await AsyncStorage.setItem('Mentors', JSON.stringify(newMentors));
-        await AsyncStorage.setItem('Mentees', JSON.stringify(newMentees));
-      } catch (error) {
-        console.log(error);
-      }
+      await saveLocals(["Mentors", "Mentees"], [mentors, mentees]);
     }
     setRefreshControl(false);
     setShouldUpdate(false);
     setMentors(newMentors);
     setMentees(newMentees);
+    // console.log('newMentors:', newMentors);
+    // console.log('newMentees:', newMentees);
   };
 
   const unapprovedAccount = () => {
@@ -88,7 +74,6 @@ export default function HomeScreen() {
     );
   };
 
-  // May need to be modified
   const onRefresh = () => {
     setRefreshControl(true);
     setPairs();
@@ -96,11 +81,8 @@ export default function HomeScreen() {
 
   const submitModalSummary = async (id) => {
     const user = JSON.parse(await AsyncStorage.getItem('User'));
-    // post insert
     createSummary(id, curSummary, user.id);
-    // update appointment status
     updateAppointmentStatus(id, 'Completed')
-    // Refresh meetings state
     refreshMeetings('')
   };
 
@@ -126,9 +108,7 @@ export default function HomeScreen() {
 
   const processMeeting = async (ret, meeting) => {
     if (ret == 'missed') {
-      // Update meeting in DB
       updateAppointmentStatus(meeting.id, 'Missed');
-      // Refresh meeting state
       refreshMeetings(curSummary);
     } else {
       setWriteSummaryModalVisible(true);
@@ -138,26 +118,18 @@ export default function HomeScreen() {
 
   const approvedHome = () => { // removed accountID from approvedHome() parameters
     return (
-      <ScrollView contentContainerStyle={{flex: 1, flexDirection: 'column'}}
+      <ScrollView contentContainerStyle={styles.scrollView}//{flex: 1, flexDirection: 'column'}}
           refreshControl={
-              <RefreshControl refreshing={refreshControl} onRefresh={onRefresh.bind(this)} />
-      }>
+            <RefreshControl refreshing={refreshControl} onRefresh={onRefresh} />
+          }>
         <View style={styles.meetingsGroup}>
           <Text style={styles.meetingsTitle}>Mentors</Text>
         </View>
-        {
-          mentors.map( (mentor, i) => {
-            return pairItem(mentor, "Mentor", i);
-          })
-        }
+        { mentors.map( (mentor, i) => { return pairItem(mentor, "Mentor", i); }) }
         <View style={styles.meetingsGroup}>
           <Text style={styles.meetingsTitle}>Mentees</Text>
         </View>
-        {
-          mentees.map( (mentee, i) => {
-            return pairItem(mentee, "Mentee", i);
-          })
-        }
+        { mentees.map( (mentee, i) => { return pairItem(mentee, "Mentee", i); }) }
       </ScrollView>
     );
   };
@@ -204,35 +176,8 @@ export default function HomeScreen() {
     componentDidMount();
   }, []);
 
-  return (
-    <View style={{flex: 1, flexDirection: 'column'}}>
-      <TitleBar
-          title="Home"
-          navFunction={() => navigation.navigate('SettingsModal')}
-          navigation={navigation}/>
-      { route.params.accountType == 1 ? unapprovedAccount() : approvedHome() }
-      <Modal
-          animationType="slide"
-          transparent={true}
-          visible={meetingPromptModalVisible}>
-        <View style={styles.meetingPromptModalContainer}>
-          <Image style={styles.bigAvatar} source={{uri: meeting.Avatar}} />
-          <Text style={styles.meetingPromptModalHeader}>Meeting Debrief</Text>
-          <Text style={styles.meetingPromptModalText}>Did you have a meeting with { meeting.MentorFirstName }?</Text>
-          <Button
-              containerStyle={styles.meetingPromptModalConfirm}
-              style={styles.summaryButtonText}
-              onPress={() => processMeeting('confirmed', meeting)}>
-            Yes, We Met
-          </Button>
-          <Button
-              containerStyle={styles.meetingPromptModalMissed}
-              style={styles.summaryButtonText}
-              onPress={() => processMeeting('missed', meeting)}>
-            Meeting Was Missed
-          </Button>
-        </View>
-      </Modal>
+  const WriteSummaryModal = () => {
+    return (
       <Modal
           animationType="slide"
           transparent={true}
@@ -268,6 +213,45 @@ export default function HomeScreen() {
           </ScrollView>
         </View>
       </Modal>
+    );
+  }
+
+  const MeetingPromptModal = () => {
+    return (
+      <Modal
+          animationType="slide"
+          transparent={true}
+          visible={meetingPromptModalVisible}>
+        <View style={styles.meetingPromptModalContainer}>
+          <Image style={styles.bigAvatar} source={{uri: meeting.Avatar}} />
+          <Text style={styles.meetingPromptModalHeader}>Meeting Debrief</Text>
+          <Text style={styles.meetingPromptModalText}>Did you have a meeting with { meeting.MentorFirstName }?</Text>
+          <Button
+              containerStyle={styles.meetingPromptModalConfirm}
+              style={styles.summaryButtonText}
+              onPress={() => processMeeting('confirmed', meeting)}>
+            Yes, We Met
+          </Button>
+          <Button
+              containerStyle={styles.meetingPromptModalMissed}
+              style={styles.summaryButtonText}
+              onPress={() => processMeeting('missed', meeting)}>
+            Meeting Was Missed
+          </Button>
+        </View>
+      </Modal>
+    );
+  }
+
+  return (
+    <View style={{flex: 1, flexDirection: 'column'}}>
+      <TitleBar
+          title="Home"
+          navFunction={() => navigation.navigate('SettingsModal')}
+          navigation={navigation}/>
+      { route.params.accountType == 1 ? unapprovedAccount() : approvedHome() }
+      <MeetingPromptModal/>
+      <WriteSummaryModal/>
     </View>
   );
 }

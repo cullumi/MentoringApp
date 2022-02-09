@@ -1,6 +1,8 @@
 
 
-import { AsyncStorage } from "react-native";
+// import { AsyncStorage } from "react-native";
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import {parseDateText, parseSimpleDateText} from './Helpers.js';
 
 // export const cur = {user:{name:"null"}};
 const apiKey = "364ec08dac33889d5ee1e15c86c0194bf91916938c5b64ea5055ac2fe6f281b5";
@@ -47,27 +49,60 @@ export async function getLinkedInToken(source='unknown'){
     return token;
 }
 
+export async function saveLocal(type, value) {
+    try {
+        await AsyncStorage.setItem(type, JSON.stringify(value));
+    } catch (error) {
+        console.log(error);
+    }
+}
+
+export async function saveLocals(types, values) {
+    for (let i = 0; i < types.length; i++) {
+        await saveLocal(types[i], values[i])
+    }
+}
+
+export async function loadLocal(type, fallback, test=(res)=>{return true;}) {
+    try {
+        var temp = JSON.parse(await AsyncStorage.getItem(type));
+        if (temp != null && test(temp)) { return temp; }
+        else { return fallback; }
+    } catch (error) {
+        console.log(error);
+        return fallback;
+    }
+}
+
+export async function loadLocalArray(type='Mentors', fallback=[]) {
+    return loadLocal(type, fallback, (res) => Array.isArray(res));
+}
+
 export async function setLocalUser(user){
     setToken(user.Token);
     await AsyncStorage.setItem('User', JSON.stringify(user));
 }
 
-export async function getLocalUser(){
+export async function getLocalUser(source='unknown'){
+    if (debug) {
+        return debugGlobals.users[0];
+    }
     var user = JSON.parse(await AsyncStorage.getItem("User"));
-    console.log("GetLocalUser:", user);
+    console.log("GetLocalUser:" + source);//:", user);
     return user;
 }
 
 // Debugging Variables
-export const debugGlobals = makeDebugGlobals(userDefs(), topicDefs(), summaryDefs()); //makeDebugGlobals(userDefs, topicDefs, summaryDefs);
-
 const AppStatuses = ["Pending", "Scheduled", "Done", "Completed", "Cancelled"];
 const SumStatuses = ["Submitted", "Edited"]
+const randAppStatus = () => { return AppStatuses[Math.floor(Math.random() * AppStatuses.length)]; }
+const randSumStatus = () => { return SumStatuses[Math.floor(Math.random() * SumStatuses.length)]; }
 const EN = 0;
 const FN = 1;
 const LN = 2;
 const TT = 0;
 const TD = 1;
+export const debugGlobals = makeDebugGlobals(userDefs(), topicDefs(), summaryDefs()); //makeDebugGlobals(userDefs, topicDefs, summaryDefs);
 
 function makeDebugGlobals (userDefs, topicDefs, summaryDefs) {
     const dGlob = {
@@ -99,24 +134,32 @@ function makeDebugGlobals (userDefs, topicDefs, summaryDefs) {
     for (let i = 0; i < dGlob.users.length; i++) {
         const user1 = dGlob.users[i];
         for (let j = 0; j < dGlob.users.length; j++) {
+            // for (let z = 0; z < 2; z++) {
+            //     const user1 = dGlob.users[(()=>{if (z == 0) {return i;} else {return j;}})()];
+            //     const user2 = dGlob.users[(()=>{if (z == 0) {return j;} else {return i;}})()];
+            const user1 = dGlob.users[i];
             const user2 = dGlob.users[j];
-            const pair = debugPair(PIndex, user1, user2);
-            dGlob.pairs.push(pair);
-            PIndex += 1;
-            let AIndex = 0;
-            let SIndex = 0;
-            for (let z = 0; z < dGlob.topics.length; z++) {
-                const topic = dGlob.topics[z];
-                const appointment = debugAppointment(AIndex, pair.Id, topic.Id, AppStatuses[1]);
-                dGlob.appointments.push(appointment);
-                AIndex += 1;
-                const summary1 = debugSummary(SIndex, appointment.Id, summaryDefs[0], user1.Id, SumStatuses[0]);
-                dGlob.summaries.push(summary1);
-                SIndex += 1;
-                const summary2 = debugSummary(SIndex, appointment.Id, summaryDefs[1], user2.Id, SumStatuses[0]);
-                dGlob.summaries.push(summary2);
-                SIndex += 1;
+            if (user1 != user2) {
+                const pair = debugPair(PIndex, user1.Id, user2.Id);
+                dGlob.pairs.push(pair);
+                PIndex += 1;
+                let AIndex = 0;
+                let SIndex = 0;
+                for (let z = 0; z < dGlob.topics.length; z++) {
+                    const topic = dGlob.topics[z];
+                    // console.log('random test:', randAppStatus());
+                    const appointment = debugAppointment(AIndex, pair.Id, topic.Id, randAppStatus());
+                    dGlob.appointments.push(appointment);
+                    AIndex += 1;
+                    const summary1 = debugSummary(SIndex, appointment.Id, summaryDefs[0], user1.Id, randSumStatus());
+                    dGlob.summaries.push(summary1);
+                    SIndex += 1;
+                    const summary2 = debugSummary(SIndex, appointment.Id, summaryDefs[1], user2.Id, randSumStatus());
+                    dGlob.summaries.push(summary2);
+                    SIndex += 1;
+                }
             }
+            // }
         }
     }
     return dGlob;
@@ -151,8 +194,8 @@ function debugUserAuth (Id) {
         Token:null,
     };
 }
-function debugUpdatePrivacy (Id, PrivacyAccepted) {
-    debugGlobals[Id].PrivacyAccepted = PrivacyAccepted;
+export function debugUpdatePrivacy (Id, PrivacyAccepted) {
+    debugGlobals.users[Id].PrivacyAccepted = PrivacyAccepted;
 }
 function debugUser (Id, EmailName, FirstName, LastName) {
     return {
@@ -163,8 +206,8 @@ function debugUser (Id, EmailName, FirstName, LastName) {
         LastName:LastName,
         Avatar:"https://media.licdn.com/media/AAYQAQSOAAgAAQAAAAAAAB-zrMZEDXI2T62PSuT6kpB6qg.png",
         ExpoPushToken:null,
-        Created:null,
-        LastUpdate:null,
+        Created:Date(),
+        LastUpdate:Date(),
         PrivacyAccepted:1,
         Approved:1,
         Type:0,
@@ -178,8 +221,8 @@ function debugUserContact (Id, UserId, EmailName) {
         UserId:UserId,
         ContactValue:EmailName+"@debugging.com",
         ContactType:"Email",
-        Created:null,
-        LastUpdate:null,
+        Created:Date(),
+        LastUpdate:Date(),
     };
 }
 
@@ -188,11 +231,11 @@ function debugTopic (Id, Title, Description, ActiveTopic) {
     return {
         Id:Id,
         PostedBy:0,
-        DueDate:null,
+        DueDate:Date(),
         Title:Title,
         Description:Description,
-        Created:null,
-        LastUpdate:null,
+        Created:Date(),
+        LastUpdate:Date(),
         ActiveTopic:ActiveTopic,
         Archived:0,
     };
@@ -204,8 +247,8 @@ function debugPair (Id, MentorId, MenteeId) {
         Id:Id,
         MentorId:MentorId,
         MenteeId:MenteeId,
-        Created:null,
-        LastUpdate:null,
+        Created:Date(),
+        LastUpdate:Date(),
         PrivacyAccepted:1,
     };
 }
@@ -213,7 +256,7 @@ function debugPair (Id, MentorId, MenteeId) {
 // Appointment Summaries
 export function addDebugSummary(AppointmentId, SummaryText, UserId) {
     const newIndex = debugGlobals.summaries.length;
-    const summary = debugSummary(newIndex, AppointmentId, SummaryText, UserId, sumStatuses[0]);
+    const summary = debugSummary(newIndex, AppointmentId, SummaryText, UserId, SumStatuses[0]);
     debugGlobals.summaries.push(summary)
 }
 function debugSummary (Id, AppointmentId, SummaryText, UserId, Status) {
@@ -223,28 +266,28 @@ function debugSummary (Id, AppointmentId, SummaryText, UserId, Status) {
         SummaryText:SummaryText,
         UserId:UserId,
         Status:Status,
-        Created:null,
-        LastUpdate:null,
+        Created:Date(),
+        LastUpdate:Date(),
     };
 }
 
 // Appointments
 export function addDebugAppointment (PairId, TopicId, ScheduledAt) {
     const newIndex = debugGlobals.appointments.length;
-    const appointment = debugAppointment(newIndex, PairId, TopicId, appStatuses[0], ScheduledAt);
+    const appointment = debugAppointment(newIndex, PairId, TopicId, AppStatuses[0], ScheduledAt);
     debugGlobals.appointments.push(appointment);
 }
-function debugUpdateAppointmentStatus (Id, Status) {
-    debugGlobals[Id].Status = Status;
+export function debugUpdateAppointmentStatus (Id, Status) {
+    debugGlobals.appointments[Id].Status = Status;
 }
-function debugAppointment (Id, PairId, TopicId, Status, ScheduledAt=null) {
+function debugAppointment (Id, PairId, TopicId, Status, ScheduledAt=Date()) {
     return {
         Id:Id,
         PairId:PairId,
         TopicId:TopicId,
         ScheduledAt:ScheduledAt,
         Status:Status,
-        Created:null,
-        LastUpdate:null,
+        Created:Date(),
+        LastUpdate:Date(),
     };
 }

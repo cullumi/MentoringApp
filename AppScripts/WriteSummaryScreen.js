@@ -2,14 +2,15 @@
 
 
 
-import React, {useState, useEffect} from 'react';
-import {Alert, AsyncStorage, View, Text, ScrollView, TouchableOpacity, TextInput, Animated} from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import React, { useState, useEffect } from 'react';
+import { Alert, View, Text, ScrollView, TouchableOpacity, TextInput, Animated } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useNavigation, useRoute } from '@react-navigation/native';
 import IonIcon from 'react-native-vector-icons/Ionicons';
-import {mainTitleWidth, styles, colors} from './Styles.js';
-import {getTopic} from './API.js';
+import { mainTitleWidth, styles, colors } from './Styles.js';
+import { getTopic, getSummary, createSummary, updateSummary, updateAppointmentStatus, deleteSummary } from './API.js';
 import Button from 'react-native-button';
-import {accountID, accountType, url} from './globals.js';
+import { accountID, accountType, url, loadLocal, getLocalUser } from './globals.js';
 
 export default function TopicsScreen() {
   const [storageId, setStorageId] = useState('')
@@ -21,12 +22,13 @@ export default function TopicsScreen() {
   const [fade, setFade] = useState(new Animated.Value(0))
   const [topic, setTopic] = useState([])
   const navigation = useNavigation();
+  const route = useRoute();
 
   const componentDidMount = () => {
-    const id = this.props.route.params.id;
-    const topicId = this.props.route.params.topicId;
-    const type = this.props.route.params.type;
-    const summaryTitle = this.props.route.params.summaryTitle;
+    const id = route.params.id;
+    const topicId = route.params.topicId;
+    const type = route.params.type;
+    const summaryTitle = route.params.summaryTitle;
     const storageId = 'summary_' + id;
     setStorageId(storageId);
     setNormalId(id);
@@ -55,24 +57,20 @@ export default function TopicsScreen() {
   }
 
   const handleBack = () => {
-    this.props.route.params.onGoBack();
+    route.params.onGoBack();
     navigation.goBack();
   }
 
   const setSkipValue = async (value, id, type) => {
     if (value !== null) {
-      setCurSummary(value)
+      setCurSummary(value);
     } else {
       if (type === 'edit') {
         // Move to API.js
-        const summaryres = await fetch(url + '/summary/appointment/' + id, {
-          method: 'GET'
-        });
-        const summaryPayload = await summaryres.json();
-        var summary = summaryPayload['recordset'][0].SummaryText;
-        setCurSummary(summary)
+        const summary = await getSummary(id);
+        setCurSummary(summary);
       } else {
-        setCurSummary('')
+        setCurSummary('');
       }
     }
   }
@@ -83,57 +81,14 @@ export default function TopicsScreen() {
   }
 
   const handleSubmit = async () => {
-    const user = JSON.parse(await AsyncStorage.getItem('User'));
+    const user = await getLocalUser('WriteSummaryScreen (handleSubmit)');
     // Move to API.js
     if (type === 'submit') {
-      // post insert
-      const postres = fetch (url + '/create-summary', {
-        method: 'POST',
-        body: JSON.stringify({
-          AppointmentId: normalId,
-          SummaryText: curSummary,
-          UserId: user.id
-        }),
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-        }
-      })
-      .catch((error) => {
-        console.error(error);
-      });
-      const statusupdateres = await fetch(url + '/update-appointment-status', {
-        method: 'POST',
-        body: JSON.stringify({
-          Id: normalId,
-          Status: 'Completed'
-        }),
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-        }
-      })
-      .catch((error) => {
-        console.error(error);
-      });
+      await createSummary(id, curSummary, user.Id);
+      await updateAppointmentStatus(normalId, 'Completed', user.Id);
     } else {
       console.log(normalId + " " + curSummary + " " + user.id);
-      // post update
-      const postres = fetch (url + '/update-summary', {
-        method: 'POST',
-        body: JSON.stringify({
-          AppointmentId: normalId,
-          SummaryText: curSummary,
-          UserId: user.id
-        }),
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-        }
-      })
-      .catch((error) => {
-        console.error(error);
-      });
+      await updateSummary(normalId, curSummary, user.Id);
     }
     fadeOut();
   }
@@ -146,36 +101,10 @@ export default function TopicsScreen() {
   const markMissedMeeting = async (id) => {
     // Move to API.js
     // Mark Appointment as 'Missed'
-    const statusupdateres = await fetch(url + '/update-appointment-status', {
-      method: 'POST',
-      body: JSON.stringify({
-        Id: id,
-        Status: 'Missed'
-      }),
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-      }
-    })
-    .catch((error) => {
-      console.error(error);
-    });
+    const user = await getLocalUser('WriteSummaryScreen (markMissedMeeting)'); //JSON.parse(await AsyncStorage.getItem('User'));
+    await updateAppointmentStatus(id, 'Missed', user.Id);
     // Delete any summary the user may have submitted accidentally...
-    const user = JSON.parse(await AsyncStorage.getItem('User'));
-    const postres = fetch (url + '/delete-summary', {
-      method: 'POST',
-      body: JSON.stringify({
-        AppointmentId: id,
-        UserId: user.id
-      }),
-      headers: {
-        'Accept': 'application/json',
-        'Content-Type': 'application/json',
-      }
-    })
-    .catch((error) => {
-      console.error(error);
-    });
+    await deleteSummary(appId, user.Id);
     handleBack();
   }
 
@@ -275,15 +204,15 @@ export default class WriteSummaryScreen extends React.Component {
     }
 
     handleBack() {
-      this.props.route.params.onGoBack();
+      route.params.onGoBack();
       this.props.navigation.goBack();
      }
 
     componentDidMount() {
-      const id = this.props.route.params.id;
-      const topicId = this.props.route.params.topicId;
-      const type = this.props.route.params.type;
-      const summaryTitle = this.props.route.params.summaryTitle;
+      const id = route.params.id;
+      const topicId = route.params.topicId;
+      const type = route.params.type;
+      const summaryTitle = route.params.summaryTitle;
       const storageId = 'summary_' + id;
       this.setState({storageId:storageId,normalId:id,topicId:topicId,type:type,summaryTitle:summaryTitle});
       AsyncStorage.getItem(storageId).then((value) => this.setSkipValue(value, id, type));

@@ -14,7 +14,7 @@ import { accountID, accountType, url, loadLocal, getLocalUser } from './globals.
 
 export default function TopicsScreen() {
   const [storageId, setStorageId] = useState('')
-  const [normalId, setNormalId] = useState(-1)
+  const [normalId, setNormalId] = useState('')
   const [topicId, setTopicId] = useState('')
   const [type, setType] = useState('')
   const [curSummary, setCurSummary] = useState('')
@@ -84,7 +84,7 @@ export default function TopicsScreen() {
     const user = await getLocalUser('WriteSummaryScreen (handleSubmit)');
     // Move to API.js
     if (type === 'submit') {
-      await createSummary(id, curSummary, user.Id);
+      await createSummary(normalId, curSummary, user.Id);
       await updateAppointmentStatus(normalId, 'Completed', user.Id);
     } else {
       console.log(normalId + " " + curSummary + " " + user.Id);
@@ -170,7 +170,7 @@ export default function TopicsScreen() {
             numberOfLines={6}
             style={styles.summaryInput}
             onChangeText={text => saveSummary(text)}
-            value={curSummary} />
+            value={curSummary.SummaryText} />
         </View>
         <Button
           containerStyle={styles.summaryButton}

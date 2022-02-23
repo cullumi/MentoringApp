@@ -35,6 +35,7 @@ export default function MeetingsScreen() {
   }
 
   const getData = () => {
+    Alert.alert('Data Gotten');
     getAppointments('past')
     .then((meetings) => {
       setPastMeetings(meetings);

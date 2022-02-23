@@ -68,7 +68,7 @@ export default function TopicsScreen() {
       if (type === 'edit') {
         // Move to API.js
         const summary = await getSummary(id);
-        setCurSummary(summary);
+        setCurSummary(summary.SummaryText);
       } else {
         setCurSummary('');
       }
@@ -87,7 +87,7 @@ export default function TopicsScreen() {
       await createSummary(id, curSummary, user.Id);
       await updateAppointmentStatus(normalId, 'Completed', user.Id);
     } else {
-      console.log(normalId + " " + curSummary + " " + user.id);
+      console.log(normalId + " " + curSummary + " " + user.Id);
       await updateSummary(normalId, curSummary, user.Id);
     }
     fadeOut();
@@ -258,7 +258,7 @@ export default class WriteSummaryScreen extends React.Component {
           body: JSON.stringify({
             AppointmentId: this.state.normalId,
             SummaryText: this.state.curSummary,
-            UserId: user.id
+            UserId: user.Id
           }),
           headers: {
             'Accept': 'application/json',
@@ -283,14 +283,14 @@ export default class WriteSummaryScreen extends React.Component {
           console.error(error);
         });
       } else {
-        console.log(this.state.normalId + " " + this.state.curSummary + " " + user.id);
+        console.log(this.state.normalId + " " + this.state.curSummary + " " + user.Id);
         // post update
         const postres = fetch (url + '/update-summary', {
           method: 'POST',
           body: JSON.stringify({
             AppointmentId: this.state.normalId,
             SummaryText: this.state.curSummary,
-            UserId: user.id
+            UserId: user.Id
           }),
           headers: {
             'Accept': 'application/json',
@@ -340,7 +340,7 @@ export default class WriteSummaryScreen extends React.Component {
         method: 'POST',
         body: JSON.stringify({
           AppointmentId: id,
-          UserId: user.id
+          UserId: user.Id
         }),
         headers: {
           'Accept': 'application/json',

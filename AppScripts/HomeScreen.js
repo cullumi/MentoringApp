@@ -201,7 +201,7 @@ export default function HomeScreen() {
                   multiline
                   numberOfLines={6}
                   style={styles.summaryModalInput}
-                  onChangeText={text => setState({'curSummary': text})}
+                  onChangeText={text => setCurrentSummary(text)}
                   value={curSummary} />
             </View>
             <Button

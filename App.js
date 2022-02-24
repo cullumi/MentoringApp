@@ -4,10 +4,12 @@ import 'react-native-gesture-handler';
 import React, { useState, Component } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
-import {AsyncStorage, PushNotificationIOS} from 'react-native';
+import {PushNotificationIOS} from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import IonIcon from 'react-native-vector-icons/Ionicons';
 import { color, debug } from 'react-native-reanimated';
+import { AppRegistry } from 'react-native-web';
 // import { Colors } from 'react-native/Libraries/NewAppScreen';
 // import Button from 'react-native-button';
 // import { SystemMessage } from 'react-native-gifted-chat';
@@ -33,33 +35,19 @@ const globals = {
 
 // 1. MEASUREMENTS AND STYLES ARE LOCATED IN THE Styles.js FILE
 import {colors} from './AppScripts/Styles.js';
-// // 2. Common Screen Components are now located in ScreenComponents.js file.
 // import * as ScreenComponents from './AppScripts/ScreenComponents.js';
-// // 3. Date Parsing methods now in the Helper.js file.
 // import * as Helper from './AppScripts/Helper.js';
-// // 4. API GET AND POST METHODS ARE NOW LOCATED IN THE API.js FILE
 // import * as API from './AppScripts/';
-// // 5. HOME SCREEN CLASS NOW IN THE HomeScreen.js FILE
 import HomeScreen from './AppScripts/HomeScreen.js';
-// // 6. ContactInfoScreen CLASS NOW IN THE ContactInfoScreen.js FILE
 import ContactInfoScreen from './AppScripts/ContactInfoScreen.js';
-// // 7. MeetingScreen class now in the MeetingsScreen.js file.
 import MeetingsScreen from './AppScripts/MeetingsScreen.js';
-// // 8. WriteSummaryScreen class now in the WriteSummaryScreen.js file.
 import WriteSummaryScreen from './AppScripts/WriteSummaryScreen.js';
-// // 9. ProposeMeetingScreen class now in the ProposeMeetingScreen.js file.
 import ProposeMeetingScreen from './AppScripts/ProposeMeetingScreen.js';
-// // 10. TopicsScreen class now in the TopicsScreen.js file.
 import TopicsScreen from './AppScripts/TopicsScreen.js';
-// // 11. HelpScreen class now in the HelpScreen.js file.
 import HelpScreen from './AppScripts/HelpScreen.js';
-// // 12. SplashScreen class now in the SplashScreen.js file.
 import SplashScreen from './AppScripts/SplashScreen.js';
-// // 13. LoginScreen class now in the LoginScreen.js file.
 import LoginScreen from './AppScripts/LoginScreen.js';
-// // 14. PrivacyScreen class now in the PrivacyScreen.js file.
 import PrivacyScreen from './AppScripts/PrivacyScreen.js';
-// // 15. SettingsScreen class now in the SettingsScreen.js file.
 import SettingsScreen from './AppScripts/SettingsScreen.js';
 // import { registerForPushNotifications } from './AppScripts/PushNotifs.js';
 import * as Globals from './AppScripts/globals.js';
@@ -110,6 +98,7 @@ function HomeStack() {
   return (
     <Tab.Navigator
         screenOptions={({ route }) => ({
+            headerShown:false,
             tabBarIcon: ({ focused, color, size }) => {
                 let iconName;
 
@@ -124,13 +113,22 @@ function HomeStack() {
                 }
 
                 return <IonIcon name={iconName} size={size} color={color} />;
-            }
+            },
+            tabBarActiveTinColor: colors.vikingBlue,
+            tabBarInactiveTinColor: 'gray',
+            tabBarShowLabel: false,
+            tabBarStyle: [
+              {
+                display: 'flex',
+              },
+              null
+            ],
         })}
-        tabBarOptions={{
-            activeTintColor: colors.vikingBlue,
-            inactiveTintColor: 'gray',
-            showLabel: false
-        }}
+        // tabBarOptions={{
+        //     activeTintColor: colors.vikingBlue,
+        //     inactiveTintColor: 'gray',
+        //     showLabel: false
+        // }}
     >
         <Tab.Screen name="Home" component={HomeScreen} initialParams={initialParams}/>
         <Tab.Screen name="Meetings" component={MeetingsScreen} initialParams={initialParams}/>
@@ -161,10 +159,11 @@ export default class AppContainer extends React.Component {
     // emergencyLogout();
     // console.ignoredYellowBox
     // LogBox.ignoreLogs(['Warning: Each', 'Warning: Possible']);
+    //{/*headerMode='none'*/}
 
     return (
         <NavigationContainer>
-          <Stack.Navigator headerMode='none' initialRouteName='Splash'>
+          <Stack.Navigator screenOptions={{headerShown:false}} initialRouteName='Splash'>
             <Stack.Screen name='Splash' component={SplashScreen} initialParams={initialParams}/>
             <Stack.Screen name='Login' component={LoginScreen} initialParams={initialParams}/>
             <Stack.Screen name='Privacy' component={PrivacyScreen} initialParams={initialParams}/>
@@ -178,5 +177,6 @@ export default class AppContainer extends React.Component {
         </NavigationContainer>
     );
   }
-
 };
+
+AppRegistry.registerComponent(AppContainer);

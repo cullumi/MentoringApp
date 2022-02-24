@@ -258,22 +258,6 @@ export const styles = StyleSheet.create({
       backgroundColor:'#fff'
     },
 
-    proposeMeetingButton: {
-      padding: 15,
-      borderRadius:4,
-      backgroundColor: colors.vikingBlue,
-      alignItems:'center',
-      marginLeft:15,
-      marginRight:15,
-      marginBottom:15
-    },
-
-    proposeMeetingButtonText: {
-      textAlign: 'center',
-      fontSize:16,
-      color: '#fff'
-    },
-
     summaryButton: {
       padding: 15,
       borderRadius:4,
@@ -477,9 +461,9 @@ export const styles = StyleSheet.create({
       paddingTop:25
     },
 
-    contactInfoList: {
-      marginTop:10,
-      marginBottom:15,
+    contactText: {
+      marginTop:20,
+      marginBottom:20,
       paddingTop:10,
       paddingBottom:10,
       backgroundColor:colors.lightGrey

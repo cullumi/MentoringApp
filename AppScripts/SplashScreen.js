@@ -1,26 +1,27 @@
 
 
 
-import React, {useState, useEffect} from 'react';
-import {View, Text} from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { useNavigation } from '@react-navigation/native';
+import React from 'react';
+import {View, Text, AsyncStorage} from 'react-native';
 // import {getCurrentUser, getUserPayloadByEmail} from './API.js';
 // import {cur} from './globals.js';
 
 // SPLASH SCREEN
 
-export default function SplashScreen() {
-  const [refreshing, setRefreshing] = useState(false)
-  const [value, setValue] = useState(false)
-  const navigation = useNavigation();
-
-  const componentDidMount = () => {
-    AsyncStorage.getItem('Email').then((value) => setSkipValue(value));
-  }
+// For checking user login status...
+export default class SplashScreen extends React.Component {
+    constructor(props) {
+      super(props)
+      this.state = {
+        refreshing : false,
+        value: null
+      };
+    }
   
-  const setSkipValue = async (newValue) => {
-      setValue(newValue)
+    componentDidMount = () => AsyncStorage.getItem('Email').then((value) => this.setSkipValue(value));
+  
+    async setSkipValue (newValue) {
+      this.setState({ value: newValue });
       // console.log("Splash1: " + cur.user.name);
       // if (value !== null) {
       //   try {
@@ -33,21 +34,20 @@ export default function SplashScreen() {
       // console.log("Splash2: " + cur.user.name);
     }
   
-    useEffect(() => {
-      componentDidMount();
-      console.log(value);
-      if (value !== null) {
-        if (value != false) {
-          navigation.navigate('Main');
+    render () {
+
+      if (this.state.value != false) {
+        if (this.state.value !== null) {
+          this.props.navigation.navigate('Main');
         } else {
-          navigation.navigate('Login');
+          this.props.navigation.navigate('Login');
         }
       }
-    }, [])
-
-    return (
-      <View style={{textAlign:'center',alignItems:'center'}}>
-        <Text style={{fontSize:22}}>MentoringApp</Text>
-      </View>
-    )
-}
+      return (
+        <View style={{textAlign:'center',alignItems:'center'}}>
+          <Text style={{fontSize:22}}>MentoringApp</Text>
+        </View>
+      )
+    }
+  
+  };

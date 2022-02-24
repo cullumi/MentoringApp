@@ -2,11 +2,9 @@
 
 
 
-// import {AsyncStorage} from 'react-native';
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import {getLocalUser, setLocalUser, url, getToken, setToken, getLinkedInToken, isUserTokenPresent, 
-  debug, debugGlobals, addDebugAppointment, addDebugSummary, debugUpdatePrivacy, debugUpdateAppointmentStatus} from './globals.js';
-import {parseDateText, parseSimpleDateText, capitalize} from './Helpers.js';
+import {AsyncStorage} from 'react-native';
+import {getLocalUser, setLocalUser, url, getToken, setToken, getLinkedInToken, isUserTokenPresent} from './globals.js';
+import {parseDateText, parseSimpleDateText} from './Helpers.js';
 import {assignMeetingStyle, styles, colors} from './Styles.js';
 import * as Crypto from 'expo-crypto';
 
@@ -40,71 +38,34 @@ export async function updatePushToken() {
 
 // Gets a topic based on it's ID.
 export async function retTopic(topicId) {
-
-    if (debug) {
-      return debugGlobals.topics.find((topic) => {return topic.ActiveTopic == 1});
-    }
-
     const topicRes = await fetch(url + '/topic/' + topicId + '/' + await getToken('retTopic'), {
       method: 'GET'
     });
     const topicPayload = await topicRes.json();
     var topic = JSON.parse(JSON.stringify(topicPayload["recordset"][0]));
-    topic.DueDateText = parseDateText(new Date(topic["DueDate"]));
-    topic.CreatedText = parseSimpleDateText(new Date(topic["Created"]));
+    topic['dueDateText'] = parseDateText(new Date(topic["DueDate"]));
+    topic['createdText'] = parseSimpleDateText(new Date(topic["Created"]));
     return topic;
 }
 
 // Gets all pairs containing the given user as a mentor, then gets a list of mentees using those pairs.
-function assignMenteeDecorations(mentee) {
-  mentee.homeBoxStyle = styles.homeMenteeBox;
-  mentee.proposeMeetingButtonStatus = true;
-  mentee.contactButtonStyle = styles.hiddenButton;
-}
 export async function getMenteesOf (userId) {
-
-    if (debug) {
-      var relevantPairs = debugGlobals.pairs.filter((pair) => {return pair.MentorId == userId});
-      const mentees = []
-      for (let i = 0; i < relevantPairs.length; i++) {
-        const mentee = debugGlobals.users.find((user) => {return relevantPairs[i].MenteeId == user.Id;});
-        mentee = {...mentee};
-        assignMenteeDecorations(mentee);
-        mentees.push(mentee);
-      }
-      return mentees;
-    }
 
     const pairs = await getMPairsOf('mentor', userId);
     const mentees = [];
     for (var i = 0; i < pairs.length; i++) {
       const index = i;
       const mentee = await getPairedUser(pairs[index]["MenteeId"], userId);
-      assignMenteeDecorations(mentee);
+      mentee.homeBoxStyle = styles.homeMenteeBox;
+      mentee.contactButtonStatus = true;
+      mentee.contactButtonStyle = styles.hiddenButton;
       mentees.push(mentee);
     }
     return mentees;
 }
 
 // Gets all pairs containing the given user as a mentee, then gets a list of mentors from those pairs.
-function assignMentorDecorations(mentor) {
-  mentor.homeBoxStyle = styles.homeMentorBox;
-  mentor.proposeMeetingButtonStatus = false;
-  mentor.contactButtonStyle = styles.proposeMeetingButton;
-}
 export async function getMentorsOf (userId) {
-
-    if (debug) {
-      var relevantPairs = debugGlobals.pairs.filter((pair) => {return pair.MenteeId == userId});
-      const mentors = []
-      for (let i = 0; i < relevantPairs.length; i++) {
-        const mentor = debugGlobals.users.find((user) => {return relevantPairs[i].MentorId == user.Id;});
-        mentor = {...mentor};
-        assignMentorDecorations(mentor);
-        mentors.push(mentor);
-      }
-      return mentors;
-    }
 
     const pairs = await getMPairsOf('mentee', userId);
     console.log("getMentorsOf: ", pairs);
@@ -112,7 +73,9 @@ export async function getMentorsOf (userId) {
     for (var i = 0; i < pairs.length; i++) {
       const index = i;
       const mentor = await getPairedUser(pairs[index]["MentorId"], userId);
-      assignMentorDecorations(mentor);
+      mentor.homeBoxStyle = styles.homeMentorBox;
+      mentor.contactButtonStatus = false;
+      mentor.contactButtonStyle = styles.summaryButton;
       mentors.push(mentor);
     }
     return mentors;
@@ -130,11 +93,6 @@ export async function getMPairsOf(mType, userID) {
 
 export async function getPairsOf(userId) {
 
-  if (debug) {
-    // console.log("Debug - getPairsOf", debugGlobals.pairs.length);
-    return debugGlobals.pairs.filter((pair) => {return pair.MentorId == userId || pair.MenteeId == userId;});
-  }
-
   const pairsres = await fetch(url + '/pair/' + userId + '/' + await getToken('getPairsOf'), {
     method: 'GET'
   });
@@ -143,10 +101,6 @@ export async function getPairsOf(userId) {
 }
 
 export async function getPair(mentorId, menteeId) {
-
-  if (debug) {
-    return debugGlobals.pairs.find((pair) => {return pair.MentorId == mentorId && pair.MenteeId == menteeId;});
-  }
 
   const userID = (await getLocalUser()).Id;
   const userToken = await getToken('createMeeting(pairId)');
@@ -162,10 +116,6 @@ export async function getPair(mentorId, menteeId) {
 // Gets basic semi-public information about a paired user.
 export async function getPairedUser(targetId, userId) {
 
-  if (debug) {
-    return debugGlobals.users.find((user) => {return user.Id == targetId;});
-  }
-
   const fullUrl = url + '/user/other/' + targetId + '/' + userId + '/' + await getToken('getUserPayloadByID');
   const userres = await fetch(fullUrl, {
     method: 'GET'
@@ -178,24 +128,12 @@ export async function getPairedUser(targetId, userId) {
 // Should Phase Out the CreateLocalUser method in favor of a simple .json() call on the payload.
 export async function getCurrentUser (source="unknown") {
 
-  if (debug) {
-    const user = debugGlobals.users[0];
-    console.log("getCurrentUser (" + source + ")");
-    return user;
-  }
-
   const userPayload = await ensureUserExists(source);
   return createLocalUser(userPayload);
 }
 
 // Gets a user based on a certain user id.
 export async function getUserByID(id) {
-
-    if (debug) {
-      const user = debugGlobals.users.find((user) => {return user.Id == id;});
-      setLocalUser(user);
-      return user;
-    }
 
     const userPayload = await getUserPayloadByID(id);
     return createLocalUser(userPayload);
@@ -243,17 +181,11 @@ export async function ensureUserExists (source="unknown") {
 }
 
 export async function getAuthorizedUser(source='unknown') {
-
-  if (debug) {
-    return debugGlobals.userAuths[0];
-  }
-
   const authres = await fetch(url + '/user/access/' + await getLinkedInToken('getAuthorizedUser'), {
     method: 'GET'
   });
   if (authres.status != 200){
     console.log("(" + source + ") Non-200 User Authorization Payload Received: ", authres);
-    return null;
   }
   const authPayload = await authres.json();
   return authPayload;
@@ -261,10 +193,6 @@ export async function getAuthorizedUser(source='unknown') {
 
 // Fetches a User Payload using a User Email.
 export async function getUserIdPayloadByEmail(email) {
-
-    if (debug) {
-      return debugGlobals.users.find((user) => {return user.Email == email;}).Id;
-    }
 
     var fetchUrl = url + '/user/email/' + email + '/' + await getToken('getUserIdPayloadByEmail');
     const userres = await fetch(fetchUrl, {
@@ -276,10 +204,6 @@ export async function getUserIdPayloadByEmail(email) {
 
 // Fetches a User Payload using a User ID.
 export async function getUserPayloadByID(id) {
-
-    if (debug){
-      return debugGlobals.users.find((user) => {return user.Id == id;});
-    }
 
     const fullUrl = url + '/user/id/' + id + '/' + await getToken('getUserPayloadByID');
     const userres = await fetch(fullUrl, {
@@ -319,20 +243,13 @@ export async function postNewUser(email, first, last, pic) {
     });
 }
 
-// Create Meeting
 export async function createMeeting(mentorId, menteeId, scheduledAt) {
 
   console.log("Getting meeting topic and pair.");
-  const topicId = (await getCurrentTopic()).Id;
-  console.log("Gotten.", topicId);
-  const pairId = (await getPair(mentorId, menteeId)).Id;
-  console.log("Gotten.", pairId);
-
-  if (debug) {
-    addDebugAppointment(pairId, topicId, new Date(scheduledAt).toString());
-    return;
-  }
-
+  const topic = await getCurrentTopic();
+  console.log("Gotten.", topic);
+  const pair = await getPair(mentorId, menteeId);
+  console.log("Gotten.", pair);
   const userId = (await getLocalUser()).Id;
   const userToken = await getToken("createMeeting");
 
@@ -341,9 +258,9 @@ export async function createMeeting(mentorId, menteeId, scheduledAt) {
   const post = await fetch(url + '/create-appointment', {
     method: 'POST',
     body: JSON.stringify({
-      PairId: pairId,
+      PairId: pair.Id,
       ScheduledAt: scheduledAt,
-      TopicId: topicId,
+      TopicId: topic.Id,
       UserId: userId,
       Token: userToken,
     }),
@@ -359,17 +276,12 @@ export async function createMeeting(mentorId, menteeId, scheduledAt) {
 }
 
 // Create Summary
-export async function createSummary(appId, curSummary, userID) {
-
-  if (debug) {
-    addDebugSummary(appId, curSummary, userID);
-    return;
-  }
+export async function createSummary(id, curSummary, userID) {
 
   const postres = fetch (url + '/create-summary' + '/' + await getToken('createSummary'), {
     method: 'POST',
     body: JSON.stringify({
-      AppointmentId: appId,
+      AppointmentId: id,
       SummaryText: curSummary,
       UserId: userID
     }),
@@ -384,105 +296,27 @@ export async function createSummary(appId, curSummary, userID) {
   
 }
 
-export async function updateSummary(appId, curSummary, userId) {
-
-  if (debug) {
-    const summary = debugGlobals.summaries.find((summary) => {
-      return summary.AppointmentId == appId && summary.UserId == userId;
-    })
-    summary.SummaryText = curSummary;
-    return;
-  }
-
-  const postres = fetch (url + '/update-summary', {
-    method: 'POST',
-    body: JSON.stringify({
-      AppointmentId: appId,
-      SummaryText: curSummary,
-      UserId: userId
-    }),
-    headers: {
-      'Accept': 'application/json',
-      'Content-Type': 'application/json',
-    }
-  })
-  .catch((error) => {
-    console.error(error);
-  });
-}
-
-export async function getSummary(id) {
-
-  if (debug) {
-    return debugGlobals.summaries.find((summary) => { return summary.Id == id; });
-  }
-
-  const summaryres = await fetch(url + '/summary/appointment/' + id, {
-    method: 'GET'
-  });
-  const summaryPayload = await summaryres.json();
-  var summary = summaryPayload['recordset'][0].SummaryText;
-  return summary;
-}
-
-export async function deleteSummary(appId, userId) {
-
-  if (debug) {
-    const summary = debugGlobals.summaries.findIndex((summary) => {
-      return summary.AppointmentId && summary.UserId; 
-    });
-    const index = debugGlobals.summaries.indexOf(summary);
-    debugGlobals.summaries.splice(index, 1);
-    return;
-  }
-
-  const postres = fetch (url + '/delete-summary', {
-    method: 'POST',
-    body: JSON.stringify({
-      AppointmentId: appId,
-      UserId: userId,
-    }),
-    headers: {
-      'Accept': 'application/json',
-      'Content-Type': 'application/json',
-    }
-  })
-  .catch((error) => {
-    console.error(error);
-  });
-}
-
 // Updates the privacy setting of a user, based on a given email.
 export async function updatePrivacy(email, privacyAccepted) {
 
-  if (debug) {
-    const user = debugGlobals.users.find((usr) => {return usr.Email == email;});
-    debugUpdatePrivacy(user.Id, privacyAccepted);
-    return;
-  }
-
-  const postres = fetch (url + '/update-privacy' + '/' + await getToken('updatePrivacy'), {
-    method: 'POST',
-    body: JSON.stringify({
-      Email: email,
-      PrivacyAccepted: privacyAccepted
-    }),
-    headers: {
-      'Accept': 'application/json',
-      'Content-Type': 'application/json',
-    }
-  })
-  .catch((error) => {
-    console.error(error);
-  });
+    const postres = fetch (url + '/update-privacy' + '/' + await getToken('updatePrivacy'), {
+      method: 'POST',
+      body: JSON.stringify({
+        Email: email,
+        PrivacyAccepted: privacyAccepted
+      }),
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json',
+      }
+    })
+    .catch((error) => {
+      console.error(error);
+    });
 }
 
 // Returns All of the Contact Info for a given UserID. ("cInfos" refers to various forms of contact)
 export async function getContactInfoOf(userID) {
-
-    if (debug) {
-      return debugGlobals.userContacts.filter((cInfo) => {return cInfo.UserId == userID;});
-    }
 
     const cInfores = await fetch(url + '/contact/' + userID + '/' + await getToken('getContactInfoOf'), {
       method: 'GET'
@@ -503,10 +337,6 @@ export async function getContactInfoOf(userID) {
 // Returns the current topic from the database.
 export async function getCurrentTopic() {
 
-  if (debug) {
-    return debugGlobals.topics.find((topic) => {return topic.ActiveTopic == 1;});
-  }
-
   var user = await getLocalUser();
   var userId = user.Id;
   const topicres = await fetch(url + '/current-topic' + '/' + userId + '/' + await getToken('getCurrentTopic'), {
@@ -522,16 +352,6 @@ export async function getCurrentTopic() {
 // Returns a list of all topics from the database
 // NOTE: excludes the current topic?  The API could use a more descriptive rename if this is the case.
 export async function getAllTopics() {
-
-  if (debug) {
-    const topics = debugGlobals.topics;
-    for (let i = 0; i < topics.length; i++) {
-      let topic = topics[i];
-      topic.DueDateText = parseDateText(new Date(topic.DueDate));
-      topic.CreatedText = parseSimpleDateText(new Date(topic.Created));
-    }
-    return topics;
-  }
 
   var user = await getLocalUser();
   var userId = user.Id;
@@ -552,13 +372,6 @@ export async function getAllTopics() {
 
 export async function getTopic(topicId) {
 
-  if (debug) {
-    const topic = debugGlobals.topics.find((topic) => {return topic.Id == topicId;});
-    topic.DueDateText = parseDateText(new Date(topic.DueDate));
-    topic.CreatedText = parseSimpleDateText(new Date(topic.Created));
-    return topic;
-  }
-
   var user = await getLocalUser();
   var userId = user.Id;
   const topicres = await fetch(url + "/topic/" + topicId + '/' + userId + '/' + await getToken('getTopic'), {
@@ -572,44 +385,16 @@ export async function getTopic(topicId) {
 // Gets past appointments
 export async function getPastAppointments(pairId, userId, source='unknownPast') {
 
-  if (debug) {
-    return debugGlobals.appointments.filter((app) => {
-      return app.PairId == pairId && (app.Status == "Done" || app.Status == "Completed" || app.Status == "Canceled");
-    });
-  }
-
-  return await getAppointmentsFor('past', pairId, userId, source);
+  return await getAppointments('past', pairId, userId, source);
 }
 
 // Gets upcoming appointments
 export async function getUpcomingAppointments(pairId, userId, source='unknownUpcoming') {
 
-  if (debug) {
-    return debugGlobals.appointments.filter((app) => {
-      return app.PairId == pairId && (app.Status == "Pending" || app.Status == "Scheduled");
-    });
-  }
-
-  return await getAppointmentsFor('upcoming', pairId, userId, source);
+  return await getAppointments('upcoming', pairId, userId, source);
 }
 
-export async function getAppointmentsFor(type='upcoming', pairId, userId, source='unknown') {
-
-  if (debug) {
-    switch (type) {
-      case 'upcoming':
-        return await getUpcomingAppointments(pairId, userId, source);
-      case 'past':
-        return await getPastAppointments(pairId, userId, source);
-    }
-    return [];
-    // const isPast = (app) => {
-    //   const appDate = app.ScheduledAt;
-    //   console.log('past date? ', appDate);
-    //   return type == 'past' && appDate <= Date();};
-    // const isUpcoming = (app) => {return type == 'upcoming' && app.ScheduledAt > Date();};
-    // return debugGlobals.appointments.filter((app) => {return app.PairId == pairId && (isPast(app) || isUpcoming(app));});
-  }
+export async function getAppointments(type, pairId, userId, source='unknown') {
 
   const res = await fetch(url + '/appointment/' + type + '/' + pairId + '/' + userId + '/' + await getToken('checkMeetingsHome(pastapts)'), {
     method: 'GET'
@@ -620,11 +405,6 @@ export async function getAppointmentsFor(type='upcoming', pairId, userId, source
 
 // Updates appointment status
 export async function updateAppointmentStatus(meetingId, status, userId) {
-
-  if (debug) {
-    debugUpdateAppointmentStatus(meetingId, status);
-    return;
-  }
 
   const statusupdateres = await fetch(url + '/update-appointment-status' + '/' + userId + '/' + await getToken('updateAppointmentStatus'), {
     method: 'POST',
@@ -647,23 +427,16 @@ export async function updateAppointmentStatus(meetingId, status, userId) {
 // Either way, it's likely we can split it up into smaller methods.
 export async function checkMeetings() {
 
-    console.log('checkMeetings');
     var meetings = [];
     var user = await getCurrentUser('checkMeetings');
-    // console.log('got user');
     var pairs = await getPairsOf(user.Id);
-    // console.log('got user and pairs');
-    // console.log(user);
-    // console.log(pairs);
 
     // Get appointments for each pair the user is a part of.
     for (var i = 0; i < pairs.length; i++) {
-      // console.log('Get appointments for pair ' + i)
       const pairId = pairs[i].Id;
       const userId = user.Id;
       const menteeId = pairs[i].MenteeId;
       const pastAppointments = await getPastAppointments(pairId, userId, 'checkMeetings');
-      // console.log('got past appointments');
       if (pastAppointments.length !== 0) {
         // Add each appointment to the meetings array with other necessary data.
         for (var j = 0; j < pastAppointments.length; j++) {
@@ -675,7 +448,6 @@ export async function checkMeetings() {
           // Check if we should process this meeting (user should be Mentee, meeting should be newly Done)...
           if (menteeId === userId && cur > date && meeting.Status === 'Scheduled') {
             await updateAppointmentStatus(meeting.Id, 'Done', userId);
-            // console.log('AppointmentStatus updated');
             meeting.updated = true;
             meeting.Status = 'Done';
             meeting.dateText = parseDateText(date);
@@ -688,7 +460,7 @@ export async function checkMeetings() {
 
             // Get associated topic information and store it.
             meeting.topic = await getTopic(meeting.TopicId);
-            meeting.topic.DueDateText = parseDateText(new Date(meeting.topic.DueDate));
+            meeting.topic.dueDateText = parseDateText(new Date(meeting.topic.DueDate));
           }
           meetings.push(meeting);
         }
@@ -699,16 +471,7 @@ export async function checkMeetings() {
 
 // I'm certain this can be broken up into smaller, more descriptive methods.
 // (It takes up half of the API file, after all)
-
-export function assignMeetingUser(meeting, type='mentor', otherUser) {
-  meeting.isMentor = type == 'mentor';
-  meeting.titleText = capitalize(type) + " Meeting";
-  meeting.Avatar = otherUser.Avatar;
-  meeting.summaryTitle = "Reflect on your conversation with " + otherUser.FirstName + ":";
-  assignMeetingStyle(type, meeting.Status, meeting);
-}
-
-export async function getAppointments(type) {
+export async function getMeetings(type) {
 
     var meetings = [];
     var user = await getCurrentUser('getAppointments');
@@ -716,7 +479,7 @@ export async function getAppointments(type) {
 
     // Get appointments for each pair the user is a part of.
     for (var i = 0; i < pairs.length; i++) {
-      const appointments = await getAppointmentsFor(type, pairs[i].Id, user.Id, 'getMeetings');
+      const appointments = getAppointments(type, pairs[i].Id, user.Id, 'getMeetings');
       if (appointments.length !== 0) {
 
         // Add each appointment to the meetings array with other necessary data.
@@ -734,11 +497,19 @@ export async function getAppointments(type) {
           
           // Get mentor/mentee avatar, and mark whether this user is the mentor/mentee, and provide title/date text.
           if (pairs[i].MentorId === user.Id) {
+            meeting.isMentor = true;
+            meeting.titleText = "Mentee Meeting";
             const mentee = await getPairedUser(pairs[i].MenteeId, user.Id);
-            assignMeetingUser(meeting, 'mentee', mentee);
+            meeting.Avatar = mentee.Avatar;
+            meeting.summaryTitle = "Reflect on your conversation with " + mentee.FirstName + ":";
+            assignMeetingStyle('mentee', meeting.Status, meeting);
           } else {
+            meeting.isMentor = false;
+            meeting.titleText = "Mentor Meeting";
             const mentor = await getPairedUser(pairs[i].MentorId, user.Id);
-            assignMeetingUser(meeting, 'mentor', mentor);
+            meeting.Avatar = mentor.Avatar;
+            meeting.summaryTitle = "Reflect on your conversation with " + mentor.FirstName + ":";
+            assignmeetingStyle('mentor', meeting.Status, meeting);
           }
           meetings.push(meeting);
         }

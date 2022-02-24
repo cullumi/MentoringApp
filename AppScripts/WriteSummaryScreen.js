@@ -10,6 +10,7 @@ import IonIcon from 'react-native-vector-icons/Ionicons';
 import { mainTitleWidth, styles, colors } from './Styles.js';
 import { getTopic, getSummary, createSummary, updateSummary, updateAppointmentStatus, deleteSummary } from './API.js';
 import Button from 'react-native-button';
+import { UnifiedTitleBar } from './ScreenComponents.js';
 import { accountID, accountType, url, loadLocal, getLocalUser } from './globals.js';
 
 export default function TopicsScreen() {
@@ -127,27 +128,6 @@ export default function TopicsScreen() {
     componentDidUpdate();
   })
 
-  const headerBar = () => {
-    return (
-      <View>
-        <View style={{height:25, backgroundColor: colors.vikingBlue}}></View>
-        <View style={{height:30, backgroundColor: colors.white}}></View>
-        <View style={{flexDirection:'row', backgroundColor: colors.white, alignItems:'center'}}>
-          <TouchableOpacity style={{marginLeft:15,width:30}} onPress={() => handleBack()} activeOpacity={0.5}>
-            <IonIcon type='Ionicons' name='ios-arrow-back' size={30} color={colors.vikingBlue} />
-          </TouchableOpacity>
-          <View style={{width:mainTitleWidth,textAlign:'center',alignItems:'center'}}>
-            <Text style={{fontSize:18}}>Edit Summary</Text>
-          </View>
-          <TouchableOpacity onPress={() => markMissedAlert(appointmentId)} activeOpacity={0.5}>
-              <IonIcon name="ios-trash" size={30} color={colors.red} />
-          </TouchableOpacity>
-        </View>
-        <View style={{height:30, backgroundColor: colors.white}}></View>
-      </View>
-    );
-  }
-
   const topicDisplay = () => {
     return (
       <View style={styles.topicContainer}>
@@ -191,7 +171,7 @@ export default function TopicsScreen() {
 
   return ( 
     <View style={{flex:1}}>
-      {headerBar()}
+      <UnifiedTitleBar title='Edit Summary' typeLeft='back' typeRight='trash' onPressRight={() => markMissedAlert(appointmentId)} />
       <ScrollView style={styles.scrollView}>
         <Text style={styles.reminderText}>Review this meeting's topic then scroll down:</Text>
         {topicDisplay()}

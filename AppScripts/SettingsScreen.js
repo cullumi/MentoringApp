@@ -8,7 +8,7 @@ import {View, Text, Image, ScrollView} from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
 import Button from 'react-native-button';
-import {BackTitleBarHelp} from './ScreenComponents.js';
+import {BackTitleBarHelp, UnifiedTitleBar} from './ScreenComponents.js';
 import {styles, colors} from './Styles.js';
 import {getLocalUser} from './globals.js';
 
@@ -36,7 +36,7 @@ export default function SettingsScreen() {
 
   return (
     <View>
-      <BackTitleBarHelp title="Settings"/> 
+      <UnifiedTitleBar title="Settings" typeLeft='back' typeRight='help'/> 
       <ScrollView style={styles.scrollView}>
         <View style={{justifyContent: 'center',
         alignItems: 'center',paddingTop:25}}>

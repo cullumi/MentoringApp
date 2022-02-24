@@ -6,7 +6,7 @@ import { View, Text, Button, ScrollView, RefreshControl, TouchableOpacity, Image
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import IonIcon from 'react-native-vector-icons/Ionicons';
 import { useNavigation, useRoute } from '@react-navigation/native';
-import  {TitleBar} from './ScreenComponents.js';
+import  {TitleBar, UnifiedTitleBar} from './ScreenComponents.js';
 import { styles, colors } from './Styles.js';
 import { getMentorsOf, getMenteesOf, getCurrentUser, checkMeetings, updateAppointmentStatus, createSummary } from './API.js';
 import { useNotification } from './PushNotifs.js';
@@ -245,8 +245,9 @@ export default function HomeScreen() {
 
   return (
     <View style={{flex: 1, flexDirection: 'column'}}>
-      <TitleBar
+      <UnifiedTitleBar
           title="Home"
+          typeRight='settings'
           navFunction={() => navigation.navigate('SettingsModal')}
           navigation={navigation}/>
       { route.params.accountType == 1 ? unapprovedAccount() : approvedHome() }

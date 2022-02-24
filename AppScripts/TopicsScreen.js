@@ -7,7 +7,7 @@ import React, { useEffect, useState } from 'react';
 import {View, Text, ScrollView, RefreshControl} from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation } from '@react-navigation/native';
-import {TitleBar} from './ScreenComponents.js';
+import {TitleBar, UnifiedTitleBar} from './ScreenComponents.js';
 import {styles, colors} from './Styles.js';
 import {getAllTopics, getCurrentTopic} from './API.js';
 
@@ -88,8 +88,9 @@ export default function TopicsScreen() {
 
   return (
     <View style={{flex: 1, flexDirection: 'column'}}>
-      <TitleBar 
-          title="Topics" 
+      <UnifiedTitleBar 
+          title="Topics"
+          typeRight='settings'
           navFunction={() => navigation.navigate('SettingsModal')}
           navigation={navigation} />
       <ScrollView

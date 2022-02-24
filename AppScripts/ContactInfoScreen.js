@@ -10,7 +10,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import Button from 'react-native-button'
 import IonIcon from 'react-native-vector-icons/Ionicons';
-import { BackTitleBarContact } from './ScreenComponents.js';
+import { BackTitleBarContact, UnifiedTitleBar } from './ScreenComponents.js';
 import { styles, colors } from './Styles.js';
 import { getCurrentUser, getContactInfoOf, createMeeting } from './API.js';
 import DateTimePickerModal from "react-native-modal-datetime-picker";
@@ -191,7 +191,7 @@ export default function ContactInfoScreen() {
   
   return (
     <View style={{flex: 1, flexDirection: 'column', backgroundColor:'#fff'}}>
-      <BackTitleBarContact title="Contact Info" navigation={navigation} />
+      <UnifiedTitleBar title="Contact Info" typeLeft='back' />
       { displayCI(contactInfo) }
       <DateTimePickerModal style={styles.dateTimeBox}
           isVisible={modalVisible}

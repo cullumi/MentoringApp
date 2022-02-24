@@ -5,7 +5,7 @@
 import React, { useState, useEffect } from 'react';
 import {View, Text, Image, ScrollView, RefreshControl, Alert} from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import {TitleBar} from './ScreenComponents.js';
+import {TitleBar, UnifiedTitleBar} from './ScreenComponents.js';
 import {styles, colors} from './Styles.js';
 import {getAppointments, updateAppointmentStatus} from './API.js';
 import {url} from './globals';
@@ -168,7 +168,7 @@ export default function MeetingsScreen() {
             return (<View/>);
           }})()
         }
-        <View style={{height: 15}}></View>
+        <View style={{height: 15}}/>
       </View>
     );
   }
@@ -204,8 +204,9 @@ export default function MeetingsScreen() {
 
   return (
     <View style={{flex:1}} key={refreshing}>
-      <TitleBar
+      <UnifiedTitleBar
           title="Meetings"
+          typeRight='settings'
           navFunction={() => navigation.navigate('SettingsModal')}
           navigation={navigation} />
       <ScrollView contentContainerStyle={styles.scrollView}

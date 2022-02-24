@@ -30,11 +30,6 @@ export async function registerForPushNotifications() {
         console.log(pushToken);
         cur.expoPushToken = token;
         updatePushToken();
-        // if (cur.name == "null") {
-        //   pushToken ;
-        // }
-        // else {
-        // }
     } catch (error) {
         console.log('Error getting a Notification token', error);
     }

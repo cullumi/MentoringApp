@@ -21,7 +21,8 @@ export default function MeetingsScreen() {
   const navigation = useNavigation();
 
   const componentDidMount = () => {
-    getData();
+    onRefresh();
+    // getData();
   }
 
   const componentDidUpdate = () => {
@@ -35,7 +36,7 @@ export default function MeetingsScreen() {
   }
 
   const getData = () => {
-    Alert.alert('Data Gotten');
+    // Alert.alert('Data Gotten');
     getAppointments('past')
     .then((meetings) => {
       setPastMeetings(meetings);
@@ -109,11 +110,11 @@ export default function MeetingsScreen() {
         break;
       case 'submitSummary':
         console.log('Navigate: Submit Summary');
-        navigation.navigate('WriteSummary', { id: id, topicId: topicId, type: 'submit', summaryTitle: str, onGoBack: () => getData() });
+        navigation.navigate('WriteSummary', { id: id, topicId: topicId, type: 'submit', summaryTitle: str});
         break;
       case 'editSummary':
         console.log('Navigate: Edit Summary');
-        navigation.navigate('WriteSummary', { id: id, topicId: topicId, type: 'edit', summaryTitle: str, onGoBack: () => getData() });
+        navigation.navigate('WriteSummary', { id: id, topicId: topicId, type: 'edit', summaryTitle: str});
         break;
     }
   }
@@ -166,7 +167,9 @@ export default function MeetingsScreen() {
           } else {
             return (<View/>);
           }})()
-      }</View>
+        }
+        <View style={{height: 15}}></View>
+      </View>
     );
   }
 
@@ -191,6 +194,8 @@ export default function MeetingsScreen() {
 
   useEffect(() => {
     componentDidMount();
+    const willFocusSubscription = navigation.addListener('focus', () => {getData();});
+    return willFocusSubscription;
   }, []);
 
   useEffect(() => {

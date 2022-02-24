@@ -14,10 +14,9 @@ import { accountID, accountType, url, loadLocal, getLocalUser } from './globals.
 
 export default function TopicsScreen() {
   const [storageId, setStorageId] = useState('')
-  const [normalId, setNormalId] = useState('')
-  const [topicId, setTopicId] = useState('')
+  const [appointmentId, setAppointmentId] = useState('')
   const [type, setType] = useState('')
-  const [curSummary, setCurSummary] = useState('')
+  const [summaryText, setSummaryText] = useState('')
   const [summaryTitle, setSummaryTitle] = useState('')
   const [fade, setFade] = useState(new Animated.Value(0))
   const [topic, setTopic] = useState([])
@@ -25,17 +24,16 @@ export default function TopicsScreen() {
   const route = useRoute();
 
   const componentDidMount = () => {
-    const id = route.params.id;
-    const topicId = route.params.topicId;
-    const type = route.params.type;
-    const summaryTitle = route.params.summaryTitle;
-    const storageId = 'summary_' + id;
-    setStorageId(storageId);
-    setNormalId(id);
-    setTopicId(topicId);
-    setType(type);
-    setSummaryTitle(summaryTitle);
-    AsyncStorage.getItem(storageId).then((value) => setSkipValue(value, id, type));
+    console.log('WriteSummaryScreen mounted');
+    setAppointmentId(route.params.id);
+    setStorageId('summary_' + appointmentId);
+    setType(route.params.type);
+    setSummaryTitle(route.params.summaryTitle);
+    getTopic(route.params.topicId)
+    .then((newTopic) => { setTopic(newTopic) });
+    console.log('finished mounting - summaryText1:', summaryText);
+    AsyncStorage.getItem(storageId).then((savedSummary) => setSkipValue(savedSummary, appointmentId, type));
+    console.log('finished mounting - summaryText2:', summaryText);
   }
 
   const componentDidUpdate = () => {
@@ -51,32 +49,29 @@ export default function TopicsScreen() {
     }
   }
 
-  const getData = () => {
-    getTopic(topicId)
-    .then((data) => { setTopic(data) });
-  }
-
   const handleBack = () => {
-    route.params.onGoBack();
     navigation.goBack();
   }
 
-  const setSkipValue = async (value, id, type) => {
-    if (value !== null) {
-      setCurSummary(value);
+  const setSkipValue = async (sumText, appId, type) => {
+    if (sumText !== null) {
+      console.log('saved - use what\' local');
+      setSummaryText(sumText);
     } else {
       if (type === 'edit') {
         // Move to API.js
-        const summary = await getSummary(id);
-        setCurSummary(summary.SummaryText);
+        console.log('editing - getSummary');
+        const summary = await getSummary(appId);
+        setSummaryText(summary.SummaryText);
       } else {
-        setCurSummary('');
+        console.log('brand new - leave it blank');
+        setSummaryText('');
       }
     }
   }
 
   const saveSummary = async (text) => {
-    setCurSummary(text)
+    setSummaryText(text)
     await AsyncStorage.setItem(storageId, text);
   }
 
@@ -84,11 +79,11 @@ export default function TopicsScreen() {
     const user = await getLocalUser('WriteSummaryScreen (handleSubmit)');
     // Move to API.js
     if (type === 'submit') {
-      await createSummary(normalId, curSummary, user.Id);
-      await updateAppointmentStatus(normalId, 'Completed', user.Id);
+      await createSummary(appointmentId, summaryText, user.Id);
+      await updateAppointmentStatus(appointmentId, 'Completed', user.Id);
     } else {
-      console.log(normalId + " " + curSummary + " " + user.Id);
-      await updateSummary(normalId, curSummary, user.Id);
+      console.log(appointmentId + " " + summaryText + " " + user.Id);
+      await updateSummary(appointmentId, summaryText, user.Id);
     }
     fadeOut();
   }
@@ -98,17 +93,17 @@ export default function TopicsScreen() {
     setType('edit');
   }
 
-  const markMissedMeeting = async (id) => {
+  const markMissedMeeting = async (appId) => {
     // Move to API.js
     // Mark Appointment as 'Missed'
     const user = await getLocalUser('WriteSummaryScreen (markMissedMeeting)'); //JSON.parse(await AsyncStorage.getItem('User'));
-    await updateAppointmentStatus(id, 'Missed', user.Id);
+    await updateAppointmentStatus(appId, 'Missed', user.Id);
     // Delete any summary the user may have submitted accidentally...
     await deleteSummary(appId, user.Id);
     handleBack();
   }
 
-  const markMissedAlert = (id) => {
+  const markMissedAlert = (appId) => {
     Alert.alert(
       "Mark as Missed?",
       "If you or your mentor were unable to attend this meeting, mark it as missed.",
@@ -118,14 +113,13 @@ export default function TopicsScreen() {
           onPress: () => console.log("Cancel Pressed"),
           style: "cancel"
         },
-        { text: "Confirm", onPress: () => markMissedMeeting(id) }
+        { text: "Confirm", onPress: () => markMissedMeeting(appId) }
       ],
       { cancelable: false }
     );
   }
 
   useEffect(() => {
-    getData();
     componentDidMount();
   }, [])
 
@@ -133,8 +127,8 @@ export default function TopicsScreen() {
     componentDidUpdate();
   })
 
-  return ( 
-    <View style={{flex:1}}>
+  const headerBar = () => {
+    return (
       <View>
         <View style={{height:25, backgroundColor: colors.vikingBlue}}></View>
         <View style={{height:30, backgroundColor: colors.white}}></View>
@@ -145,37 +139,45 @@ export default function TopicsScreen() {
           <View style={{width:mainTitleWidth,textAlign:'center',alignItems:'center'}}>
             <Text style={{fontSize:18}}>Edit Summary</Text>
           </View>
-          <TouchableOpacity onPress={() => markMissedAlert(normalId)} activeOpacity={0.5}>
+          <TouchableOpacity onPress={() => markMissedAlert(appointmentId)} activeOpacity={0.5}>
               <IonIcon name="ios-trash" size={30} color={colors.red} />
           </TouchableOpacity>
         </View>
         <View style={{height:30, backgroundColor: colors.white}}></View>
       </View>
-      <ScrollView style={styles.scrollView}>
-        <Text style={styles.reminderText}>Review this meeting's topic then scroll down:</Text>
-        <View style={styles.topicContainer}>
+    );
+  }
+
+  const topicDisplay = () => {
+    return (
+      <View style={styles.topicContainer}>
           <View style={styles.topicHeader}>
             <Text style={styles.topicTitleText}>{topic.Title}</Text>
-            <Text style={styles.topicHeaderDateText}>{topic.createdText}</Text>
+            <Text style={styles.topicHeaderDateText}>{topic.CreatedText}</Text>
           </View>
           <View style={styles.topicInfo}>
-            <Text style={styles.topicDateText}>Due: {topic.dueDateText}</Text>
+            <Text style={styles.topicDateText}>Due: {topic.DueDateText}</Text>
             <Text>{topic.Description}</Text>
           </View>
-        </View>
-        <Text style={styles.summaryTitle}>{summaryTitle}</Text>
+      </View>
+    );
+  }
+
+  const summaryEditor = () => {
+    return (
+      <View>
         <View style={styles.summaryInputBox}>
           <TextInput
             multiline
             numberOfLines={6}
             style={styles.summaryInput}
             onChangeText={text => saveSummary(text)}
-            value={curSummary.SummaryText} />
+            value={summaryText} />
         </View>
         <Button
-          containerStyle={styles.summaryButton}
-          style={styles.summaryButtonText}
-          onPress={() => handleSubmit()}>
+            containerStyle={styles.summaryButton}
+            style={styles.summaryButtonText}
+            onPress={() => handleSubmit()}>
           Save
         </Button>
         <Animated.View style={{opacity: fade}}>
@@ -183,6 +185,18 @@ export default function TopicsScreen() {
             <Text style={{textAlign: 'center'}}>Summary saved!</Text>
           </View>
         </Animated.View>
+      </View>
+    );
+  }
+
+  return ( 
+    <View style={{flex:1}}>
+      {headerBar()}
+      <ScrollView style={styles.scrollView}>
+        <Text style={styles.reminderText}>Review this meeting's topic then scroll down:</Text>
+        {topicDisplay()}
+        <Text style={styles.summaryTitle}>{summaryTitle}</Text>
+        {summaryEditor()}
       </ScrollView>
     </View>
   );

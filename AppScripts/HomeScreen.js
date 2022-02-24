@@ -19,7 +19,7 @@ export default function HomeScreen() {
   const [mentees, setMentees] = useState([]);
   const [meetingPromptModalVisible, setMeetingPromptModalVisible] = useState(false);
   const [writeSummaryModalVisible, setWriteSummaryModalVisible] = useState(false);
-  const [curSummary, setCurSummary] = useState("");
+  const [summaryText, setSummaryText] = useState("");
   const [meeting, setMeeting] = useState({
       "MentorFirstName":"",
       "Avatar": "",
@@ -81,27 +81,27 @@ export default function HomeScreen() {
 
   const submitModalSummary = async (id) => {
     const user = JSON.parse(await AsyncStorage.getItem('User'));
-    createSummary(id, curSummary, user.id);
+    createSummary(id, summaryText, user.id);
     updateAppointmentStatus(id, 'Completed')
     refreshMeetings('')
   };
 
-  const refreshMeetings = async (curSummary) => {
+  const refreshMeetings = async (sumText) => {
     var meetings = await checkMeetingsHome();
     if (meetings && meetings.length > 0) {
       for (var meetingC = 0; meetingC < meetings.length; meetingC++) {
         if (meetings[meetingC].updated == true) {
-          setCurSummary(curSummary);
+          setSummaryText(sumText);
           setMeeting(meetings[meetingC]);
           setMeetingPromptModalVisible(true);
           meetingC = meetings.length;
         } else if (meetingC == meetings.length-1) {
-          setCurSummary(curSummary);
+          setSummaryText(sumText);
           setWriteSummaryModalVisible(false);
         }
       }
     } else {
-      setCurSummary(curSummary);
+      setSummaryText(sumText);
       setWriteSummaryModalVisible(false);
     }
   };
@@ -109,7 +109,7 @@ export default function HomeScreen() {
   const processMeeting = async (ret, meeting) => {
     if (ret == 'missed') {
       updateAppointmentStatus(meeting.id, 'Missed');
-      refreshMeetings(curSummary);
+      refreshMeetings(summaryText);
     } else {
       setWriteSummaryModalVisible(true);
       setMeetingPromptModalVisible(false);
@@ -202,7 +202,7 @@ export default function HomeScreen() {
                   numberOfLines={6}
                   style={styles.summaryModalInput}
                   onChangeText={text => setCurrentSummary(text)}
-                  value={curSummary} />
+                  value={summaryText} />
             </View>
             <Button
                 containerStyle={styles.submitSummaryModalButton}

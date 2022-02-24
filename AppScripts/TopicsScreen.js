@@ -88,29 +88,19 @@ export default function TopicsScreen() {
 
   return (
     <View style={{flex: 1, flexDirection: 'column'}}>
-      <UnifiedTitleBar 
-          title="Topics"
-          typeRight='settings'
-          navFunction={() => navigation.navigate('SettingsModal')}
-          navigation={navigation} />
+      <UnifiedTitleBar title="Topics" typeRight='settings' />
       <ScrollView
         refreshControl={
             <RefreshControl refreshing={refreshControl} onRefresh={onRefresh.bind(this)} />
-          }>
+        }>
         <View style={styles.meetingsGroup}>
           <Text style={styles.meetingsTitle}>Current Topic</Text>
         </View>
-        {
-          currentTopic != null ? topicItem(currentTopic) : <View/>
-        }
+        { currentTopic != null ? topicItem(currentTopic) : <View/> }
         <View style={styles.meetingsGroup}>
           <Text style={styles.meetingsTitle}>All Topics</Text>
         </View>
-        {
-          topics.map( (topic, i) => {
-            return topicItem(topic, i);
-          })
-        }
+        { topics.map( (topic, i) => { return topicItem(topic, i); }) }
       </ScrollView>
     </View>
   );

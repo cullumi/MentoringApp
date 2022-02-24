@@ -58,7 +58,7 @@ export async function retTopic(topicId) {
 // Gets all pairs containing the given user as a mentor, then gets a list of mentees using those pairs.
 function assignMenteeDecorations(mentee) {
   mentee.homeBoxStyle = styles.homeMenteeBox;
-  mentee.contactButtonStatus = true;
+  mentee.proposeMeetingButtonStatus = true;
   mentee.contactButtonStyle = styles.hiddenButton;
 }
 export async function getMenteesOf (userId) {
@@ -80,9 +80,7 @@ export async function getMenteesOf (userId) {
     for (var i = 0; i < pairs.length; i++) {
       const index = i;
       const mentee = await getPairedUser(pairs[index]["MenteeId"], userId);
-      mentee.homeBoxStyle = styles.homeMenteeBox;
-      mentee.contactButtonStatus = true;
-      mentee.contactButtonStyle = styles.hiddenButton;
+      assignMenteeDecorations(mentee);
       mentees.push(mentee);
     }
     return mentees;
@@ -91,8 +89,8 @@ export async function getMenteesOf (userId) {
 // Gets all pairs containing the given user as a mentee, then gets a list of mentors from those pairs.
 function assignMentorDecorations(mentor) {
   mentor.homeBoxStyle = styles.homeMentorBox;
-  mentor.contactButtonStatus = false;
-  mentor.contactButtonStyle = styles.summaryButton;
+  mentor.proposeMeetingButtonStatus = false;
+  mentor.contactButtonStyle = styles.proposeMeetingButton;
 }
 export async function getMentorsOf (userId) {
 

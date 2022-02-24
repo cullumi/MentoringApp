@@ -10,7 +10,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useNavigation, useRoute } from '@react-navigation/native';
 import Button from 'react-native-button'
 import IonIcon from 'react-native-vector-icons/Ionicons';
-import { BackTitleBarContact, UnifiedTitleBar } from './ScreenComponents.js';
+import { UnifiedTitleBar } from './ScreenComponents.js';
 import { styles, colors } from './Styles.js';
 import { getCurrentUser, getContactInfoOf, createMeeting } from './API.js';
 import DateTimePickerModal from "react-native-modal-datetime-picker";
@@ -62,7 +62,7 @@ export default function ContactInfoScreen() {
     setContactInfo(newCI);
   }
 
-  const openContactPicker = async () => {
+  const openContactInfoPicker = async () => {
 
     const { status } = await Contacts.requestPermissionsAsync();
 
@@ -133,17 +133,18 @@ export default function ContactInfoScreen() {
     navigation.navigate('Meetings');
   };
 
+  const onSelectContactInfo = () => {
+    if (info.ContactType == 'Email') {
+      Linking.openURL('mailto:' + info.ContactValue);
+    } else {
+      openContactInfoPicker();
+    }
+  }
+
   const infoItem = (info, i) => {
     return (
       <View key={i}>
-        <TouchableOpacity style={styles.contactRow} onPress={
-              () => {
-                if (info.ContactType == 'Email') {
-                  Linking.openURL('mailto:' + info.ContactValue)
-                } else {
-                  openContactPicker()
-              }}
-            }>
+        <TouchableOpacity style={styles.contactRow} onPress={ () => {onSelectContactInfo();} }>
           <View style={styles.contactIconContainer}>
             <IonIcon type='Ionicons' name={info.ContactIcon} size={30} color={colors.vikingBlue} />
           </View>
@@ -161,25 +162,25 @@ export default function ContactInfoScreen() {
     const type = route.params.type;
     return(
       <View style={styles.contactContainer}>
-        <View style={{flexGrow: 1}}>
+        <View style={{marginBottom:15, flexGrow:1}}>
           <Image style={styles.contactAvatar} source={{uri: user.Avatar}} />
           <Text style={styles.contactName}>{ user.FirstName + " " + user.LastName }</Text>
           <View style={user.homeBoxStyle}>
             <Text style={styles.contactTag}>{ type } </Text>
           </View>
         </View>
-        <View style={styles.contactText}>
+        <Button
+            containerStyle={user.contactButtonStyle}
+            style={styles.proposeMeetingButtonText}
+            minimumDate={new Date(2021, 12, 12)}
+            onPress={() => showModal()}
+            disabled={user.proposeMeetingButtonStatus}>
+          Propose Meeting
+        </Button>
+        <View style={styles.contactInfoList}>
           { console.log(JSON.stringify(cInfo)) }
           { cInfo.map( (info, i) => { return infoItem(info, i); }) }
         </View>
-        <Button
-            containerStyle={user.contactButtonStyle}
-            style={styles.summaryButtonText}
-            minimumDate={new Date(2021, 12, 12)}
-            onPress={() => showModal()}
-            disabled={user.contactButtonStatus}>
-          Propose Meeting
-        </Button>
       </View>
     );
   }

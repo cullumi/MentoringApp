@@ -204,11 +204,7 @@ export default function MeetingsScreen() {
 
   return (
     <View style={{flex:1}} key={refreshing}>
-      <UnifiedTitleBar
-          title="Meetings"
-          typeRight='settings'
-          navFunction={() => navigation.navigate('SettingsModal')}
-          navigation={navigation} />
+      <UnifiedTitleBar title="Meetings" typeRight='settings' />
       <ScrollView contentContainerStyle={styles.scrollView}
           refreshControl={
               <RefreshControl refreshing={refreshControl} onRefresh={onRefresh} />

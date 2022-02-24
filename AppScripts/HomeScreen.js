@@ -245,11 +245,7 @@ export default function HomeScreen() {
 
   return (
     <View style={{flex: 1, flexDirection: 'column'}}>
-      <UnifiedTitleBar
-          title="Home"
-          typeRight='settings'
-          navFunction={() => navigation.navigate('SettingsModal')}
-          navigation={navigation}/>
+      <UnifiedTitleBar title="Home" typeRight='settings' />
       { route.params.accountType == 1 ? unapprovedAccount() : approvedHome() }
       <MeetingPromptModal/>
       <WriteSummaryModal/>

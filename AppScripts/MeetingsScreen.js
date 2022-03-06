@@ -12,12 +12,14 @@ import {url} from './globals';
 import Button from 'react-native-button';
 
 export default function MeetingsScreen() {
-  const [toolTipVisible, setToolTipVisible] = useState(false)
-  const [upcomingMeetings, setUpcomingMeetings] = useState([])
-  const [pastMeetings, setPastMeetings] = useState([])
-  const [refreshing, setRefreshing] = useState(false)
-  const [keyUpdate, setKeyUpdate] = useState(true)
-  const [refreshControl, setRefreshControl] = useState(true)
+  const [toolTipVisible, setToolTipVisible] = useState(false);
+  const [upcomingMeetings, setUpcomingMeetings] = useState([]);
+  const [pastMeetings, setPastMeetings] = useState([]);
+  const [pastRefreshing, setPastRefreshing] = useState([]);
+  const [upcomingRefreshing, setUpcomingRefreshing] = useState([]);
+  const [refreshing, setRefreshing] = useState(false);
+  const [keyUpdate, setKeyUpdate] = useState(true);
+  const [refreshControl, setRefreshControl] = useState(true);
   const navigation = useNavigation();
 
   const componentDidMount = () => {
@@ -35,18 +37,28 @@ export default function MeetingsScreen() {
     }
   }
 
+  const resetRefresh = () => {
+    if (!(pastRefreshing && upcomingRefreshing)) {
+      setRefreshing(false);
+      setRefreshControl(false);
+    }
+  }
+
   const getData = () => {
-    // Alert.alert('Data Gotten');
+    Alert.alert('Data Gotten');
+    setPastRefreshing(true);
     getAppointments('past')
     .then((meetings) => {
       setPastMeetings(meetings);
-      setRefreshing(false);
+      setPastRefreshing(false);
+      resetRefresh();
     });
+    setUpcomingRefreshing(true);
     getAppointments('upcoming')
     .then((meetings) => {
       setUpcomingMeetings(meetings);
-      setRefreshing(false);
-      setRefreshControl(false);
+      setUpcomingRefreshing(false);
+      resetRefresh();
     });
   }
 
@@ -58,7 +70,7 @@ export default function MeetingsScreen() {
 
   const acceptMeeting = async (id) => {
     updateAppointmentStatus(id, 'Scheduled');
-    setRefreshing(true);
+    onRefresh();
   }
 
   const acceptMeetingAlert = (id) => {
@@ -81,7 +93,7 @@ export default function MeetingsScreen() {
 
   const cancelMeeting = async (id) => {
     updateAppointmentStatus(id, 'Canceled');
-    setRefreshing(true);
+    onRefresh();
   }
 
   const cancelMeetingAlert = (id) => {

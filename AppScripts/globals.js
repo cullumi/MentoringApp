@@ -95,8 +95,21 @@ export async function getLocalUser(source='unknown'){
 // Debugging Variables
 const AppStatuses = ["Pending", "Scheduled", "Done", "Completed", "Cancelled"];
 const SumStatuses = ["Submitted", "Edited"]
-const randAppStatus = () => { return AppStatuses[Math.floor(Math.random() * AppStatuses.length)]; }
-const randSumStatus = () => { return SumStatuses[Math.floor(Math.random() * SumStatuses.length)]; }
+var lastAppStatus = -1;
+var lastSumStatus = -1;
+const randAppStatus = () => { //return AppStatuses[Math.floor(Math.random() * AppStatuses.length)]; }
+    const index = (lastAppStatus+=1)%(AppStatuses.length);
+    return AppStatuses[index];
+}
+const randSumStatus = () => { //return SumStatuses[Math.floor(Math.random() * SumStatuses.length)]; }
+    const index = (lastSumStatus+=1)%(SumStatuses.length)
+    return SumStatuses[index];
+}
+const randomDate = () => {
+    const start = new Date(2021, 1, 1);
+    const end = new Date(2024, 1, 1);
+    return Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()));
+}
 const EN = 0;
 const FN = 1;
 const LN = 2;
@@ -206,8 +219,8 @@ function debugUser (Id, EmailName, FirstName, LastName) {
         LastName:LastName,
         Avatar:"https://media.licdn.com/media/AAYQAQSOAAgAAQAAAAAAAB-zrMZEDXI2T62PSuT6kpB6qg.png",
         ExpoPushToken:null,
-        Created:Date(),
-        LastUpdate:Date(),
+        Created:randomDate(),
+        LastUpdate:randomDate(),
         PrivacyAccepted:1,
         Approved:1,
         Type:0,
@@ -221,8 +234,8 @@ function debugUserContact (Id, UserId, EmailName) {
         UserId:UserId,
         ContactValue:EmailName+"@debugging.com",
         ContactType:"Email",
-        Created:Date(),
-        LastUpdate:Date(),
+        Created:randomDate(),
+        LastUpdate:randomDate(),
     };
 }
 
@@ -231,11 +244,11 @@ function debugTopic (Id, Title, Description, ActiveTopic) {
     return {
         Id:Id,
         PostedBy:0,
-        DueDate:Date(),
+        DueDate:randomDate(),
         Title:Title,
         Description:Description,
-        Created:Date(),
-        LastUpdate:Date(),
+        Created:randomDate(),
+        LastUpdate:randomDate(),
         ActiveTopic:ActiveTopic,
         Archived:0,
     };
@@ -247,8 +260,8 @@ function debugPair (Id, MentorId, MenteeId) {
         Id:Id,
         MentorId:MentorId,
         MenteeId:MenteeId,
-        Created:Date(),
-        LastUpdate:Date(),
+        Created:randomDate(),
+        LastUpdate:randomDate(),
         PrivacyAccepted:1,
     };
 }
@@ -266,8 +279,8 @@ function debugSummary (Id, AppointmentId, SummaryText, UserId, Status) {
         SummaryText:SummaryText,
         UserId:UserId,
         Status:Status,
-        Created:Date(),
-        LastUpdate:Date(),
+        Created:randomDate(),
+        LastUpdate:randomDate(),
     };
 }
 
@@ -287,7 +300,7 @@ function debugAppointment (Id, PairId, TopicId, Status, ScheduledAt=Date()) {
         TopicId:TopicId,
         ScheduledAt:ScheduledAt,
         Status:Status,
-        Created:Date(),
-        LastUpdate:Date(),
+        Created:randomDate(),
+        LastUpdate:randomDate(),
     };
 }

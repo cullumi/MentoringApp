@@ -90,6 +90,8 @@ const Tab = createBottomTabNavigator();
 //   }),
 // });
 
+// const tabLongPres
+
 const initialParams = Globals.globalParams();
 
 // HOME STACK
@@ -97,6 +99,7 @@ function HomeStack() {
 
   return (
     <Tab.Navigator
+        screenListeners={Globals.longPressListener}
         screenOptions={({ route }) => ({
             headerShown:false,
             tabBarIcon: ({ focused, color, size }) => {
@@ -114,15 +117,12 @@ function HomeStack() {
 
                 return <IonIcon name={iconName} size={size} color={color} />;
             },
-            tabBarActiveTinColor: colors.vikingBlue,
-            tabBarInactiveTinColor: 'gray',
+            tabBarActiveTintColor: colors.vikingBlue,
+            tabBarInactiveTintColor: 'gray',
             tabBarShowLabel: false,
-            tabBarStyle: [
-              {
-                display: 'flex',
-              },
-              null
-            ],
+            tabBarStyle: {
+              display: 'flex',
+            }
         })}
         // tabBarOptions={{
         //     activeTintColor: colors.vikingBlue,

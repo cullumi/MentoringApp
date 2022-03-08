@@ -20,6 +20,17 @@ export function globalParams() {
     return globals;
 }
 
+export function longPressListener({ navigation }) {
+    return {
+        /* Fixes issue where tapping a tab registers as
+        * a "long press" instead of a normal one.
+        */
+        tabLongPress: (e) => {
+        navigation.jumpTo(e.target.split('-')[0]);
+        },
+    }
+}
+
 export async function setToken(token){
     await AsyncStorage.setItem('Token', token);
 }
@@ -108,7 +119,7 @@ const randSumStatus = () => { //return SumStatuses[Math.floor(Math.random() * Su
 const randomDate = () => {
     const start = new Date(2021, 1, 1);
     const end = new Date(2024, 1, 1);
-    return Date(start.getTime() + Math.random() * (end.getTime() - start.getTime()));
+    return new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime())).toString();
 }
 const EN = 0;
 const FN = 1;
@@ -144,6 +155,8 @@ function makeDebugGlobals (userDefs, topicDefs, summaryDefs) {
         dGlob.topics.push(topic);
     }
     let PIndex = 0;
+    let AIndex = 0;
+    let SIndex = 0;
     for (let i = 0; i < dGlob.users.length; i++) {
         const user1 = dGlob.users[i];
         for (let j = 0; j < dGlob.users.length; j++) {
@@ -156,8 +169,7 @@ function makeDebugGlobals (userDefs, topicDefs, summaryDefs) {
                 const pair = debugPair(PIndex, user1.Id, user2.Id);
                 dGlob.pairs.push(pair);
                 PIndex += 1;
-                let AIndex = 0;
-                let SIndex = 0;
+                
                 for (let z = 0; z < dGlob.topics.length; z++) {
                     const topic = dGlob.topics[z];
                     // console.log('random test:', randAppStatus());
@@ -291,9 +303,14 @@ export function addDebugAppointment (PairId, TopicId, ScheduledAt) {
     debugGlobals.appointments.push(appointment);
 }
 export function debugUpdateAppointmentStatus (Id, Status) {
-    debugGlobals.appointments[Id].Status = Status;
+    const app = debugGlobals.appointments.find((app) => {return app.Id == Id;})
+    if (app != null) {
+        console.log("Changing app ", app.Id, " to ", Status);
+        app.Status = Status;
+    }
+    else { console.log("appointment doesn't exist?"); }
 }
-function debugAppointment (Id, PairId, TopicId, Status, ScheduledAt=Date()) {
+function debugAppointment (Id, PairId, TopicId, Status, ScheduledAt=randomDate()) {
     return {
         Id:Id,
         PairId:PairId,

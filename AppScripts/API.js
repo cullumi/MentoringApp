@@ -180,7 +180,7 @@ export async function getCurrentUser (source="unknown") {
 
   if (debug) {
     const user = debugGlobals.users[0];
-    console.log("getCurrentUser (" + source + ")");
+    //console.log("getCurrentUser (" + source + ")");
     return user;
   }
 
@@ -574,7 +574,7 @@ export async function getPastAppointments(pairId, userId, source='unknownPast') 
 
   if (debug) {
     return debugGlobals.appointments.filter((app) => {
-      return app.PairId == pairId && (app.Status == "Done" || app.Status == "Completed" || app.Status == "Canceled");
+      return app.PairId == pairId && (app.Status == "Done" || app.Status == "Completed" || app.Status == "Cancelled");
     });
   }
 
@@ -622,11 +622,12 @@ export async function getAppointmentsFor(type='upcoming', pairId, userId, source
 export async function updateAppointmentStatus(meetingId, status, userId) {
 
   if (debug) {
+    console.log("meeting: ", meetingId);
     debugUpdateAppointmentStatus(meetingId, status);
     return;
   }
 
-  const statusupdateres = await fetch(url + '/update-appointment-status' + '/' + userId + '/' + await getToken('updateAppointmentStatus'), {
+  await fetch(url + '/update-appointment-status' + '/' + userId + '/' + await getToken('updateAppointmentStatus'), {
     method: 'POST',
     body: JSON.stringify({
       Id: meetingId,
@@ -650,20 +651,14 @@ export async function checkMeetings() {
     console.log('checkMeetings');
     var meetings = [];
     var user = await getCurrentUser('checkMeetings');
-    // console.log('got user');
     var pairs = await getPairsOf(user.Id);
-    // console.log('got user and pairs');
-    // console.log(user);
-    // console.log(pairs);
 
     // Get appointments for each pair the user is a part of.
     for (var i = 0; i < pairs.length; i++) {
-      // console.log('Get appointments for pair ' + i)
       const pairId = pairs[i].Id;
       const userId = user.Id;
       const menteeId = pairs[i].MenteeId;
       const pastAppointments = await getPastAppointments(pairId, userId, 'checkMeetings');
-      // console.log('got past appointments');
       if (pastAppointments.length !== 0) {
         // Add each appointment to the meetings array with other necessary data.
         for (var j = 0; j < pastAppointments.length; j++) {
@@ -675,7 +670,6 @@ export async function checkMeetings() {
           // Check if we should process this meeting (user should be Mentee, meeting should be newly Done)...
           if (menteeId === userId && cur > date && meeting.Status === 'Scheduled') {
             await updateAppointmentStatus(meeting.Id, 'Done', userId);
-            // console.log('AppointmentStatus updated');
             meeting.updated = true;
             meeting.Status = 'Done';
             meeting.dateText = parseDateText(date);

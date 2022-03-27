@@ -5,7 +5,7 @@
 // import {AsyncStorage} from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {getLocalUser, setLocalUser, url, getToken, setToken, getLinkedInToken, isUserTokenPresent, 
-  debug, debugGlobals, addDebugAppointment, addDebugSummary, debugUpdatePrivacy, debugUpdateAppointmentStatus} from './globals.js';
+  debug, debugGlobals, addDebugAppointment, addDebugSummary, debugUpdatePrivacy, debugUpdateSummaryText, debugUpdateAppointmentStatus} from './globals.js';
 import {parseDateText, parseSimpleDateText, capitalize} from './Helpers.js';
 import {assignMeetingStyle, styles, colors} from './Styles.js';
 import * as Crypto from 'expo-crypto';
@@ -362,6 +362,7 @@ export async function createMeeting(mentorId, menteeId, scheduledAt) {
 export async function createSummary(appId, curSummary, userID) {
 
   if (debug) {
+    console.log("Create Summary");
     addDebugSummary(appId, curSummary, userID);
     return;
   }
@@ -387,10 +388,12 @@ export async function createSummary(appId, curSummary, userID) {
 export async function updateSummary(appId, curSummary, userId) {
 
   if (debug) {
+
+    console.log("Update Summary");
     const summary = debugGlobals.summaries.find((summary) => {
       return summary.AppointmentId == appId && summary.UserId == userId;
     })
-    summary.SummaryText = curSummary;
+    debugUpdateSummaryText(summary.Id, curSummary);
     return;
   }
 
@@ -411,13 +414,15 @@ export async function updateSummary(appId, curSummary, userId) {
   });
 }
 
-export async function getSummary(id) {
+export async function getSummary(appId) {
 
   if (debug) {
-    return debugGlobals.summaries.find((summary) => { return summary.Id == id; });
+    const summary = debugGlobals.summaries.find((summary) => { return summary.AppointmentId == appId; });
+    console.log("Get Summary:", summary.SummaryText);
+    return summary;
   }
 
-  const summaryres = await fetch(url + '/summary/appointment/' + id, {
+  const summaryres = await fetch(url + '/summary/appointment/' + appId, {
     method: 'GET'
   });
   const summaryPayload = await summaryres.json();

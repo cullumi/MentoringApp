@@ -18,6 +18,7 @@ export default function TopicsScreen() {
   const [appointmentId, setAppointmentId] = useState('')
   const [type, setType] = useState('')
   const [summaryText, setSummaryText] = useState('')
+  const [summaryHeader, setSummaryHeader] = useState('');
   const [summaryTitle, setSummaryTitle] = useState('')
   const [fade, setFade] = useState(new Animated.Value(0))
   const [topic, setTopic] = useState([])
@@ -29,11 +30,13 @@ export default function TopicsScreen() {
     setAppointmentId(route.params.id);
     setStorageId('summary_' + appointmentId);
     setType(route.params.type);
+    console.log("\"" + type + "\", \"" + route.params.type + "\"");
     setSummaryTitle(route.params.summaryTitle);
+    pickSummaryHeader(route.params.type);
     getTopic(route.params.topicId)
     .then((newTopic) => { setTopic(newTopic) });
     console.log('finished mounting - summaryText1:', summaryText);
-    AsyncStorage.getItem(storageId).then((savedSummary) => setSkipValue(savedSummary, appointmentId, type));
+    AsyncStorage.getItem(storageId.toString()).then((savedSummary) => setSkipValue(savedSummary, route.params.id, route.params.type));
     console.log('finished mounting - summaryText2:', summaryText);
   }
 
@@ -55,30 +58,42 @@ export default function TopicsScreen() {
   }
 
   const setSkipValue = async (sumText, appId, type) => {
-    if (sumText !== null) {
-      console.log('saved - use what\' local');
-      setSummaryText(sumText);
-    } else {
-      if (type === 'edit') {
-        // Move to API.js
-        console.log('editing - getSummary');
-        const summary = await getSummary(appId);
-        setSummaryText(summary.SummaryText);
+    console.log("Set Skip Value");
+    // if (sumText !== null) {
+    //   console.log('saved - use what\' local');
+    //   setSummaryText(sumText);
+    // } else {
+      loadSummary(appId, type);
+    // }
+  }
+
+  const loadSummary = async (appId, type) => {
+    console.log("\"" + type + "\", \"" + route.params.type + "\"");
+    if (type === 'edit') {
+      // Move to API.js
+      console.log('editing - getSummary');
+      const summary = await getSummary(appId);
+      if (Array.isArray(summary.SummaryText)) {
+        saveSummary(summary.SummaryText[0]);
       } else {
-        console.log('brand new - leave it blank');
-        setSummaryText('');
+        saveSummary(summary.SummaryText);
       }
+    } else {
+      console.log('brand new - leave it blank');
+      saveSummary('');
     }
   }
 
   const saveSummary = async (text) => {
-    setSummaryText(text)
-    await AsyncStorage.setItem(storageId, text);
+    if (text !== null) {
+      console.log("\"" + type + "\", \"" + route.params.type + "\"");
+      setSummaryText(text)
+      await AsyncStorage.setItem(storageId.toString(), text.toString());
+    }
   }
 
-  const handleSubmit = async () => {
+  const uploadSummary = async () => {
     const user = await getLocalUser('WriteSummaryScreen (handleSubmit)');
-    // Move to API.js
     if (type === 'submit') {
       await createSummary(appointmentId, summaryText, user.Id);
       await updateAppointmentStatus(appointmentId, 'Completed', user.Id);
@@ -86,12 +101,19 @@ export default function TopicsScreen() {
       console.log(appointmentId + " " + summaryText + " " + user.Id);
       await updateSummary(appointmentId, summaryText, user.Id);
     }
+  }
+
+  const handleSubmit = async () => {
+    // Move to API.js
+    uploadSummary();
+    saveSummary(summaryText)
     fadeOut();
   }
 
   const fadeOut = () => {
     setFade(new Animated.Value(1));
     setType('edit');
+    pickSummaryHeader('edit');
   }
 
   const markMissedMeeting = async (appId) => {
@@ -169,9 +191,17 @@ export default function TopicsScreen() {
     );
   }
 
+  const pickSummaryHeader = (type) => {
+    if (type === 'edit') {
+      setSummaryHeader("Edit Summary");
+    } else {
+      setSummaryHeader("Submit Summary");
+    }
+  }
+
   return ( 
     <View style={{flex:1}}>
-      <UnifiedTitleBar title='Edit Summary' typeLeft='back' typeRight='trash' onPressRight={() => markMissedAlert(appointmentId)} />
+      <UnifiedTitleBar title={summaryHeader} typeLeft='back' typeRight='trash' onPressRight={() => markMissedAlert(appointmentId)} />
       <ScrollView style={styles.scrollView}>
         <Text style={styles.reminderText}>Review this meeting's topic then scroll down:</Text>
         {topicDisplay()}

@@ -284,6 +284,14 @@ export function addDebugSummary(AppointmentId, SummaryText, UserId) {
     const summary = debugSummary(newIndex, AppointmentId, SummaryText, UserId, SumStatuses[0]);
     debugGlobals.summaries.push(summary)
 }
+export function debugUpdateSummaryText(Id, SummaryText) {
+    const summary = debugGlobals.summaries.find((summary) => {return summary.Id == Id})
+    if (summary != null) {
+        console.log("Changing summary ", summary.Id, " to ", SummaryText);
+        summary.SummaryText = SummaryText;
+    }
+    else { console.log("summary doesn't exist?"); }
+}
 function debugSummary (Id, AppointmentId, SummaryText, UserId, Status) {
     return {
         Id:Id,

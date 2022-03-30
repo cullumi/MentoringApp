@@ -20,7 +20,7 @@ export async function updatePushToken() {
   var token = user.token;
   var email = user.email;
   var uID = user.id;
-  const postres = fetch(url + '/update-expo-push-token' + '/' + token, {
+  const postres = fetch(url + '/update-expo-push-token', {
     method: 'POST',
     body: JSON.stringify({
       email,
@@ -367,12 +367,13 @@ export async function createSummary(appId, curSummary, userID) {
     return;
   }
 
-  const postres = fetch (url + '/create-summary' + '/' + await getToken('createSummary'), {
+  const postres = fetch (url + '/create-summary', {
     method: 'POST',
     body: JSON.stringify({
       AppointmentId: appId,
       SummaryText: curSummary,
-      UserId: userID
+      UserId: userID,
+      Token: await getToken('createSummary'),
     }),
     headers: {
       'Accept': 'application/json',
@@ -402,7 +403,8 @@ export async function updateSummary(appId, curSummary, userId) {
     body: JSON.stringify({
       AppointmentId: appId,
       SummaryText: curSummary,
-      UserId: userId
+      UserId: userId,
+      Token: await getToken('deleteSummary'),
     }),
     headers: {
       'Accept': 'application/json',
@@ -422,7 +424,7 @@ export async function getSummary(appId) {
     return summary;
   }
 
-  const summaryres = await fetch(url + '/summary/appointment/' + appId, {
+  const summaryres = await fetch(url + '/summary/appointment/' + appId + '/' + await getToken('getSummary'), {
     method: 'GET'
   });
   const summaryPayload = await summaryres.json();
@@ -446,6 +448,7 @@ export async function deleteSummary(appId, userId) {
     body: JSON.stringify({
       AppointmentId: appId,
       UserId: userId,
+      Token: await getToken('deleteSummary'),
     }),
     headers: {
       'Accept': 'application/json',
@@ -466,11 +469,12 @@ export async function updatePrivacy(email, privacyAccepted) {
     return;
   }
 
-  const postres = fetch (url + '/update-privacy' + '/' + await getToken('updatePrivacy'), {
+  const postres = fetch (url + '/update-privacy', {
     method: 'POST',
     body: JSON.stringify({
       Email: email,
-      PrivacyAccepted: privacyAccepted
+      PrivacyAccepted: privacyAccepted,
+      Token: await getToken('updatePrivacy'),
     }),
     headers: {
       'Accept': 'application/json',
@@ -632,11 +636,13 @@ export async function updateAppointmentStatus(meetingId, status, userId) {
     return;
   }
 
-  await fetch(url + '/update-appointment-status' + '/' + userId + '/' + await getToken('updateAppointmentStatus'), {
+  await fetch(url + '/update-appointment-status', {
     method: 'POST',
     body: JSON.stringify({
       Id: meetingId,
-      Status: status
+      Status: status,
+      UserId: userId,
+      Token: await getToken('updateAppointmentStatus'),
     }),
     headers: {
       'Accept': 'application/json',

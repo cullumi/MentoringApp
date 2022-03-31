@@ -70,26 +70,29 @@ export default function LoginScreen() {
     console.log("Checking if user exists in database...");
     const authPayload = await getAuthorizedUser('Login-Direct');
 
-    // Get Current User.
-    console.log("Ensuring user exists...");
-    let curUser = await getCurrentUser("Login");
+    if (authPayload !== null) {
+      
+      // Get Current User.
+      console.log("Ensuring user exists...");
+      let curUser = await getCurrentUser("Login");
 
-    // Check if debugging is active
-    if (debug){
-      // await AsyncStorage.setItem('User', JSON.stringify(curUser));
-      console.log("Debug --> Navigate to Main Screen")
-      navigation.navigate('Main');
-      return;
-    }
+      // Check if debugging is active
+      if (debug){
+        // await AsyncStorage.setItem('User', JSON.stringify(curUser));
+        console.log("Debug --> Navigate to Main Screen")
+        navigation.navigate('Main');
+        return;
+      }
 
-    // Check if this user needs to be added to DB.
-    if (authPayload.rowsAffected == 0) {
-      postNewUser(email, first, last, pic);
-      await AsyncStorage.setItem('User', JSON.stringify(curUser));
-      navigation.navigate('Privacy');
-    } else {
-      await AsyncStorage.setItem('User', JSON.stringify(curUser));
-      navigation.navigate('Main');
+      // Check if this user needs to be added to DB.
+      if (authPayload.rowsAffected == 0) {
+        postNewUser(email, first, last, pic);
+        await AsyncStorage.setItem('User', JSON.stringify(curUser));
+        navigation.navigate('Privacy');
+      } else {
+        await AsyncStorage.setItem('User', JSON.stringify(curUser));
+        navigation.navigate('Main');
+      }
     }
   }
 

@@ -2,7 +2,7 @@
 
 
 
-// import {AsyncStorage} from 'react-native';
+import {Alert} from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import {getLocalUser, setLocalUser, url, getToken, setToken, getLinkedInToken, isUserTokenPresent, 
   debug, debugGlobals, addDebugAppointment, addDebugSummary, debugUpdatePrivacy, debugUpdateSummaryText, debugUpdateAppointmentStatus} from './globals.js';
@@ -185,7 +185,11 @@ export async function getCurrentUser (source="unknown") {
   }
 
   const userPayload = await ensureUserExists(source);
-  return createLocalUser(userPayload);
+  if (userPayload !== null) {
+    return createLocalUser(userPayload);
+  } else {
+    return null;
+  }
 }
 
 // Gets a user based on a certain user id.
@@ -225,21 +229,32 @@ export async function ensureUserExists (source="unknown") {
     let authPayload = await getAuthorizedUser('ensureUserExists');
 
     // check if this user needs to be added to DB.
-    while (authPayload.rowsAffected == 0) {
+    while (authPayload !== null && authPayload.rowsAffected == 0) {
       await postNewUser(email, first, last, pic);
       authPayload = await getAuthorizedUser('ensureUserExists');
     }
-    // Set the user
-    const userToken = authPayload["recordset"][0]["Token"];
-    userId = authPayload["recordset"][0]["Id"]
-    await setToken(userToken);
+    
+    if (authPayload !== null) {
+      // Set the user
+      const userToken = authPayload["recordset"][0]["Token"];
+      userId = authPayload["recordset"][0]["Id"];
+      await setToken(userToken);
+    } else {
+      console.log("null: ", authPayload)
+    }
+
   } else {
     var user = await getLocalUser()
     userId = user.Id;
   }
-  let userPayload = await getUserPayloadByID(userId);
-  const payload = userPayload
-  return payload;
+
+  if (userId !== null) {
+    let userPayload = await getUserPayloadByID(userId);
+    const payload = userPayload;
+    return payload;
+  } else {
+    return null;
+  }
 }
 
 export async function getAuthorizedUser(source='unknown') {
@@ -253,10 +268,16 @@ export async function getAuthorizedUser(source='unknown') {
   });
   if (authres.status != 200){
     console.log("(" + source + ") Non-200 User Authorization Payload Received: ", authres);
+    if (authres.status >= 500 && authres.status < 600) {
+      Alert.alert("Connection Timed Out: " + authres.status);
+    } else {
+      Alert.alert("Connection Error: " + authres.status);
+    }
     return null;
+  } else {
+    const authPayload = await authres.json();
+    return authPayload;
   }
-  const authPayload = await authres.json();
-  return authPayload;
 }
 
 // Fetches a User Payload using a User Email.
@@ -664,38 +685,41 @@ export async function checkMeetings() {
     var user = await getCurrentUser('checkMeetings');
     var pairs = await getPairsOf(user.Id);
 
-    // Get appointments for each pair the user is a part of.
-    for (var i = 0; i < pairs.length; i++) {
-      const pairId = pairs[i].Id;
-      const userId = user.Id;
-      const menteeId = pairs[i].MenteeId;
-      const pastAppointments = await getPastAppointments(pairId, userId, 'checkMeetings');
-      if (pastAppointments.length !== 0) {
-        // Add each appointment to the meetings array with other necessary data.
-        for (var j = 0; j < pastAppointments.length; j++) {
-          var meeting = JSON.parse(JSON.stringify(pastAppointments[j]));
-          let date = new Date(meeting.ScheduledAt);
-          let cur = new Date();
-          meeting.updated = false;
+    if (user !== null && paris !== null) {
 
-          // Check if we should process this meeting (user should be Mentee, meeting should be newly Done)...
-          if (menteeId === userId && cur > date && meeting.Status === 'Scheduled') {
-            await updateAppointmentStatus(meeting.Id, 'Done', userId);
-            meeting.updated = true;
-            meeting.Status = 'Done';
-            meeting.dateText = parseDateText(date);
+      // Get appointments for each pair the user is a part of.
+      for (var i = 0; i < pairs.length; i++) {
+        const pairId = pairs[i].Id;
+        const userId = user.Id;
+        const menteeId = pairs[i].MenteeId;
+        const pastAppointments = await getPastAppointments(pairId, userId, 'checkMeetings');
+        if (pastAppointments.length !== 0) {
+          // Add each appointment to the meetings array with other necessary data.
+          for (var j = 0; j < pastAppointments.length; j++) {
+            var meeting = JSON.parse(JSON.stringify(pastAppointments[j]));
+            let date = new Date(meeting.ScheduledAt);
+            let cur = new Date();
+            meeting.updated = false;
 
-            // Get mentor/mentee avatar, and mark whether this user is the mentor/mentee, and provide title/prompt text.
-            meeting.titleText = "Mentor Meeting";
-            const mentor = await getPairedUser(pairs[i].MentorId, userId);
-            meeting.Avatar = mentor.Avatar;
-            meeting.MentorFirstName = mentor.FirstName;
+            // Check if we should process this meeting (user should be Mentee, meeting should be newly Done)...
+            if (menteeId === userId && cur > date && meeting.Status === 'Scheduled') {
+              await updateAppointmentStatus(meeting.Id, 'Done', userId);
+              meeting.updated = true;
+              meeting.Status = 'Done';
+              meeting.dateText = parseDateText(date);
 
-            // Get associated topic information and store it.
-            meeting.topic = await getTopic(meeting.TopicId);
-            meeting.topic.DueDateText = parseDateText(new Date(meeting.topic.DueDate));
+              // Get mentor/mentee avatar, and mark whether this user is the mentor/mentee, and provide title/prompt text.
+              meeting.titleText = "Mentor Meeting";
+              const mentor = await getPairedUser(pairs[i].MentorId, userId);
+              meeting.Avatar = mentor.Avatar;
+              meeting.MentorFirstName = mentor.FirstName;
+
+              // Get associated topic information and store it.
+              meeting.topic = await getTopic(meeting.TopicId);
+              meeting.topic.DueDateText = parseDateText(new Date(meeting.topic.DueDate));
+            }
+            meetings.push(meeting);
           }
-          meetings.push(meeting);
         }
       }
     }
@@ -719,36 +743,39 @@ export async function getAppointments(type) {
     var user = await getCurrentUser('getAppointments');
     var pairs = await getPairsOf(user.Id);
 
-    // Get appointments for each pair the user is a part of.
-    for (var i = 0; i < pairs.length; i++) {
-      const appointments = await getAppointmentsFor(type, pairs[i].Id, user.Id, 'getMeetings');
-      if (appointments.length !== 0) {
+    if (user !== null && paris !== null) {
 
-        // Add each appointment to the meetings array with other necessary data.
-        for (var j = 0; j < appointments.length; j++) {
-          var meeting = JSON.parse(JSON.stringify(appointments[j]));
-          let date = new Date(meeting.ScheduledAt);
-          let cur = new Date();
-          
-          //Check if Status needs to be updated due to this meeting happening.
-          if (type === 'past' && cur > date && meeting.Status === 'Scheduled') {
-            await updateAppointmentStatus(meeting.Id, 'Done', user.Id);
-            meeting.Status = 'Done';
+      // Get appointments for each pair the user is a part of.
+      for (var i = 0; i < pairs.length; i++) {
+        const appointments = await getAppointmentsFor(type, pairs[i].Id, user.Id, 'getMeetings');
+        if (appointments.length !== 0) {
+
+          // Add each appointment to the meetings array with other necessary data.
+          for (var j = 0; j < appointments.length; j++) {
+            var meeting = JSON.parse(JSON.stringify(appointments[j]));
+            let date = new Date(meeting.ScheduledAt);
+            let cur = new Date();
+            
+            //Check if Status needs to be updated due to this meeting happening.
+            if (type === 'past' && cur > date && meeting.Status === 'Scheduled') {
+              await updateAppointmentStatus(meeting.Id, 'Done', user.Id);
+              meeting.Status = 'Done';
+            }
+            meeting.dateText = parseDateText(date);
+            
+            // Get mentor/mentee avatar, and mark whether this user is the mentor/mentee, and provide title/date text.
+            if (pairs[i].MentorId === user.Id) {
+              const mentee = await getPairedUser(pairs[i].MenteeId, user.Id);
+              assignMeetingUser(meeting, 'mentee', mentee);
+            } else {
+              const mentor = await getPairedUser(pairs[i].MentorId, user.Id);
+              assignMeetingUser(meeting, 'mentor', mentor);
+            }
+            meetings.push(meeting);
           }
-          meeting.dateText = parseDateText(date);
-          
-          // Get mentor/mentee avatar, and mark whether this user is the mentor/mentee, and provide title/date text.
-          if (pairs[i].MentorId === user.Id) {
-            const mentee = await getPairedUser(pairs[i].MenteeId, user.Id);
-            assignMeetingUser(meeting, 'mentee', mentee);
-          } else {
-            const mentor = await getPairedUser(pairs[i].MentorId, user.Id);
-            assignMeetingUser(meeting, 'mentor', mentor);
-          }
-          meetings.push(meeting);
         }
       }
+      meetings.sort((a,b) => new Date(b.dateText) - new Date(a.dateText));
     }
-    meetings.sort((a,b) => new Date(b.dateText) - new Date(a.dateText));
     return meetings;
 }

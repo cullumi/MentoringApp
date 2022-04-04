@@ -228,12 +228,16 @@ export async function ensureUserExists (source="unknown") {
 
     let authPayload = await getAuthorizedUser('ensureUserExists');
 
+    console.log('ensureUserExists (', source, '): auth_Payload gotten');
+
     // check if this user needs to be added to DB.
     while (authPayload !== null && authPayload.rowsAffected == 0) {
       await postNewUser(email, first, last, pic);
       authPayload = await getAuthorizedUser('ensureUserExists');
     }
     
+    console.log('ensureUserExists (', source, '): user posted', authPayload);
+
     if (authPayload !== null) {
       // Set the user
       const userToken = authPayload["recordset"][0]["Token"];
@@ -242,6 +246,8 @@ export async function ensureUserExists (source="unknown") {
     } else {
       console.log("null: ", authPayload)
     }
+
+    console.log('ensureUserExists (', source, '): payload parsed');
 
   } else {
     var user = await getLocalUser()
@@ -275,8 +281,13 @@ export async function getAuthorizedUser(source='unknown') {
     }
     return null;
   } else {
+    console.log('200 status', authres);
     const authPayload = await authres.json();
-    return authPayload;
+    if (authPayload == false) {
+      return null;
+    } else {
+      return authPayload;
+    }
   }
 }
 

@@ -28,41 +28,62 @@ export default function LoginScreen() {
   const navigation = useNavigation();
   var modal;
 
+  async function fetchUsing(url, bearer, ender='') {
+    var resp;
+    if (!bearer) {
+      resp = await fetch(url + ender, {
+        method: 'GET'
+      });
+    } else {
+      resp = await fetch(url + ender, {
+        method: 'GET',
+        headers: {
+          Authorization: 'Bearer ' + bearer,
+        }
+      });
+    }
+    const payload = await resp.json();
+    return payload;
+  }
+
   const getLinkedInProfileInfo = async (access_token) => {
     console.log("Getting LinkedIn profile information...");
-    // get basic profile information
-    const response = await fetch('https://api.linkedin.com/v2/me', {
-      method: 'GET',
-      headers: {
-        Authorization: 'Bearer ' + access_token,
-      }
-    });
-    const payload = await response.json();
-    return payload;
+    return await fetchUsing('https://api.linkedin.com/v2/me', access_token)
+    // // get basic profile information
+    // const response = await fetch('https://api.linkedin.com/v2/me', {
+    //   method: 'GET',
+    //   headers: {
+    //     Authorization: 'Bearer ' + access_token,
+    //   }
+    // });
+    // const payload = await response.json();
+    // return payload;
   }
 
   const getLinkedInProfilePicture = async (access_token) => {
     console.log("Getting LinkedIn profile picutre...");
-    // get profile picture URL
-    const url = 'https://api.linkedin.com/v2/me?projection=(id,profilePicture(displayImage~:playableStreams))&oauth2_access_token='
-    const pictureres = await fetch(url + access_token, {
-      method: 'GET'
-    });
-    const picPayload = await pictureres.json();
-    return picPayload;
+    return await fetchUsing('https://api.linkedin.com/v2/me?projection=(id,profilePicture(displayImage~:playableStreams))&oauth2_access_token=', null, access_token);
+    // // get profile picture URL
+    // const url = 'https://api.linkedin.com/v2/me?projection=(id,profilePicture(displayImage~:playableStreams))&oauth2_access_token='
+    // const pictureres = await fetch(url + access_token, {
+    //   method: 'GET'
+    // });
+    // const picPayload = await pictureres.json();
+    // return picPayload;
   }
 
   const getLinkedInProfileEmail = async (access_token) => {
     console.log("Getting LinkedIn email address...");
-    // get email address
-    const emailres = await fetch('https://api.linkedin.com/v2/clientAwareMemberHandles?q=members&projection=(elements*(primary,type,handle~))', {
-      method: 'GET',
-      headers: {
-        Authorization: 'Bearer ' + access_token,
-      }
-    });
-    const emailPayload = await emailres.json();
-    return emailPayload;
+    return await fetchUsing('https://api.linkedin.com/v2/clientAwareMemberHandles?q=members&projection=(elements*(primary,type,handle~))', access_token);
+    // // get email address
+    // const emailres = await fetch('https://api.linkedin.com/v2/clientAwareMemberHandles?q=members&projection=(elements*(primary,type,handle~))', {
+    //   method: 'GET',
+    //   headers: {
+    //     Authorization: 'Bearer ' + access_token,
+    //   }
+    // });
+    // const emailPayload = await emailres.json();
+    // return emailPayload;
   }
 
   const ensureUserExists = async (email, last, first, pic) => {
@@ -71,7 +92,7 @@ export default function LoginScreen() {
     const authPayload = await getAuthorizedUser('Login-Direct');
 
     if (authPayload !== null) {
-      
+
       // Get Current User.
       console.log("Ensuring user exists...");
       let curUser = await getCurrentUser("Login");
@@ -79,7 +100,7 @@ export default function LoginScreen() {
       // Check if debugging is active
       if (debug){
         // await AsyncStorage.setItem('User', JSON.stringify(curUser));
-        console.log("Debug --> Navigate to Main Screen")
+        console.log("Debug --> Navigate to Main Screen");
         navigation.navigate('Main');
         return;
       }

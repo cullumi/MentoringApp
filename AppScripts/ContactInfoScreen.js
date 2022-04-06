@@ -133,7 +133,7 @@ export default function ContactInfoScreen() {
     navigation.navigate('Meetings');
   };
 
-  const onSelectContactInfo = () => {
+  const onSelectContactInfo = (info) => {
     if (info.ContactType == 'Email') {
       Linking.openURL('mailto:' + info.ContactValue);
     } else {
@@ -144,7 +144,7 @@ export default function ContactInfoScreen() {
   const infoItem = (info, i) => {
     return (
       <View key={i}>
-        <TouchableOpacity style={styles.contactRow} onPress={ () => {onSelectContactInfo();} }>
+        <TouchableOpacity style={styles.contactRow} onPress={ () => {onSelectContactInfo(info);} }>
           <View style={styles.contactIconContainer}>
             <IonIcon type='Ionicons' name={info.ContactIcon} size={30} color={colors.vikingBlue} />
           </View>

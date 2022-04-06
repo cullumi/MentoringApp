@@ -12,20 +12,24 @@ import {url} from './globals';
 import Button from 'react-native-button';
 
 export default function MeetingsScreen() {
-  const [toolTipVisible, setToolTipVisible] = useState(false)
-  const [upcomingMeetings, setUpcomingMeetings] = useState([])
-  const [pastMeetings, setPastMeetings] = useState([])
-  const [refreshing, setRefreshing] = useState(false)
-  const [keyUpdate, setKeyUpdate] = useState(true)
-  const [refreshControl, setRefreshControl] = useState(true)
+  const [toolTipVisible, setToolTipVisible] = useState(false);
+  const [upcomingMeetings, setUpcomingMeetings] = useState([]);
+  const [pastMeetings, setPastMeetings] = useState([]);
+  const [pastRefreshing, setPastRefreshing] = useState([]);
+  const [upcomingRefreshing, setUpcomingRefreshing] = useState([]);
+  const [refreshing, setRefreshing] = useState(false);
+  const [keyUpdate, setKeyUpdate] = useState(true);
+  const [refreshControl, setRefreshControl] = useState(true);
   const navigation = useNavigation();
 
   const componentDidMount = () => {
-    onRefresh();
-    // getData();
+    console.log("Mounted");
+    // onRefresh();
+    getData();
   }
 
   const componentDidUpdate = () => {
+    // console.log("Updated");
     if (refreshing == true) {
       getAppointments('upcoming')
       .then((data) => {
@@ -35,18 +39,29 @@ export default function MeetingsScreen() {
     }
   }
 
+  const resetRefresh = () => {
+    if (!(pastRefreshing && upcomingRefreshing)) {
+      setRefreshing(false);
+      setRefreshControl(false);
+    }
+  }
+
   const getData = () => {
+    console.log("Fetching");
     // Alert.alert('Data Gotten');
+    setPastRefreshing(true);
     getAppointments('past')
     .then((meetings) => {
       setPastMeetings(meetings);
-      setRefreshing(false);
+      setPastRefreshing(false);
+      resetRefresh();
     });
+    setUpcomingRefreshing(true);
     getAppointments('upcoming')
     .then((meetings) => {
       setUpcomingMeetings(meetings);
-      setRefreshing(false);
-      setRefreshControl(false);
+      setUpcomingRefreshing(false);
+      resetRefresh();
     });
   }
 
@@ -57,8 +72,11 @@ export default function MeetingsScreen() {
   }
 
   const acceptMeeting = async (id) => {
+    console.log("Accept Meeting");
     updateAppointmentStatus(id, 'Scheduled');
     setRefreshing(true);
+    getData();
+    // onRefresh();
   }
 
   const acceptMeetingAlert = (id) => {
@@ -80,8 +98,11 @@ export default function MeetingsScreen() {
   }
 
   const cancelMeeting = async (id) => {
+    console.log("Cancel Meeting");
     updateAppointmentStatus(id, 'Canceled');
     setRefreshing(true);
+    getData();
+    // onRefresh();
   }
 
   const cancelMeetingAlert = (id) => {
@@ -119,42 +140,52 @@ export default function MeetingsScreen() {
     }
   }
 
+  const meetingDisplay = (m) => {
+    return (
+      <View style={styles.meetingInfo}>
+        <View style={styles.meetingMainRow}>
+          <Image style={styles.meetingAvatar} source={{uri: m.Avatar}} />
+          <View style={styles.meetingMainInfo}>
+            <Text style={styles.meetingTitleText}>{m.titleText}</Text>
+            <Text style={styles.meetingDateText}>{m.dateText}</Text>
+          </View>
+          <View style={{flex: 1}}>
+            <Text style={m.meetingStatus}>{m.Status}</Text>
+          </View>
+        </View>
+      </View>
+    )
+  }
+
   const onPressWrapper = (m, onPress) => { return () => onPress(m); };
-  const printMeetingsList = (meetings, onPress=(m) => handlePress(m.buttonPress, m.Id)) => {
+  const meetingOnPress = (m) => handlePress(m.buttonPress, m.Id);
+  const meetingButton = (m, onPress=meetingOnPress) => {
+    return (
+      <Button
+        containerStyle={m.meetingButton} style={m.meetingButtonText}
+        onPress={onPressWrapper(m, onPress)}
+        disabled={m.buttonDisabled}>
+        {m.buttonText}
+      </Button>
+    )
+  }
+
+  const printMeetingsList = (meetings, onPress=meetingOnPress) => {
     return (
       meetings.map((m, i) => {
         return (
           <View key={i} style={styles.meeting}>
-            <View style={styles.meetingInfo}>
-              <View style={styles.meetingMainRow}>
-                <Image style={styles.meetingAvatar} source={{uri: m.Avatar}} />
-                <View style={styles.meetingMainInfo}>
-                  <Text style={styles.meetingTitleText}>{m.titleText}</Text>
-                  <Text style={styles.meetingDateText}>{m.dateText}</Text>
-                </View>
-                <View style={{flex: 1}}>
-                  <Text style={m.meetingStatus}>{m.Status}</Text>
-                </View>
-              </View>
-            </View>
-            <Button
-              containerStyle={m.meetingButton}
-              style={m.meetingButtonText}
-              onPress={onPressWrapper(m, onPress)}
-              disabled={m.buttonDisabled}>
-              {m.buttonText}
-              </Button>
+            {meetingDisplay(m)}
+            {meetingButton(m, onPress)}
           </View>
-        );
-      })
-    );
+    );}));
   }
 
   const pastOnPress = (m) => handlePress(m.buttonPress, m.Id, m.TopicId, m.summaryTitle);
   const printPastMeetings = () => {
-    console.log("Past Meetings"); //:", JSON.stringify(pastMeetings));
+    // console.log("Past Meetings"); //:", JSON.stringify(pastMeetings));
     return (
-      <View>{ 
+      <View>{
           (() => {if (pastMeetings[0] !== undefined) {
             return(
               <View>
@@ -175,17 +206,17 @@ export default function MeetingsScreen() {
 
   const upcomingOnPress = (m) => handlePress(m.buttonPress, m.Id);
   const printUpcomingMeetings = () => {
-    console.log("Upcoming Meetings");//: " + JSON.stringify(upcomingMeetings));
+    // console.log("Upcoming Meetings");//: " + JSON.stringify(upcomingMeetings));
     return (
       <View>
         <View style={styles.meetingsGroup}>
           <Text style={styles.meetingsTitle}>Upcoming</Text>
         </View>
-        { 
+        {
           (() => {if (upcomingMeetings[0] !== undefined) {
             return printMeetingsList(upcomingMeetings, upcomingOnPress);
           } else {
-            return (<Text style={styles.meetingsPrimaryNone}>No scheduled meetings!</Text>);
+            return (<Text style={styles.meetingsPrimaryNone}>No scheduled meetings</Text>);
           }})()
         }
       </View>

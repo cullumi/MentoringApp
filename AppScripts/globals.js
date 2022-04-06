@@ -6,7 +6,7 @@ import {parseDateText, parseSimpleDateText} from './Helpers.js';
 
 // export const cur = {user:{name:"null"}};
 const apiKey = "364ec08dac33889d5ee1e15c86c0194bf91916938c5b64ea5055ac2fe6f281b5";
-export const debug = true;
+export const debug = false;
 export const accountID = 1;
 export const accountType = 0;
 export const url = "https://mentorsapp.cs.wwu.edu";//"https://mentorship.cs.wwu.edu";//"http://mshipapp2.loca.lt";
@@ -18,6 +18,17 @@ export function globalParams() {
         url: url
     }
     return globals;
+}
+
+export function longPressListener({ navigation }) {
+    return {
+        /* Fixes issue where tapping a tab registers as
+        * a "long press" instead of a normal one.
+        */
+        tabLongPress: (e) => {
+        navigation.jumpTo(e.target.split('-')[0]);
+        },
+    }
 }
 
 export async function setToken(token){
@@ -95,8 +106,21 @@ export async function getLocalUser(source='unknown'){
 // Debugging Variables
 const AppStatuses = ["Pending", "Scheduled", "Done", "Completed", "Cancelled"];
 const SumStatuses = ["Submitted", "Edited"]
-const randAppStatus = () => { return AppStatuses[Math.floor(Math.random() * AppStatuses.length)]; }
-const randSumStatus = () => { return SumStatuses[Math.floor(Math.random() * SumStatuses.length)]; }
+var lastAppStatus = -1;
+var lastSumStatus = -1;
+const randAppStatus = () => { //return AppStatuses[Math.floor(Math.random() * AppStatuses.length)]; }
+    const index = (lastAppStatus+=1)%(AppStatuses.length);
+    return AppStatuses[index];
+}
+const randSumStatus = () => { //return SumStatuses[Math.floor(Math.random() * SumStatuses.length)]; }
+    const index = (lastSumStatus+=1)%(SumStatuses.length)
+    return SumStatuses[index];
+}
+const randomDate = () => {
+    const start = new Date(2021, 1, 1);
+    const end = new Date(2024, 1, 1);
+    return new Date(start.getTime() + Math.random() * (end.getTime() - start.getTime())).toString();
+}
 const EN = 0;
 const FN = 1;
 const LN = 2;
@@ -131,6 +155,8 @@ function makeDebugGlobals (userDefs, topicDefs, summaryDefs) {
         dGlob.topics.push(topic);
     }
     let PIndex = 0;
+    let AIndex = 0;
+    let SIndex = 0;
     for (let i = 0; i < dGlob.users.length; i++) {
         const user1 = dGlob.users[i];
         for (let j = 0; j < dGlob.users.length; j++) {
@@ -143,8 +169,7 @@ function makeDebugGlobals (userDefs, topicDefs, summaryDefs) {
                 const pair = debugPair(PIndex, user1.Id, user2.Id);
                 dGlob.pairs.push(pair);
                 PIndex += 1;
-                let AIndex = 0;
-                let SIndex = 0;
+                
                 for (let z = 0; z < dGlob.topics.length; z++) {
                     const topic = dGlob.topics[z];
                     // console.log('random test:', randAppStatus());
@@ -206,8 +231,8 @@ function debugUser (Id, EmailName, FirstName, LastName) {
         LastName:LastName,
         Avatar:"https://media.licdn.com/media/AAYQAQSOAAgAAQAAAAAAAB-zrMZEDXI2T62PSuT6kpB6qg.png",
         ExpoPushToken:null,
-        Created:Date(),
-        LastUpdate:Date(),
+        Created:randomDate(),
+        LastUpdate:randomDate(),
         PrivacyAccepted:1,
         Approved:1,
         Type:0,
@@ -221,8 +246,8 @@ function debugUserContact (Id, UserId, EmailName) {
         UserId:UserId,
         ContactValue:EmailName+"@debugging.com",
         ContactType:"Email",
-        Created:Date(),
-        LastUpdate:Date(),
+        Created:randomDate(),
+        LastUpdate:randomDate(),
     };
 }
 
@@ -231,11 +256,11 @@ function debugTopic (Id, Title, Description, ActiveTopic) {
     return {
         Id:Id,
         PostedBy:0,
-        DueDate:Date(),
+        DueDate:randomDate(),
         Title:Title,
         Description:Description,
-        Created:Date(),
-        LastUpdate:Date(),
+        Created:randomDate(),
+        LastUpdate:randomDate(),
         ActiveTopic:ActiveTopic,
         Archived:0,
     };
@@ -247,8 +272,8 @@ function debugPair (Id, MentorId, MenteeId) {
         Id:Id,
         MentorId:MentorId,
         MenteeId:MenteeId,
-        Created:Date(),
-        LastUpdate:Date(),
+        Created:randomDate(),
+        LastUpdate:randomDate(),
         PrivacyAccepted:1,
     };
 }
@@ -259,6 +284,14 @@ export function addDebugSummary(AppointmentId, SummaryText, UserId) {
     const summary = debugSummary(newIndex, AppointmentId, SummaryText, UserId, SumStatuses[0]);
     debugGlobals.summaries.push(summary)
 }
+export function debugUpdateSummaryText(Id, SummaryText) {
+    const summary = debugGlobals.summaries.find((summary) => {return summary.Id == Id})
+    if (summary != null) {
+        console.log("Changing summary ", summary.Id, " to ", SummaryText);
+        summary.SummaryText = SummaryText;
+    }
+    else { console.log("summary doesn't exist?"); }
+}
 function debugSummary (Id, AppointmentId, SummaryText, UserId, Status) {
     return {
         Id:Id,
@@ -266,8 +299,8 @@ function debugSummary (Id, AppointmentId, SummaryText, UserId, Status) {
         SummaryText:SummaryText,
         UserId:UserId,
         Status:Status,
-        Created:Date(),
-        LastUpdate:Date(),
+        Created:randomDate(),
+        LastUpdate:randomDate(),
     };
 }
 
@@ -278,16 +311,21 @@ export function addDebugAppointment (PairId, TopicId, ScheduledAt) {
     debugGlobals.appointments.push(appointment);
 }
 export function debugUpdateAppointmentStatus (Id, Status) {
-    debugGlobals.appointments[Id].Status = Status;
+    const app = debugGlobals.appointments.find((app) => {return app.Id == Id;})
+    if (app != null) {
+        console.log("Changing app ", app.Id, " to ", Status);
+        app.Status = Status;
+    }
+    else { console.log("appointment doesn't exist?"); }
 }
-function debugAppointment (Id, PairId, TopicId, Status, ScheduledAt=Date()) {
+function debugAppointment (Id, PairId, TopicId, Status, ScheduledAt=randomDate()) {
     return {
         Id:Id,
         PairId:PairId,
         TopicId:TopicId,
         ScheduledAt:ScheduledAt,
         Status:Status,
-        Created:Date(),
-        LastUpdate:Date(),
+        Created:randomDate(),
+        LastUpdate:randomDate(),
     };
 }

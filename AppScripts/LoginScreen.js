@@ -9,7 +9,7 @@ import Button from 'react-native-button';
 import LinkedInModal from 'react-native-linkedin';
 import { useNavigation } from '@react-navigation/native';
 import {styles, colors} from './Styles.js';
-import {getCurrentUser, postNewUser, getUserIdPayloadByEmail, getAuthorizedUser} from './API.js';
+import {getCurrentUser, initializeUser} from './API.js';
 import {registerForPushNotifications} from './PushNotifs.js';
 import {url, setLocalUser, setLinkedInToken, debug} from './globals.js';
 import { setStatusBarNetworkActivityIndicatorVisible } from 'expo-status-bar';
@@ -86,28 +86,27 @@ export default function LoginScreen() {
     // return emailPayload;
   }
 
-  const ensureUserExists = async (email, last, first, pic) => {
+  const handleLoginNavigation = async (email, last, first, pic) => {
+    
     // Check if user exists in database before ensuring it exists.
-    console.log("Checking if user exists in database...");
-    const authPayload = await getAuthorizedUser('Login-Direct');
+    // console.log("Checking if user exists in database...");
 
-    if (authPayload !== null) {
+    // Get Current User.
+    console.log("Ensuring user exists...");
+    let curUser = await getCurrentUser("Login");
 
-      // Get Current User.
-      console.log("Ensuring user exists...");
-      let curUser = await getCurrentUser("Login");
+    // Check if debugging is active
+    if (debug){
+      console.log("Debug --> Navigate to Main Screen");
+      navigation.navigate('Main');
+      return;
+    }
 
-      // Check if debugging is active
-      if (debug){
-        // await AsyncStorage.setItem('User', JSON.stringify(curUser));
-        console.log("Debug --> Navigate to Main Screen");
-        navigation.navigate('Main');
-        return;
-      }
-
-      // Check if this user needs to be added to DB.
-      if (authPayload.rowsAffected == 0) {
-        postNewUser(email, first, last, pic);
+    // Check if this user needs to be added to DB.
+    console.log('handleLoginNavigation:', curUser);
+    let existed = false;
+    if (!!curUser != false) {
+      if (!existed) {
         await AsyncStorage.setItem('User', JSON.stringify(curUser));
         navigation.navigate('Privacy');
       } else {
@@ -149,7 +148,7 @@ export default function LoginScreen() {
       } catch (error) {
         console.log(error);
       }
-      await ensureUserExists(email, first, last, pic);
+      await handleLoginNavigation(email, first, last, pic);
 
       setRefreshing(false);
       setValid(true);

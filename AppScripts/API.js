@@ -230,20 +230,12 @@ export async function ensureUserExists (source="unknown") {
     const pic = await AsyncStorage.getItem('Avatar');
 
     let authPayload = await initializeUser('ensureUserExists');
-    console.log('ensureUserExists (', source, '): auth_Payload gotten');
-    // check if this user needs to be added to DB.
-    // while (authPayload !== null && authPayload.rowsAffected == 0) {
-    //   // await postNewUser(email, first, last, pic);
-    //   authPayload = await initializeUser('ensureUserExists');
-    // }
     console.log('ensureUserExists (', source, '): user posted', authPayload);
     if (authPayload !== null) {
       // Set the user
       console.log("Snag user token and id.\n");
       const userToken = authPayload[0]["Token"];
       userId = authPayload[0]["Id"];
-      // const userToken = authPayload["recordset"][0]["Token"];
-      // userId = authPayload["recordset"][0]["Id"];
       await setToken(userToken);
     } else {
       console.log("null: ", authPayload)

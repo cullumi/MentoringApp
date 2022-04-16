@@ -90,8 +90,6 @@ export default function LoginScreen() {
     
     // Check if user exists in database before ensuring it exists.
     // console.log("Checking if user exists in database...");
-    // const authPayload = await initializeUser('Login-Direct');
-    // if (authPayload !== null) {}
 
     // Get Current User.
     console.log("Ensuring user exists...");
@@ -99,19 +97,16 @@ export default function LoginScreen() {
 
     // Check if debugging is active
     if (debug){
-      // await AsyncStorage.setItem('User', JSON.stringify(curUser));
       console.log("Debug --> Navigate to Main Screen");
       navigation.navigate('Main');
       return;
     }
 
     // Check if this user needs to be added to DB.
-    // if (authPayload.rowsAffected == 0) {
     console.log('handleLoginNavigation:', curUser);
     let existed = false;
     if (!!curUser != false) {
       if (!existed) {
-        // postNewUser(email, first, last, pic);
         await AsyncStorage.setItem('User', JSON.stringify(curUser));
         navigation.navigate('Privacy');
       } else {

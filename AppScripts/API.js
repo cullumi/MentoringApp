@@ -292,34 +292,6 @@ export async function initializeUser(source='unknown') {
   return statusCheck(authres, source);
 }
 
-export async function getAuthorizedUser(source='unknown') {
-
-  if (debug) {
-    return debugGlobals.userAuths[0];
-  }
-
-  const authres = await fetch(url + '/user/access/' + await getLinkedInToken('getAuthorizedUser'), {
-    method: 'GET'
-  });
-  if (authres.status != 200){
-    console.log("(" + source + ") Non-200 User Authorization Payload Received: ", authres);
-    if (authres.status >= 500 && authres.status < 600) {
-      Alert.alert("Connection Timed Out: " + authres.status);
-    } else {
-      Alert.alert("Connection Error: " + authres.status);
-    }
-    return null;
-  } else {
-    console.log('200 status', authres);
-    const authPayload = await authres.json();
-    if (authPayload == false) {
-      return null;
-    } else {
-      return authPayload;
-    }
-  }
-}
-
 // Fetches a User Payload using a User Email.
 export async function getUserIdPayloadByEmail(email) {
 

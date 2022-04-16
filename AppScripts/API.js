@@ -193,13 +193,11 @@ export async function getCurrentUser (source="unknown") {
 
 // Gets a user based on a certain user id.
 export async function getUserByID(id) {
-
     if (debug) {
       const user = debugGlobals.users.find((user) => {return user.Id == id;});
       setLocalUser(user);
       return user;
     }
-
     const userPayload = await getUserPayloadByID(id);
     return createLocalUser(userPayload);
 }
@@ -277,7 +275,6 @@ export async function initializeUser(source='unknown') {
   if (debug) {
     return debugGlobals.userAuths[0];
   }
-
   token = await getLinkedInToken('initializeUser');
   const authres = await fetch(url + '/user/access/' + token, {
     method: 'GET'
@@ -302,11 +299,9 @@ export async function getUserIdPayloadByEmail(email) {
 
 // Fetches a User Payload using a User ID.
 export async function getUserPayloadByID(id) {
-
     if (debug){
       return debugGlobals.users.find((user) => {return user.Id == id;});
     }
-
     let token = await getToken('getUserPayloadByID');
     console.log('getUserPayloadByID:\n\tid:', id, '\n\ttoken:', token);
     const fullUrl = url + '/user/id/' + id + '/' + token;

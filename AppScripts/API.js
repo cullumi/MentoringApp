@@ -222,8 +222,10 @@ export function createLocalUser(userPayload) {
 // All in all, Effectively accounts for when the user was created offline, or for when the API is offline.
 export async function ensureUserExists (source="unknown") {
 
+  var user = await getLocalUser();
+  var tokenPresent = await isUserTokenPresent()
   var userId = null;
-  if (!await isUserTokenPresent()){
+  if (!tokenPresent || user === null){
     const email = await AsyncStorage.getItem("Email");
     const first = await AsyncStorage.getItem('FirstName');
     const last = await AsyncStorage.getItem('LastName');
@@ -242,7 +244,6 @@ export async function ensureUserExists (source="unknown") {
     }
     console.log('ensureUserExists (', source, '): payload parsed');
   } else {
-    var user = await getLocalUser()
     userId = user.Id;
   }
   if (userId !== null) {

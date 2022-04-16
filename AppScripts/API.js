@@ -180,7 +180,6 @@ export async function getCurrentUser (source="unknown") {
 
   if (debug) {
     const user = debugGlobals.users[0];
-    //console.log("getCurrentUser (" + source + ")");
     return user;
   }
 
@@ -208,11 +207,15 @@ export async function getUserByID(id) {
 // Creates a javascript object out of a user payload for use elsewhere in the React Native app.
 // Note:  this should probably be replaced with a .json() call or otherwise by using JSON.parse().
 export function createLocalUser(userPayload) {
-
-    const recordSet = userPayload["recordset"][0];
-    const user = JSON.parse(JSON.stringify(recordSet));
-    setLocalUser(user);
-    return user;
+    console.log('createLocalUser: ', userPayload);
+    if (userPayload.success !== false) {
+      const recordSet = userPayload["recordset"][0];
+      const user = JSON.parse(JSON.stringify(recordSet));
+      setLocalUser(user);
+      return user;
+    } else {
+      return null;
+    }
 }
 
 // Finds the current user if it can, creates a new user and adds it to the database if needed.
@@ -226,41 +229,67 @@ export async function ensureUserExists (source="unknown") {
     const last = await AsyncStorage.getItem('LastName');
     const pic = await AsyncStorage.getItem('Avatar');
 
-    let authPayload = await getAuthorizedUser('ensureUserExists');
-
+    let authPayload = await initializeUser('ensureUserExists');
     console.log('ensureUserExists (', source, '): auth_Payload gotten');
-
     // check if this user needs to be added to DB.
-    while (authPayload !== null && authPayload.rowsAffected == 0) {
-      await postNewUser(email, first, last, pic);
-      authPayload = await getAuthorizedUser('ensureUserExists');
-    }
-    
+    // while (authPayload !== null && authPayload.rowsAffected == 0) {
+    //   // await postNewUser(email, first, last, pic);
+    //   authPayload = await initializeUser('ensureUserExists');
+    // }
     console.log('ensureUserExists (', source, '): user posted', authPayload);
-
     if (authPayload !== null) {
       // Set the user
-      const userToken = authPayload["recordset"][0]["Token"];
-      userId = authPayload["recordset"][0]["Id"];
+      console.log("Snag user token and id.\n");
+      const userToken = authPayload[0]["Token"];
+      userId = authPayload[0]["Id"];
+      // const userToken = authPayload["recordset"][0]["Token"];
+      // userId = authPayload["recordset"][0]["Id"];
       await setToken(userToken);
     } else {
       console.log("null: ", authPayload)
     }
-
     console.log('ensureUserExists (', source, '): payload parsed');
-
   } else {
     var user = await getLocalUser()
     userId = user.Id;
   }
-
   if (userId !== null) {
-    let userPayload = await getUserPayloadByID(userId);
-    const payload = userPayload;
-    return payload;
+    return await getUserPayloadByID(userId);
   } else {
     return null;
   }
+}
+
+export async function statusCheck(authres, source='unknown') {
+  if (authres.status != 200){
+    console.log("(" + source + ") Non-200 User Authorization Payload Received: ", authres);
+    if (authres.status >= 500 && authres.status < 600) {
+      Alert.alert("Connection Timed Out: " + authres.status);
+    } else {
+      Alert.alert("Connection Error: " + authres.status);
+    }
+    return null;
+  } else {
+    console.log('200 status', authres);
+    const authPayload = await authres.json();
+    if (authPayload == false) {
+      return null;
+    } else {
+      return authPayload;
+    }
+  }
+}
+
+export async function initializeUser(source='unknown') {
+  if (debug) {
+    return debugGlobals.userAuths[0];
+  }
+
+  token = await getLinkedInToken('initializeUser');
+  const authres = await fetch(url + '/user/access/' + token, {
+    method: 'GET'
+  });
+  return statusCheck(authres, source);
 }
 
 export async function getAuthorizedUser(source='unknown') {
@@ -313,7 +342,9 @@ export async function getUserPayloadByID(id) {
       return debugGlobals.users.find((user) => {return user.Id == id;});
     }
 
-    const fullUrl = url + '/user/id/' + id + '/' + await getToken('getUserPayloadByID');
+    let token = await getToken('getUserPayloadByID');
+    console.log('getUserPayloadByID:\n\tid:', id, '\n\ttoken:', token);
+    const fullUrl = url + '/user/id/' + id + '/' + token;
     const userres = await fetch(fullUrl, {
       method: 'GET'
     });

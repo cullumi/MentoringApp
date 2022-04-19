@@ -49,7 +49,7 @@ export async function retTopic(topicId) {
       method: 'GET'
     });
     const topicPayload = await topicRes.json();
-    var topic = JSON.parse(JSON.stringify(topicPayload["recordset"][0]));
+    var topic = JSON.parse(JSON.stringify(topicPayload[0]));
     topic.DueDateText = parseDateText(new Date(topic["DueDate"]));
     topic.CreatedText = parseSimpleDateText(new Date(topic["Created"]));
     return topic;
@@ -125,7 +125,8 @@ export async function getMPairsOf(mType, userID) {
       method: 'GET'
     });
     const pairsPayload = await pairsres.json();
-    return pairsPayload["recordset"];
+    console.log("getMPairsOf: ", pairsPayload);
+    return pairsPayload;
 }
 
 export async function getPairsOf(userId) {
@@ -139,7 +140,7 @@ export async function getPairsOf(userId) {
     method: 'GET'
   });
   const pairsPayload = await pairsres.json();
-  return pairsPayload["recordset"];
+  return pairsPayload;
 }
 
 export async function getPair(mentorId, menteeId) {
@@ -156,7 +157,7 @@ export async function getPair(mentorId, menteeId) {
   });
   const ppayload = await pairres.json();
   console.log("Pair:", ppayload);
-  return JSON.parse(JSON.stringify(ppayload.recordset[0]));
+  return JSON.parse(JSON.stringify(ppayload[0]));
 }
 
 // Gets basic semi-public information about a paired user.
@@ -171,7 +172,7 @@ export async function getPairedUser(targetId, userId) {
     method: 'GET'
   });
   const userPayload = await userres.json();
-  return JSON.parse(JSON.stringify(userPayload.recordset[0]));
+  return JSON.parse(JSON.stringify(userPayload[0]));
 }
 
 // Gets the Current User via the ensureUserExists method and the createLocalUser method.
@@ -207,8 +208,7 @@ export async function getUserByID(id) {
 export function createLocalUser(userPayload) {
     console.log('createLocalUser: ', userPayload);
     if (userPayload.success !== false) {
-      const recordSet = userPayload["recordset"][0];
-      const user = JSON.parse(JSON.stringify(recordSet));
+      const user = userPayload[0];
       setLocalUser(user);
       return user;
     } else {
@@ -225,9 +225,9 @@ export async function ensureUserExists (source="unknown") {
   var userId = null;
   if (!tokenPresent || user === null){
     const email = await AsyncStorage.getItem("Email");
-    const first = await AsyncStorage.getItem('FirstName');
-    const last = await AsyncStorage.getItem('LastName');
-    const pic = await AsyncStorage.getItem('Avatar');
+    // const first = await AsyncStorage.getItem('FirstName');
+    // const last = await AsyncStorage.getItem('LastName');
+    // const pic = await AsyncStorage.getItem('Avatar');
 
     let authPayload = await initializeUser('ensureUserExists');
     console.log('ensureUserExists (', source, '): user posted', authPayload);
@@ -451,7 +451,7 @@ export async function getSummary(appId) {
     method: 'GET'
   });
   const summaryPayload = await summaryres.json();
-  var summary = summaryPayload['recordset'][0].SummaryText;
+  var summary = summaryPayload[0].SummaryText;
   return summary;
 }
 
@@ -520,7 +520,7 @@ export async function getContactInfoOf(userID) {
       method: 'GET'
     });
     const cInfoPayload = await cInfores.json();
-    const recordSet = JSON.parse(JSON.stringify(cInfoPayload["recordset"]));
+    const recordSet = JSON.parse(JSON.stringify(cInfoPayload));
     var cInfos = [];
     for (var i = 0; i < recordSet.length; i++) {
       const index = i;
@@ -545,7 +545,7 @@ export async function getCurrentTopic() {
     method: 'GET'
   });
   const topicPayload = await topicres.json();
-  var topic = JSON.parse(JSON.stringify(topicPayload['recordset'][0]));
+  var topic = JSON.parse(JSON.stringify(topicPayload[0]));
   topic.DueDateText = parseDateText(new Date(topic.DueDate));
   topic.CreatedText = parseSimpleDateText(new Date(topic.Created));
   return topic;
@@ -571,7 +571,7 @@ export async function getAllTopics() {
     method: 'GET'
   });
   const topicsPayload = await topicsres.json();
-  const recordSet = topicsPayload["recordset"];
+  const recordSet = topicsPayload;
   var topics = [];
   for (var i = 0; i < recordSet.length; i++) {
     var topic = JSON.parse(JSON.stringify(recordSet[i]));
@@ -597,7 +597,7 @@ export async function getTopic(topicId) {
     method: 'GET'
   });
   const topicPayload = await topicres.json();
-  const topic = topicPayload.recordset[0];
+  const topic = topicPayload[0];
   return topic;
 }
 
@@ -647,7 +647,7 @@ export async function getAppointmentsFor(type='upcoming', pairId, userId, source
     method: 'GET'
   });
   const payload = await res.json();
-  return payload.recordset;
+  return payload;
 }
 
 // Updates appointment status
@@ -687,7 +687,7 @@ export async function checkMeetings() {
     var user = await getCurrentUser('checkMeetings');
     var pairs = await getPairsOf(user.Id);
 
-    if (user !== null && paris !== null) {
+    if (user !== null && pairs !== null) {
 
       // Get appointments for each pair the user is a part of.
       for (var i = 0; i < pairs.length; i++) {
@@ -745,7 +745,7 @@ export async function getAppointments(type) {
     var user = await getCurrentUser('getAppointments');
     var pairs = await getPairsOf(user.Id);
 
-    if (user !== null && paris !== null) {
+    if (user !== null && pairs !== null) {
 
       // Get appointments for each pair the user is a part of.
       for (var i = 0; i < pairs.length; i++) {

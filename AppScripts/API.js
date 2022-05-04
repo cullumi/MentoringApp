@@ -78,8 +78,7 @@ export async function getMenteesOf (userId) {
     const pairs = await getMPairsOf('mentor', userId);
     const mentees = [];
     for (var i = 0; i < pairs.length; i++) {
-      const index = i;
-      const mentee = await getPairedUser(pairs[index]["MenteeId"], userId);
+      const mentee = await getPairedUser(pairs[i]["MenteeId"], userId);
       assignMenteeDecorations(mentee);
       mentees.push(mentee);
     }
@@ -110,8 +109,7 @@ export async function getMentorsOf (userId) {
     console.log("getMentorsOf: ", pairs);
     const mentors = [];
     for (var i = 0; i < pairs.length; i++) {
-      const index = i;
-      const mentor = await getPairedUser(pairs[index]["MentorId"], userId);
+      const mentor = await getPairedUser(pairs[i]["MentorId"], userId);
       assignMentorDecorations(mentor);
       mentors.push(mentor);
     }
@@ -157,7 +155,7 @@ export async function getPair(mentorId, menteeId) {
   });
   const ppayload = await pairres.json();
   console.log("Pair:", ppayload);
-  return JSON.parse(JSON.stringify(ppayload[0]));
+  return ppayload[0];
 }
 
 // Gets basic semi-public information about a paired user.
@@ -171,8 +169,14 @@ export async function getPairedUser(targetId, userId) {
   const userres = await fetch(fullUrl, {
     method: 'GET'
   });
+  console.log('getPairedUser (res): ', userres);
   const userPayload = await userres.json();
-  return JSON.parse(JSON.stringify(userPayload[0]));
+  console.log('getPairedUser (payload): ', userPayload);
+  if (userPayload.success === false) {
+    return [];
+  } else {
+    return userPayload[0];
+  }
 }
 
 // Gets the Current User via the ensureUserExists method and the createLocalUser method.

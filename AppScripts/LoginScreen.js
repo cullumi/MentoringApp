@@ -49,41 +49,16 @@ export default function LoginScreen() {
   const getLinkedInProfileInfo = async (access_token) => {
     console.log("Getting LinkedIn profile information...");
     return await fetchUsing('https://api.linkedin.com/v2/me', access_token)
-    // // get basic profile information
-    // const response = await fetch('https://api.linkedin.com/v2/me', {
-    //   method: 'GET',
-    //   headers: {
-    //     Authorization: 'Bearer ' + access_token,
-    //   }
-    // });
-    // const payload = await response.json();
-    // return payload;
   }
 
   const getLinkedInProfilePicture = async (access_token) => {
     console.log("Getting LinkedIn profile picutre...");
     return await fetchUsing('https://api.linkedin.com/v2/me?projection=(id,profilePicture(displayImage~:playableStreams))&oauth2_access_token=', null, access_token);
-    // // get profile picture URL
-    // const url = 'https://api.linkedin.com/v2/me?projection=(id,profilePicture(displayImage~:playableStreams))&oauth2_access_token='
-    // const pictureres = await fetch(url + access_token, {
-    //   method: 'GET'
-    // });
-    // const picPayload = await pictureres.json();
-    // return picPayload;
   }
 
   const getLinkedInProfileEmail = async (access_token) => {
     console.log("Getting LinkedIn email address...");
     return await fetchUsing('https://api.linkedin.com/v2/clientAwareMemberHandles?q=members&projection=(elements*(primary,type,handle~))', access_token);
-    // // get email address
-    // const emailres = await fetch('https://api.linkedin.com/v2/clientAwareMemberHandles?q=members&projection=(elements*(primary,type,handle~))', {
-    //   method: 'GET',
-    //   headers: {
-    //     Authorization: 'Bearer ' + access_token,
-    //   }
-    // });
-    // const emailPayload = await emailres.json();
-    // return emailPayload;
   }
 
   const handleLoginNavigation = async (email, last, first, pic) => {
@@ -129,26 +104,26 @@ export default function LoginScreen() {
       await setLinkedInToken(access_token);
 
       // Getting LinkedIn Payloads
-      const payload = await getLinkedInProfileInfo(access_token);
-      const picPayload = await getLinkedInProfilePicture(access_token);
+      // const payload = await getLinkedInProfileInfo(access_token);
+      // const picPayload = await getLinkedInProfilePicture(access_token);
       const emailPayload = await getLinkedInProfileEmail(access_token);
 
       const email = emailPayload.elements[0]["handle~"].emailAddress;
-      const first = payload.localizedFirstName;
-      const last = payload.localizedLastName;
-      const pic = picPayload.profilePicture["displayImage~"].elements[2].identifiers[0].identifier;
+      // const first = payload.localizedFirstName;
+      // const last = payload.localizedLastName;
+      // const pic = picPayload.profilePicture["displayImage~"].elements[2].identifiers[0].identifier;
 
       // Constructing user details...
-      console.log("Constructing user details...");
+      // console.log("Constructing user details...");
       try {
         await AsyncStorage.setItem('Email', email);
-        await AsyncStorage.setItem('FirstName', first);
-        await AsyncStorage.setItem('LastName', last);
-        await AsyncStorage.setItem('Avatar', pic);
+      //   await AsyncStorage.setItem('FirstName', first);
+      //   await AsyncStorage.setItem('LastName', last);
+      //   await AsyncStorage.setItem('Avatar', pic);
       } catch (error) {
         console.log(error);
       }
-      await handleLoginNavigation(email, first, last, pic);
+      await handleLoginNavigation();//email, first, last, pic);
 
       setRefreshing(false);
       setValid(true);

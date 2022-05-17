@@ -42,13 +42,16 @@ export default function HomeScreen() {
       newMentees = await getMenteesOf(curUser.Id);
       newMentors = await getMentorsOf(curUser.Id);
       doSetAsyncStorage = true;
+      console.log("Got MMs from Remote");
     } catch (error) {
       console.log(error);
+      console.log("MMs from Local");
       newMentors = await loadLocalArray('Mentors', newMentors);
       newMentees = await loadLocalArray('Mentees', newMentees);
     }
     // Save mentor/mentee info from the database into local storage, for when you're offline.
     if (doSetAsyncStorage) {
+      console.log("MMs saved to Local");
       await saveLocals(["Mentors", "Mentees"], [mentors, mentees]);
     }
     setRefreshControl(false);
@@ -117,6 +120,8 @@ export default function HomeScreen() {
   }
 
   const approvedHome = () => { // removed accountID from approvedHome() parameters
+    console.log("Mentors: ", mentors.length);
+    console.log("Mentees: ", mentees.length);
     return (
       <ScrollView contentContainerStyle={styles.scrollView}//{flex: 1, flexDirection: 'column'}}
           refreshControl={
@@ -135,6 +140,9 @@ export default function HomeScreen() {
   };
 
   const pairItem = (otherUser, otherType, i=0) => {
+    
+    console.log("Other User (", otherType, "): [", Array.isArray(otherUser) && otherUser.length == 0, "] ");
+    
     return (
       <View key={i}>
         <TouchableOpacity onPress={() =>

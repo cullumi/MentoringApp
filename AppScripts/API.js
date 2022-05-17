@@ -78,6 +78,7 @@ export async function getMenteesOf (userId) {
     const pairs = await getMPairsOf('mentor', userId);
     const mentees = [];
     for (var i = 0; i < pairs.length; i++) {
+      console.log("Mentee? ", pairs[i])
       const mentee = await getPairedUser(pairs[i]["MenteeId"], userId);
       assignMenteeDecorations(mentee);
       mentees.push(mentee);
@@ -106,7 +107,7 @@ export async function getMentorsOf (userId) {
     }
 
     const pairs = await getMPairsOf('mentee', userId);
-    console.log("getMentorsOf: ", pairs);
+    // console.log("getMentorsOf: ", pairs);
     const mentors = [];
     for (var i = 0; i < pairs.length; i++) {
       const mentor = await getPairedUser(pairs[i]["MentorId"], userId);
@@ -123,7 +124,7 @@ export async function getMPairsOf(mType, userID) {
       method: 'GET'
     });
     const pairsPayload = await pairsres.json();
-    console.log("getMPairsOf: ", pairsPayload);
+    // console.log("getMPairsOf: ", pairsPayload);
     return pairsPayload;
 }
 
@@ -149,12 +150,12 @@ export async function getPair(mentorId, menteeId) {
 
   const userID = (await getLocalUser()).Id;
   const userToken = await getToken('createMeeting(pairId)');
-  console.log("getPair:", mentorId, menteeId, userID, userToken);
+  // console.log("getPair:", mentorId, menteeId, userID, userToken);
   const pairres = await fetch(url + '/pair/both/' + mentorId + "/" + menteeId + '/' + userID + '/' + userToken, {
     method: 'GET'
   });
   const ppayload = await pairres.json();
-  console.log("Pair:", ppayload);
+  // console.log("Pair:", ppayload);
   return ppayload[0];
 }
 

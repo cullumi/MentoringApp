@@ -69,7 +69,7 @@ export default function LoginScreen() {
     // Get Current User.
     console.log("Ensuring user exists...");
     let curUser = await getCurrentUser("Login");
-
+    console.log('curUser:',curUser)
     // Check if debugging is active
     if (debug){
       console.log("Debug --> Navigate to Main Screen");

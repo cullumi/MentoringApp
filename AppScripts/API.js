@@ -194,11 +194,7 @@ export async function getCurrentUser (source="unknown") {
   }
 
   const userPayload = await ensureUserExists(source);
-  if (userPayload !== null) {
-    return createLocalUser(userPayload);
-  } else {
-    return null;
-  }
+  return userPayload
 }
 
 // Gets a user based on a certain user id.
@@ -246,6 +242,7 @@ export async function ensureUserExists (source="unknown") {
       const userToken = authPayload[0]["Token"];
       userId = authPayload[0]["Id"];
       await setToken(userToken);
+      return authPayload
     } else {
       console.log("null: ", authPayload)
     }
@@ -288,7 +285,7 @@ export async function initializeUser(source='unknown') {
   const authres = await fetch(url + '/user/access/' + token, {
     method: 'GET'
   });
-  return statusCheck(authres, source);
+  return await statusCheck(authres, source);
 }
 
 // Fetches a User Payload using a User Email.
@@ -320,6 +317,17 @@ export async function getUserPayloadByID(id) {
     const userPayload = await userres.json();
     const value = JSON.parse(JSON.stringify(userPayload));
     return value;
+}
+
+export async function getUserForSettings(id, token) {
+  console.log('getUserForSettings:\n\tid:', id, '\n\ttoken:', token);
+  const fullUrl = url + '/user/id/' + id + '/' + token;
+  const userres = await fetch(fullUrl, {
+    method: 'GET'
+  });
+  const userPayload = await userres.json();
+  const value = JSON.parse(JSON.stringify(userPayload));
+  return value;
 }
 
 // Creates a User via POST

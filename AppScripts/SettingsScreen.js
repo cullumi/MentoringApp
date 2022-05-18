@@ -11,27 +11,28 @@ import Button from 'react-native-button';
 import {BackTitleBarHelp, UnifiedTitleBar} from './ScreenComponents.js';
 import {styles, colors} from './Styles.js';
 import {getLocalUser} from './globals.js';
+import { getUserForSettings } from './API.js'
 
 export default function SettingsScreen() {
   const [refreshing, setRefreshing] = useState(false)
   const [user, setUser] = useState({})
   const navigation = useNavigation();
 
-  logout = () => {
+  const logout = () => {
     AsyncStorage.clear();
     navigation.navigate('Login');
   };
 
-  const getUser = async () => {
-    setUser(getLocalUser('SettingsScreen'));
-  };
-
-  const componentDidMount = () => {
-    getUser();
+  const getData = async () => {
+    var res = await getLocalUser('SettingsScreen')
+    var data = await getUserForSettings(res[0].Id, res[0].Token)
+    console.log('data:',data)
+    data = data[0]
+    setUser(data);
   };
 
   useEffect(() => {
-    componentDidMount();
+    getData()
   }, []);
 
   return (
@@ -40,8 +41,8 @@ export default function SettingsScreen() {
       <ScrollView style={styles.scrollView}>
         <View style={{justifyContent: 'center',
         alignItems: 'center',paddingTop:25}}>
-          <Image style={styles.bigAvatar} source={{uri: user.avatar}} />
-          <Text style={styles.settingsName}>{user.firstName} {user.lastName}</Text>
+          <Image style={styles.bigAvatar} source={{uri: user.Avatar}} />
+          <Text style={styles.settingsName}>{user.FirstName} {user.LastName}</Text>
           <Button
             containerStyle={styles.logoutButton}
             style={{fontSize: 16, color: 'white'}}

@@ -99,7 +99,7 @@ export async function getLocalUser(source='unknown'){
         return debugGlobals.users[0];
     }
     var user = JSON.parse(await AsyncStorage.getItem("User"));
-    console.log("GetLocalUser:" + source, user);
+    // console.log("GetLocalUser:" + source, user);
     return user;
 }
 

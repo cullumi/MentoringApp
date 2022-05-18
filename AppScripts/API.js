@@ -78,10 +78,13 @@ export async function getMenteesOf (userId) {
     const pairs = await getMPairsOf('mentor', userId);
     const mentees = [];
     for (var i = 0; i < pairs.length; i++) {
-      console.log("Mentee? ", pairs[i])
-      const mentee = await getPairedUser(pairs[i]["MenteeId"], userId);
-      assignMenteeDecorations(mentee);
-      mentees.push(mentee);
+      console.log("Mentee? ", pairs[i] !== undefined && pairs[i].Id !== undefined);
+      var mentee;
+      if ((mentee = await getPairedUser(pairs[i]["MenteeId"], userId)) != false) {
+        console.log("PairedUser? ", mentee);
+        assignMenteeDecorations(mentee);
+        mentees.push(mentee);
+      }
     }
     return mentees;
 }
@@ -110,9 +113,11 @@ export async function getMentorsOf (userId) {
     // console.log("getMentorsOf: ", pairs);
     const mentors = [];
     for (var i = 0; i < pairs.length; i++) {
-      const mentor = await getPairedUser(pairs[i]["MentorId"], userId);
-      assignMentorDecorations(mentor);
-      mentors.push(mentor);
+      var mentor;
+      if ((mentor = await getPairedUser(pairs[i]["MentorId"], userId)) != false) {
+        assignMentorDecorations(mentor);
+        mentors.push(mentor);
+      }
     }
     return mentors;
 }
@@ -170,11 +175,10 @@ export async function getPairedUser(targetId, userId) {
   const userres = await fetch(fullUrl, {
     method: 'GET'
   });
-  console.log('getPairedUser (res): ', userres);
   const userPayload = await userres.json();
   console.log('getPairedUser (payload): ', userPayload);
   if (userPayload.success === false) {
-    return [];
+    return false;
   } else {
     return userPayload[0];
   }
@@ -365,7 +369,10 @@ export async function createMeeting(mentorId, menteeId, scheduledAt) {
   const userToken = await getToken("createMeeting");
 
   // Create appointment.
-  console.log("Posting appointment:", pair.Id, scheduledAt, topic.Id, userId, userToken);
+  scheduledAt = new Date(scheduledAt).toISOString();
+  scheduledAt = scheduledAt.replace("T", " ");
+  scheduledAt = scheduledAt.replace("Z", "");
+  console.log("Posting appointment:", pairId, scheduledAt, topicId, userId, userToken);
   const post = await fetch(url + '/create-appointment', {
     method: 'POST',
     body: JSON.stringify({
